@@ -1,9 +1,15 @@
-var mongoose = require('mongoose');
-//Set up default mongoose connection
-var mongoDB = 'mongodb://127.0.0.1/model';
-mongoose.connect(mongoDB, { useNewUrlParser: true });
- //Get the default connection
-var db = mongoose.connection;
-//Bind connection to error event (to get notification of connection errors)
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+const mongoose = require('mongoose');
+
+// Function to connect to MongoDB
+const connectDB = async () => {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB connected');
+    } catch (error) {
+        console.error('MongoDB connection failed:', error);
+        process.exit(1);
+    }
+}
+
+// Export the connection function
+module.exports = connectDB;
