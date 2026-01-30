@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
-import '../../../data/dummy_transactions.dart';
+import '../../../models/transaction_model.dart';
 
 class TransactionItem extends StatelessWidget {
-  final DummyTransaction transaction;
+  final TransactionModel transaction;
 
   const TransactionItem({super.key, required this.transaction});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // LEFT
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -36,10 +37,13 @@ class TransactionItem extends StatelessWidget {
                 ),
               ],
             ),
+
+            // RIGHT
             Text(
               '${transaction.isIncome ? '+' : '-'} \$${transaction.amount}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: 15,
                 color: transaction.isIncome ? Colors.green : Colors.red,
               ),
             ),
