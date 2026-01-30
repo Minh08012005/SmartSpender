@@ -29,94 +29,110 @@ class HomeScreen extends StatelessWidget {
 
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ================= HEADER =================
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            // ================= HEADER + BALANCE (GREEN) =================
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+              decoration: const BoxDecoration(
+                color: Color(0xff2A7C76),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
-                        'Good afternoon,',
-                        style: TextStyle(color: Colors.black54),
+                  // ===== HEADER =====
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Good afternoon,',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Enjelin Morgeana',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Enjelin Morgeana',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.notifications_none,
+                          color: Color(0xff2A7C76),
                         ),
                       ),
                     ],
                   ),
+
+                  const SizedBox(height: 24),
+
+                  // ===== BALANCE CARD =====
                   Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xff3E8E89), Color(0xff2A7C76)],
+                      ),
                     ),
-                    child: const Icon(Icons.notifications_none),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Balance',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          '\$2,548.00',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            _BalanceInfo(
+                              icon: Icons.arrow_downward,
+                              title: 'Income',
+                              amount: '\$1,840.00',
+                            ),
+                            _BalanceInfo(
+                              icon: Icons.arrow_upward,
+                              title: 'Expenses',
+                              amount: '\$284.00',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
 
-            // ================= BALANCE CARD =================
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(24),
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xff3E8E89), Color(0xff2A7C76)],
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Balance',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      '\$2,548.00',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        _BalanceInfo(
-                          icon: Icons.arrow_downward,
-                          title: 'Income',
-                          amount: '\$1,840.00',
-                        ),
-                        _BalanceInfo(
-                          icon: Icons.arrow_upward,
-                          title: 'Expenses',
-                          amount: '\$284.00',
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
 
             // ================= TITLE =================
             Padding(
@@ -151,7 +167,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// ===== BALANCE INFO =====
+// ================= BALANCE INFO =================
 class _BalanceInfo extends StatelessWidget {
   final IconData icon;
   final String title;
