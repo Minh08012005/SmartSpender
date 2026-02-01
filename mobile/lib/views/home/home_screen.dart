@@ -10,27 +10,10 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),
 
-      // ===== BOTTOM BAR =====
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: 0,
-        selectedItemColor: const Color(0xff2A7C76),
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: false,
-        showUnselectedLabels: false,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: ''),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.add_circle, size: 36),
-            label: '',
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ''),
-        ],
-      ),
-
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER + BALANCE (GREEN) =================
+            // ================= HEADER + BALANCE =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -72,7 +55,7 @@ class HomeScreen extends StatelessWidget {
                           color: Colors.white,
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.notifications_none,
                           color: Color(0xff2A7C76),
                         ),
