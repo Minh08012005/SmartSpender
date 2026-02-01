@@ -11,7 +11,7 @@ const Joi = require('joi');
  */
 const registerSchema = Joi.object({
   email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', 'org', 'edu'] } })
+    .email({ minDomainSegments: 2, tlds: { allow: true } })
     .required()
     .messages({
       'string.email': 'Please provide a valid email address',
@@ -46,7 +46,7 @@ const registerSchema = Joi.object({
  */
 const loginSchema = Joi.object({
   email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ['com', 'net', 'org', 'edu'] } })
+    .email({ minDomainSegments: 2, tlds: { allow: true } })
     .required()
     .messages({
       'string.email': 'Please provide a valid email address',

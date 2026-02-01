@@ -22,6 +22,7 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
+      select: false, // Không trả về trường này trong các truy vấn mặc định
     },
     // Trường fullName: bắt buộc, tên đầy đủ của người dùng
     fullName: {
