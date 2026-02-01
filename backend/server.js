@@ -57,7 +57,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Global error handling middleware (phải ở cuối)
+// Global error handling middleware
 app.use(errorHandler);
 
 // Khởi động server
