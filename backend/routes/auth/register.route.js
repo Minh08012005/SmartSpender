@@ -6,12 +6,16 @@
 const express = require('express'); // Framework routing
 const router = express.Router(); // Tạo router instance
 
+// Import validation schema
+const { registerSchema } = require('../../validators/auth.validator');
+const validate = require('../../middleware/validate.middleware');
+
 // Import controller xử lý đăng ký
 const register = require('../../controllers/auth/register.controller');
 
-// Định nghĩa route POST /register
-// Khi có request POST đến, gọi hàm register từ controller
-router.post('/register', register);
+// Định nghĩa route POST /register với validation
+// Khi có request POST đến, validate data rồi gọi hàm register từ controller
+router.post('/register', validate(registerSchema), register);
 
 // Xuất router để sử dụng trong server.js
 module.exports = router;

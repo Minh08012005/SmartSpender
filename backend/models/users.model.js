@@ -16,6 +16,7 @@ const userSchema = new mongoose.Schema(
       unique: true, // Duy nhất trong collection
       trim: true, // Loại bỏ khoảng trắng đầu và cuối
       lowercase: true, // Chuyển thành chữ thường
+      index: true, // Thêm index cho hiệu suất query
     },
     // Trường password: bắt buộc, lưu mật khẩu đã hash
     password: {
@@ -26,6 +27,7 @@ const userSchema = new mongoose.Schema(
     fullName: {
       type: String,
       required: true,
+      trim: true,
     },
   },
   { timestamps: true }, // Tự động thêm createdAt và updatedAt
