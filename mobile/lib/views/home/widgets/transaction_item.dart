@@ -8,6 +8,8 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isIncome = transaction.type == 'income';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
@@ -24,7 +26,7 @@ class TransactionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.title,
+                  transaction.category,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -40,11 +42,11 @@ class TransactionItem extends StatelessWidget {
 
             // RIGHT
             Text(
-              '${transaction.isIncome ? '+' : '-'} \$${transaction.amount}',
+              '${isIncome ? '+' : '-'} \$${transaction.amount}',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
-                color: transaction.isIncome ? Colors.green : Colors.red,
+                color: isIncome ? Colors.green : Colors.red,
               ),
             ),
           ],

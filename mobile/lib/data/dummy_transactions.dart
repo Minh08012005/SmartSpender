@@ -1,23 +1,28 @@
 import '../models/transaction_model.dart';
 
 final List<TransactionModel> dummyTransactions = [
-  TransactionModel(title: 'Upwork', date: 'Today', amount: 850, isIncome: true),
   TransactionModel(
-    title: 'Transfer',
-    date: 'Yesterday',
-    amount: 85,
-    isIncome: false,
+    id: 'T001',
+    amount: 120000,
+    category: 'Food',
+    date: '2026-01-30',
+    note: 'Lunch with friends',
+    type: 'expense',
   ),
   TransactionModel(
-    title: 'Paypal',
-    date: 'Jan 30, 2022',
-    amount: 1406,
-    isIncome: true,
+    id: 'T002',
+    amount: 850000,
+    category: 'Freelance',
+    date: '2026-01-29',
+    note: 'Upwork payment',
+    type: 'income',
   ),
   TransactionModel(
-    title: 'Youtube',
-    date: 'Jan 16, 2022',
-    amount: 11.99,
-    isIncome: false,
+    id: 'T003',
+    amount: 150000,
+    category: 'Entertainment',
+    date: '2026-01-28',
+    note: 'Youtube Premium',
+    type: 'expense',
   ),
 ];

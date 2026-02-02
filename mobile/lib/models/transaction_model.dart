@@ -1,13 +1,17 @@
 class TransactionModel {
-  final String title;
-  final String date;
+  final String id;
   final double amount;
-  final bool isIncome;
+  final String category;
+  final String date;
+  final String note;
+  final String type; // income | expense
 
   TransactionModel({
-    required this.title,
-    required this.date,
+    required this.id,
     required this.amount,
-    required this.isIncome,
+    required this.category,
+    required this.date,
+    required this.note,
+    required this.type,
   });
 }
