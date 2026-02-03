@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../../models/transaction_model.dart';
 
 class TransactionItem extends StatelessWidget {
@@ -8,7 +9,8 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isIncome = transaction.type == 'income';
+    final bool isIncome = transaction.type == TransactionType.income;
+    final formatter = NumberFormat('#,###', 'vi_VN');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -42,7 +44,7 @@ class TransactionItem extends StatelessWidget {
 
             // RIGHT
             Text(
-              '${isIncome ? '+' : '-'} \$${transaction.amount}',
+              '${isIncome ? '+' : '-'} ${formatter.format(transaction.amount)} ₫',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 15,

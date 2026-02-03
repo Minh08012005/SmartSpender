@@ -1,15 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../../data/dummy_transactions.dart';
 import 'widgets/transaction_item.dart';
+import '../../models/transaction_model.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // ===== FORMATTER TIỀN VIỆT =====
+    final formatter = NumberFormat('#,###', 'vi_VN');
+
+    // ===== TÍNH TOÁN TIỀN =====
+    final totalIncome = dummyTransactions
+        .where((t) => t.type == TransactionType.income)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+
+    final totalExpense = dummyTransactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+
+    final totalBalance = totalIncome - totalExpense;
+
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),
-
       body: SafeArea(
         child: Column(
           children: [
@@ -84,9 +99,9 @@ class HomeScreen extends StatelessWidget {
                           style: TextStyle(color: Colors.white70),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          '\$2,548.00',
-                          style: TextStyle(
+                        Text(
+                          '${formatter.format(totalBalance)} ₫',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
@@ -95,16 +110,16 @@ class HomeScreen extends StatelessWidget {
                         const SizedBox(height: 20),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
+                          children: [
                             _BalanceInfo(
                               icon: Icons.arrow_downward,
                               title: 'Income',
-                              amount: '\$1,840.00',
+                              amount: '${formatter.format(totalIncome)} ₫',
                             ),
                             _BalanceInfo(
                               icon: Icons.arrow_upward,
                               title: 'Expenses',
-                              amount: '\$284.00',
+                              amount: '${formatter.format(totalExpense)} ₫',
                             ),
                           ],
                         ),
