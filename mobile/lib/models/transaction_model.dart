@@ -26,7 +26,10 @@ class TransactionModel {
       category: json['category'],
       date: json['date'],
       note: json['note'],
-      type: TransactionType.values.firstWhere((e) => e.name == json['type']),
+      type: TransactionType.values.firstWhere(
+        (e) => e.name == json['type'],
+        orElse: () => TransactionType.expense, // Fallback chống crash
+      ),
     );
   }
 
