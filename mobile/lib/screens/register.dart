@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../theme/text_style.dart';
+import '../navigation/main_navigation.dart';
+import '../services/auth_service.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -17,6 +19,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
+  final RegExp _passwordRegex = RegExp(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]',
+  );
   final RegExp _emailRegex = RegExp(
     r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
   );
@@ -92,7 +99,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               validator: (value) {
                                 final trimmed = value?.trim() ?? '';
                                 if (trimmed.isEmpty) {
-                                  return 'Vui lòng nhập họ tên';
+                                  return 'Vui lòng nhập họ tên';
+                                }
+                                if (trimmed.length < 2) {
+                                  return 'Họ tên tối thiểu 2 ký tự';
+                                }
+                                if (trimmed.length > 100) {
+                                  return 'Họ tên tối đa 100 ký tự';
                                 }
                                 return null;
                               },
@@ -132,12 +145,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               });
                             },
                             validator: (value) {
-                              if ((value ?? '').trim().isEmpty) {
+                              final trimmed = (value ?? '').trim();
+                              if (trimmed.isEmpty) {
                                 return 'Vui lòng nhập mật khẩu';
                               }
-                              if ((value ?? '').trim().length < 6) {
-                                return 'Mật khẩu tối thiểu 6 ký tự';
+                              if (trimmed.length < 8 || !_passwordRegex.hasMatch(trimmed)) {
+                                return 'Mật khẩu cần tối thiểu 8 ký tự bao gồm chữ số, chữ in hoa và kí tự đặc biệt';
                               }
+                              if (trimmed.length > 128) {
+                                return 'Mật khẩu tối đa 128 ký tự';
+                              }
+                             //if (!_passwordRegex.hasMatch(trimmed)) {
+                             //   return 'Mật khẩu cần chữ hoa, chữ thường, số và ký tự đặc biệt';
+                             // }
                               return null;
                             },
                           ),
@@ -168,6 +188,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                             const SizedBox(height: 32),
 
+                            if (_errorMessage != null) ...[
+                              Text(
+                                _errorMessage!,
+                                style: AppTextStyle.subtitle.copyWith(
+                                  color: AppColors.textLink,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
                             // Sign Up Button
                             SizedBox(
                               width: double.infinity,
@@ -180,10 +210,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     borderRadius: BorderRadius.circular(15),
                                   ),
                                 ),
-                                onPressed: () {
-                                  _formKey.currentState?.validate();
-                                },
-                                child: Text('Sign Up', style: AppTextStyle.buttonText),
+                                onPressed: _isLoading ? null : _handleRegister,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            AppColors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Text('Sign Up', style: AppTextStyle.buttonText),
                               ),
                             ),
 
@@ -210,6 +249,43 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _handleRegister() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.register(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      fullName: _nameController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!result.success) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = result.message;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MainNavigation(),
       ),
     );
   }
@@ -242,7 +318,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hintStyle: AppTextStyle.hint,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              errorStyle: AppTextStyle.subtitle.copyWith(color: AppColors.textLink),
+              errorStyle: AppTextStyle.subtitle.copyWith(
+                color: AppColors.textLink,
+                fontSize: 12,
+                height: 1.3,
+              ),
+              errorMaxLines: 3,
             ),
           ),
         ),
@@ -279,7 +360,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
               hintStyle: AppTextStyle.hint,
               border: InputBorder.none,
               contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-              errorStyle: AppTextStyle.subtitle.copyWith(color: AppColors.textLink),
+              errorStyle: AppTextStyle.subtitle.copyWith(
+                color: AppColors.textLink,
+                fontSize: 12,
+                height: 1.3,
+              ),
+              errorMaxLines: 3,
               suffixIcon: IconButton(
                 onPressed: onToggle,
                 icon: Icon(

@@ -1,9 +1,54 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String _baseUrl = 'https://YOUR_BACKEND_URL/api/auth';
+  static const String _baseUrl = 'http://192.168.1.11:3000/api/auth';
+  static const Duration _timeout = Duration(seconds: 12);
+
+  static Map<String, dynamic>? _tryDecodeBody(String body) {
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map<String, dynamic>) {
+        return decoded;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  static AuthResult _friendlyAuthError({
+    required int statusCode,
+    required bool isLogin,
+    String? serverMessage,
+  }) {
+    if (isLogin && statusCode == 401) {
+      return AuthResult(
+        success: false,
+        message: 'Sai tài khoản hoặc mật khẩu',
+      );
+    }
+
+    if (!isLogin && statusCode == 409) {
+      return AuthResult(
+        success: false,
+        message: 'Tài khoản đã tồn tại',
+      );
+    }
+
+    if (serverMessage != null && serverMessage.trim().isNotEmpty) {
+      return AuthResult(
+        success: false,
+        message: serverMessage,
+      );
+    }
+
+    return AuthResult(
+      success: false,
+      message: 'Lỗi server ($statusCode)',
+    );
+  }
 
   /// =======================
   /// LOGIN
@@ -12,18 +57,35 @@ class AuthService {
     final url = Uri.parse('$_baseUrl/login');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': email,
+              'password': password,
+            }),
+          )
+          .timeout(_timeout);
 
-      final body = jsonDecode(response.body);
+      final body = _tryDecodeBody(response.body);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return _friendlyAuthError(
+          statusCode: response.statusCode,
+          isLogin: true,
+          serverMessage: body?['message'],
+        );
+      }
+
+      if (body == null) {
+        return AuthResult(
+          success: false,
+          message: 'Phản hồi không hợp lệ từ server',
+        );
+      }
 
       // Backend trả success = false
       if (body['success'] == false) {
@@ -51,6 +113,16 @@ class AuthService {
         success: true,
         message: body['message'] ?? 'Đăng nhập thành công',
       );
+    } on TimeoutException {
+      return AuthResult(
+        success: false,
+        message: 'Kết nối quá thời gian, vui lòng thử lại',
+      );
+    } on SocketException {
+      return AuthResult(
+        success: false,
+        message: 'Không thể kết nối tới server',
+      );
     } catch (e) {
       return AuthResult(
         success: false,
@@ -70,19 +142,36 @@ class AuthService {
     final url = Uri.parse('$_baseUrl/register');
 
     try {
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-          'fullName': fullName,
-        }),
-      );
+      final response = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: jsonEncode({
+              'email': email,
+              'password': password,
+              'fullName': fullName,
+            }),
+          )
+          .timeout(_timeout);
 
-      final body = jsonDecode(response.body);
+      final body = _tryDecodeBody(response.body);
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        return _friendlyAuthError(
+          statusCode: response.statusCode,
+          isLogin: false,
+          serverMessage: body?['message'],
+        );
+      }
+
+      if (body == null) {
+        return AuthResult(
+          success: false,
+          message: 'Phản hồi không hợp lệ từ server',
+        );
+      }
 
       if (body['success'] == false) {
         return AuthResult(
@@ -101,6 +190,16 @@ class AuthService {
       return AuthResult(
         success: true,
         message: body['message'] ?? 'Đăng ký thành công',
+      );
+    } on TimeoutException {
+      return AuthResult(
+        success: false,
+        message: 'Kết nối quá thời gian, vui lòng thử lại',
+      );
+    } on SocketException {
+      return AuthResult(
+        success: false,
+        message: 'Không thể kết nối tới server',
       );
     } catch (e) {
       return AuthResult(

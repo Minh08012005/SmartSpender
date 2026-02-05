@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../theme/text_style.dart';
+import '../navigation/main_navigation.dart';
+import '../services/auth_service.dart';
 import 'register.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -14,6 +16,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _errorMessage;
   final RegExp _emailRegex = RegExp(
     r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
   );
@@ -140,6 +144,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             const SizedBox(height: 48),
 
+                            if (_errorMessage != null) ...[
+                              Text(
+                                _errorMessage!,
+                                style: AppTextStyle.subtitle.copyWith(
+                                  color: AppColors.textLink,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
                             // Sign In Button
                             SizedBox(
                               width: double.infinity,
@@ -156,13 +170,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ),
                                   ),
                                 ),
-                                onPressed: () {
-                                  _formKey.currentState?.validate();
-                                },
-                                child: const Text(
-                                  'Sign in',
-                                  style: AppTextStyle.buttonText,
-                                ),
+                                onPressed: _isLoading ? null : _handleLogin,
+                                child: _isLoading
+                                    ? const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            AppColors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : const Text(
+                                        'Sign in',
+                                        style: AppTextStyle.buttonText,
+                                      ),
                               ),
                             ),
 
@@ -202,6 +225,42 @@ class _LoginScreenState extends State<LoginScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _handleLogin() async {
+    final isValid = _formKey.currentState?.validate() ?? false;
+    if (!isValid) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    final result = await AuthService.login(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
+
+    if (!mounted) return;
+
+    if (!result.success) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = result.message;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MainNavigation(),
       ),
     );
   }
