@@ -14,6 +14,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  final RegExp _emailRegex = RegExp(
+    r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
+  );
 
   @override
   void dispose() {
@@ -88,6 +91,16 @@ class _LoginScreenState extends State<LoginScreen> {
                               controller: _emailController,
                               hintText: 'Email',
                               keyboardType: TextInputType.emailAddress,
+                              validator: (value) {
+                                final trimmed = value?.trim() ?? '';
+                                if (trimmed.isEmpty) {
+                                  return 'Vui lòng nhập email';
+                                }
+                                if (!_emailRegex.hasMatch(trimmed)) {
+                                  return 'Email không đúng định dạng';
+                                }
+                                return null;
+                              },
                             ),
 
                             const SizedBox(height: 16),
@@ -101,6 +114,16 @@ class _LoginScreenState extends State<LoginScreen> {
                                 setState(() {
                                   _obscurePassword = !_obscurePassword;
                                 });
+                              },
+                              validator: (value) {
+                                final trimmed = value?.trim() ?? '';
+                                if (trimmed.isEmpty) {
+                                  return 'Vui lòng nhập mật khẩu';
+                                }
+                               // if (trimmed.length < 6) {
+                               //   return 'Mật khẩu tối thiểu 6 ký tự';
+                               // }
+                                return null;
                               },
                             ),
 
@@ -138,11 +161,6 @@ class _LoginScreenState extends State<LoginScreen> {
                                 },
                                 child: const Text(
                                   'Sign in',
-                                 // style: TextStyle(
-                                 //   color: AppColors.white,
-                                 //   fontSize: 18,
-                                 //   fontFamily: 'Inter',
-                                 //   fontWeight: FontWeight.w600,
                                   style: AppTextStyle.buttonText,
                                 ),
                               ),
