@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'navigation/main_navigation.dart';
+import 'screens/login.dart';
+//import 'navigation/main_navigation.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,9 +11,10 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: MainNavigation(),
+      home: LoginScreen(),
+   //   home: MainNavigation(),
     );
   }
 }
