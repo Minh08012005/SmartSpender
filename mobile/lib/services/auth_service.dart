@@ -3,10 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../core/config/app_config.dart';
 
 class AuthService {
-  static const String _baseUrl = 'http://192.168.1.11:3000/api/auth';
-  static const Duration _timeout = Duration(seconds: 12);
+  // Using AppConfig for dynamic URL based on platform/environment
+  static String get _baseUrl => AppConfig.authApiUrl;
+  static const Duration _timeout = Duration(seconds: 30);
 
   static Map<String, dynamic>? _tryDecodeBody(String body) {
     try {
@@ -24,30 +26,18 @@ class AuthService {
     String? serverMessage,
   }) {
     if (isLogin && statusCode == 401) {
-      return AuthResult(
-        success: false,
-        message: 'Sai tài khoản hoặc mật khẩu',
-      );
+      return AuthResult(success: false, message: 'Sai tài khoản hoặc mật khẩu');
     }
 
     if (!isLogin && statusCode == 409) {
-      return AuthResult(
-        success: false,
-        message: 'Tài khoản đã tồn tại',
-      );
+      return AuthResult(success: false, message: 'Tài khoản đã tồn tại');
     }
 
     if (serverMessage != null && serverMessage.trim().isNotEmpty) {
-      return AuthResult(
-        success: false,
-        message: serverMessage,
-      );
+      return AuthResult(success: false, message: serverMessage);
     }
 
-    return AuthResult(
-      success: false,
-      message: 'Lỗi server ($statusCode)',
-    );
+    return AuthResult(success: false, message: 'Lỗi server ($statusCode)');
   }
 
   /// =======================
@@ -60,13 +50,8 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: jsonEncode({
-              'email': email,
-              'password': password,
-            }),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(_timeout);
 
@@ -124,10 +109,7 @@ class AuthService {
         message: 'Không thể kết nối tới server',
       );
     } catch (e) {
-      return AuthResult(
-        success: false,
-        message: 'Lỗi kết nối server',
-      );
+      return AuthResult(success: false, message: 'Lỗi kết nối server');
     }
   }
 
@@ -145,9 +127,7 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
               'email': email,
               'password': password,
@@ -174,10 +154,7 @@ class AuthService {
       }
 
       if (body['success'] == false) {
-        return AuthResult(
-          success: false,
-          message: body['message'],
-        );
+        return AuthResult(success: false, message: body['message']);
       }
 
       final accessToken = body['data']?['accessToken'];
@@ -202,10 +179,7 @@ class AuthService {
         message: 'Không thể kết nối tới server',
       );
     } catch (e) {
-      return AuthResult(
-        success: false,
-        message: 'Lỗi kết nối server',
-      );
+      return AuthResult(success: false, message: 'Lỗi kết nối server');
     }
   }
 }
@@ -217,8 +191,5 @@ class AuthResult {
   final bool success;
   final String message;
 
-  AuthResult({
-    required this.success,
-    required this.message,
-  });
+  AuthResult({required this.success, required this.message});
 }
