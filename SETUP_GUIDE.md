@@ -133,4 +133,4 @@ Password: Test@123456
 
 ## ❓ Cần hỗ trợ?
 
-Liên hệ: [Tên team lead] hoặc tạo issue trên GitHub
+Liên hệ: Minh(Leader) hoặc tạo issue trên GitHub

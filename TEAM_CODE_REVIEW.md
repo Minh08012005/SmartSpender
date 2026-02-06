@@ -2,7 +2,7 @@
 
 **Ngày merge:** 06/02/2026  
 **Nhánh đích:** `dev`  
-**Reviewer:** [Tên team lead]
+**Reviewer:** Minh
 
 ---
 
@@ -19,12 +19,12 @@ File này ghi lại **các vấn đề phát sinh** sau khi merge code từ các
  
 | # |      Nhánh      |             Thành viên      |      Nội dung               |     Status             |
 |---|-------|----------- |----------|--------|
-| 1 | `feature/login-api`          | [Tên] |       Login/Register API integration|     ⚠️ Cần fix           |
-| 2 | `feature/home-ui`            | [Tên] |           Home UI screen             |      ✅ OK              |
-| 3 | `feature/transaction-schema` | [Tên] |        Transaction mongoose schema   |     ✅ OK               |
-| 4 | `feature/transaction-seed`   | [Tên] |        Seed script for transactions  |   ✅ OK                 |
-| 5 | `feature/transaction-api`    | [Tên] |         Transaction API routes          ⚠️ Cần fix             |
-| 6 | `fix/login`                  | [Tên] |           Fix route ordering              ✅ OK                |
+| 1 | `feature/login-api`          | Đúc Anh |       Login/Register API integration|     ⚠️ Cần fix           |
+| 2 | `feature/home-ui`            | Sơn |           Home UI screen             |      ✅ OK              |
+| 3 | `feature/transaction-schema` | Bảo |        Transaction mongoose schema   |     ✅ OK               |
+| 4 | `feature/transaction-seed`   | Bảo  |        Seed script for transactions  |   ✅ OK                 |
+| 5 | `feature/transaction-api`    | Bảo |         Transaction API routes          ⚠️ Cần fix             |
+| 6 | `fix/login`                  | Đức Anh |           Fix route ordering              ✅ OK                |
 
 --- 
 
