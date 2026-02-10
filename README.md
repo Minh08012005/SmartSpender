@@ -192,6 +192,7 @@ flutter run      # Chọn device (Android/iOS)
 
 ## 📚 Tài liệu tham khảo
 
+- **[DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md):** Hướng dẫn code từng task theo Clean Architecture
 - **[CONTRIBUTING.md](CONTRIBUTING.md):** Quy định code, commit, PR chi tiết
 - **[SETUP_GUIDE.md](SETUP_GUIDE.md):** Hướng dẫn setup môi trường dev
 - **API Docs:** `http://localhost:3000/api-docs` (Swagger)
