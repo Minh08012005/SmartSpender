@@ -1,83 +1,224 @@
 # 💰 SmartSpender - Quản lý chi tiêu thông minh
 
-Dự án phát triển ứng dụng quản lý tài chính cá nhân dành cho nhóm 2 - Sprint 1.
+Dự án phát triển ứng dụng quản lý tài chính cá nhân dành cho nhóm 2 - **Sprint 2: Core Features & Integration**
 
-## 👥 Thành viên nhóm
-
-- **Leader:** Minh
-- **Backend:** Bảo, Duy
-- **Mobile:** Sơn, Đức Anh
-
-## 📂 Cấu trúc thư mục
-
-Dự án được tổ chức theo mô hình Monorepo:
-
-- `/backend`: Mã nguồn phía máy chủ (Node.js).
-- `/mobile`: Mã nguồn ứng dụng di động (Flutter).
-
-
-
-## 🛠 Quy định chung & Quy trình làm việc
-
-Để dự án vận hành trơn tru và tránh xung đột code, toàn bộ thành viên bắt buộc tuân thủ các quy định sau:
-
-### 1. Phân chia khu vực làm việc (Folder)
-
-Dự án áp dụng mô hình Monorepo. Thành viên chỉ làm việc trong thư mục được phân công:
-
-- **Team Backend (Bảo, Duy):** Thao tác hoàn toàn trong thư mục `/backend`.
-- **Team Mobile (Sơn, Đức Anh):** Thao tác hoàn toàn trong thư mục `/mobile`.
-- **Leader:** Quản lý cấu trúc gốc và duyệt Merge.
-
-### 2. Quy trình Git (Git Flow)
-
-Áp dụng "5 Tình huống Git" đã thống nhất. Mọi task đều phải thực hiện trên nhánh riêng tách từ `dev`.
-
-- **Bắt đầu Task:** `git checkout dev` -> `git pull origin dev` -> `git checkout -b feature/ten-task`.
-- **Nộp bài (PR):** Đẩy nhánh feature lên GitHub và tạo Pull Request (PR) vào nhánh `dev`.
-- **Tuyệt đối:** Không code trực tiếp trên nhánh `main` hoặc `dev`.
-
-### 3. Quy định về .gitignore & File rác
-
-Mỗi Team phải đảm bảo file `.gitignore` hoạt động đúng trước khi push code:
-
-- **Backend:** Chặn `node_modules/`, `.env`, các file log.
-- **Mobile:** Chặn `build/`, `.dart_tool/`, `.packages`.
-- **Lưu ý:** Nếu thấy PR có hàng trăm file lạ (thư viện), Leader sẽ Reject (từ chối) yêu cầu merge.
-
-### 4. Pull Request & Review
-
-- Mọi PR cần được ít nhất 1 thành viên khác trong cùng team (Backend/Mobile) review trước khi Leader bấm Merge.
-- Nội dung PR phải ghi rõ: "Hoàn thành Task #[Số Task] - [Tên Task]".
+> 🚀 **Trạng thái:** Sprint 2 đang triển khai (10/02 - 20/02/2026)
 
 ---
 
-_Chúc anh em có một Sprint 1 làm việc hiệu quả! 🔥_
+## 👥 Thành viên nhóm
+
+| Vai trò        | Thành viên         | Nhiệm vụ Sprint 2                             |
+| -------------- | ------------------ | --------------------------------------------- |
+| **👨‍💼 Leader**  | Mai Huy Minh       | State Management, Base Code, Code Review 100% |
+| **🧑‍💻 Backend** | Nguyễn Văn Duy     | API Filter & Statistics                       |
+| **🧑‍💻 Backend** | Vũ Nguyễn Ngọc Bảo | CRUD APIs, Swagger Docs, Unit Tests           |
+| **📱 Mobile**  | Trịnh Thái Sơn     | Home Screen Integration, API Connection       |
+| **📱 Mobile**  | Lê Đức Anh         | Form Add/Edit Transaction, Validation         |
+
+---
+
+## 📂 Cấu trúc thư mục
+
+Dự án được tổ chức theo mô hình **Monorepo + Clean Architecture**:
+
+```
+SmartSpender/
+├── backend/              # Node.js API Server
+│   ├── controllers/      # Request handlers
+│   ├── models/          # MongoDB schemas
+│   ├── routes/          # API endpoints
+│   ├── middleware/      # Auth, validation, error handling
+│   └── services/        # Business logic
+│
+├── mobile/              # Flutter App
+│   ├── lib/
+│   │   ├── core/        # Config, constants, services (API, storage)
+│   │   ├── data/        # Models, providers (state management)
+│   │   ├── features/    # Feature modules (auth, transaction)
+│   │   └── views/       # UI screens & widgets
+│   └── test/            # Unit tests
+│
+└── docs/                # Documentation
+```
+
+---
 
 ## 📅 Lộ trình phát triển (Roadmap)
 
-### 🏁 Sprint 1 (26/01 - 08/02) - Đang thực hiện 🛠️
+### ✅ Sprint 1 (26/01 - 08/02) - Hoàn thành
 
-- [x] Khởi tạo dự án & chia folder.
-- [ ] Thiết kế cơ sở dữ liệu (Database Design).
-- [ ] API Đăng ký/Đăng nhập.
-- [ ] UI màn hình Home & Login.
+- [x] Khởi tạo dự án & chia folder
+- [x] Thiết kế cơ sở dữ liệu (MongoDB)
+- [x] API Đăng ký/Đăng nhập (JWT Authentication)
+- [x] UI màn hình Login/Register (Flutter)
+- [x] Setup Git Flow & Code Review process
 
-### 🔜 Sprint 2 (Dự kiến)
+**Thành tựu:**
 
-- [ ] Chức năng quản lý ví và tài khoản.
-- [ ] Biểu đồ thống kê chi tiêu hàng tuần.
+- ✅ Backend API hoạt động ổn định
+- ✅ Mobile UI/UX đẹp, smooth animations
+- ✅ Authentication flow hoàn chỉnh
 
-## 💻 Hướng dẫn chạy code (Sẽ cập nhật chi tiết sau)
+---
+
+### 🔥 Sprint 2 (10/02 - 20/02) - Đang thực hiện
+
+**🎯 Mục tiêu:** Integration (Kết nối) + Core Logic + State Management
+
+#### Giai đoạn 1: TẬP TRUNG CAO ĐỘ (10/02 - 16/02)
+
+**Backend:**
+
+- [ ] 🔍 API Filter Transaction nâng cao (Ngày, Loại, Category)
+- [ ] 📊 API Statistics (Aggregation) tính tổng thu/chi
+- [ ] ✏️ API CRUD Transaction (Create/Update/Delete)
+- [ ] 📚 Swagger API Documentation
+- [ ] ✅ Unit Tests cho các API
+
+**Mobile:**
+
+- [ ] 🏠 Integration Home Screen với API thật (thay Dummy Data)
+- [ ] 🔄 UI States: Loading, Empty, Error
+- [ ] ↻ Pull-to-refresh transactions
+- [ ] 📝 Form Thêm/Sửa Transaction
+- [ ] ✔️ Validation chi tiết (số tiền, ngày, category)
+- [ ] 🎨 State Management (Provider/Riverpod)
+
+#### Giai đoạn 2: NHẸ NHÀNG (16/02 - 20/02)
+
+- [ ] 🧪 Unit Tests (Backend + Mobile)
+- [ ] 📖 Viết Documentation
+- [ ] 🎨 Polish UI/UX
+- [ ] 🎬 Prepare Demo
+
+---
+
+### 🔜 Sprint 3 (Dự kiến: 21/02+)
+
+- [ ] 💼 Budget management features
+- [ ] 📈 Chart/Statistics screen với biểu đồ
+- [ ] 🔔 Push Notifications
+- [ ] 🌙 Dark mode
+
+---
+
+## 🛠 Quy định chung & Quy trình làm việc
+
+### 1. Phân chia khu vực làm việc
+
+- **Team Backend:** Thao tác trong `/backend` only
+- **Team Mobile:** Thao tác trong `/mobile` only
+- **Leader:** Quản lý root, review & merge PR
+
+### 2. Quy trình Git (Git Flow)
+
+```bash
+# Bắt đầu task mới
+git checkout dev
+git pull origin dev
+git checkout -b feat/your-feature-name
+
+# Code xong, commit & push
+git add .
+git commit -m "feat(scope): description"
+git push origin feat/your-feature-name
+
+# Tạo Pull Request trên GitHub vào nhánh dev
+```
+
+**⚠️ QUY TẮC VÀNG:**
+
+- ❌ KHÔNG code trực tiếp trên `main` hoặc `dev`
+- ✅ MỌI task phải qua Pull Request
+- ✅ Cần ít nhất 1 người review & approve
+
+### 3. Commit Message Standard
+
+```bash
+# ✅ ĐÚNG
+feat(auth): add persistent login
+fix(ui): fix button alignment
+docs: update README for Sprint 2
+
+# ❌ SAI
+update
+fix bug
+changes
+```
+
+### 4. Pull Request & Code Review
+
+- Mọi PR cần **ít nhất 1 approval** trước khi merge
+- Title PR: `[Sprint 2] feat(scope): Description`
+- Nội dung: Mô tả rõ thay đổi + checklist
+
+---
+
+## 💻 Hướng dẫn chạy code
 
 ### Backend
 
-1. `cd backend`
-2. `npm install`
-3. `npm start`
+```bash
+cd backend
+npm install
+npm start        # Development mode
+# Server chạy tại http://localhost:3000
+```
+
+**Environment Variables:**
+
+```env
+PORT=3000
+MONGODB_URI=mongodb://localhost:27017/smartspender
+JWT_SECRET=your_secret_key
+```
 
 ### Mobile
 
-1. `cd mobile`
-2. `flutter pub get`
-3. `flutter run`
+```bash
+cd mobile
+flutter pub get
+flutter run      # Chọn device (Android/iOS)
+```
+
+**Lưu ý:**
+
+- Android Emulator: API tự động dùng `10.0.2.2:3000`
+- iOS Simulator: API tự động dùng `localhost:3000`
+- Physical Device: Đổi `localNetworkIP` trong `app_config.dart`
+
+---
+
+## 📚 Tài liệu tham khảo
+
+- **[CONTRIBUTING.md](CONTRIBUTING.md):** Quy định code, commit, PR chi tiết
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md):** Hướng dẫn setup môi trường dev
+- **API Docs:** `http://localhost:3000/api-docs` (Swagger)
+
+---
+
+## 🎯 Sprint 2 Progress
+
+| Task                     | Assigned      | Status         | Note                        |
+| ------------------------ | ------------- | -------------- | --------------------------- |
+| Persistent Login         | Leader        | ✅ Done        | Đã merge vào dev            |
+| Clean Architecture Setup | Leader        | ✅ Done        | ApiService, Providers ready |
+| API Filter               | Backend (Duy) | 🔄 In Progress | -                           |
+| API CRUD                 | Backend (Bảo) | 🔄 In Progress | -                           |
+| Home Integration         | Mobile (Sơn)  | 🔄 In Progress | -                           |
+| Form Transaction         | Mobile (Anh)  | 🔄 In Progress | -                           |
+
+---
+
+**📞 Liên hệ & Hỗ trợ:**
+
+- Có vấn đề? Hỏi trong group chat team
+- Cần review? Tag @MaiHuyMinh trong PR
+- Gặp lỗi? Tạo Issue trên GitHub với label `bug`
+
+---
+
+_Sprint 2 - Let's build something awesome! 🚀🔥_
+
+**Cập nhật lần cuối:** 10/02/2026
