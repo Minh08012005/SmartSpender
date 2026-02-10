@@ -3,17 +3,21 @@
 ## 🚫 Quy Tắc Bắt Buộc
 
 ### 1. Git Flow
+
 - **Đặt tên nhánh**: `feat/tên-tính-năng`, `fix/tên-lỗi`, `docs/tên-tài-liệu`
 - **TUYỆT ĐỐI KHÔNG push trực tiếp vào `dev`**
 - Mọi thay đổi phải qua Pull Request
 
 ### 2. Pull Request
+
 - **Cần ít nhất 1 người approve** mới merge
 - Mỗi PR chỉ làm **1 task duy nhất**
 - Tối đa **300-500 dòng code**
 
 ### 3. Commit Message
+
 Chuẩn Conventional Commits:
+
 ```bash
 feat(scope): mô tả ngắn gọn
 fix(scope): mô tả lỗi đã sửa
@@ -21,6 +25,7 @@ docs: cập nhật tài liệu
 ```
 
 **Ví dụ:**
+
 ```bash
 ✅ feat(auth): add login screen
 ✅ fix(ui): fix button alignment
@@ -29,6 +34,7 @@ docs: cập nhật tài liệu
 ```
 
 ### 4. Code Quality
+
 - Đặt tên biến/hàm: **camelCase** (tiếng Anh)
 - Đặt tên class: **PascalCase**
 - File không quá **250 dòng**
@@ -39,6 +45,7 @@ docs: cập nhật tài liệu
 ## 📅 Sprint 2 Checklist
 
 ### Tuần 1 (Done ✅)
+
 - [x] Setup Clean Architecture boilerplate
 - [x] Tạo ApiService với Dio + Interceptors
 - [x] Implement TransactionProvider
@@ -46,12 +53,14 @@ docs: cập nhật tài liệu
 - [x] Tài liệu CONTRIBUTING.md
 
 ### Tuần 2 (In Progress 🔄)
+
 - [ ] Tích hợp API thật vào TransactionProvider
 - [ ] Implement Add/Edit/Delete Transaction
 - [ ] Transaction filtering (by month/category)
 - [ ] Error handling UI
 
 ### Tuần 3-4 (Planned 📝)
+
 - [ ] Budget management features
 - [ ] Chart/Statistics screen
 - [ ] Notifications
@@ -89,4 +98,4 @@ git push origin feat/your-feature
 
 ---
 
-*Cập nhật: February 2026*
+_Cập nhật: February 2026_
