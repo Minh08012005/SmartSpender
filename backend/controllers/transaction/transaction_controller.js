@@ -1,4 +1,4 @@
-const Transaction = require("../models/transaction_schema");
+const Transaction = require("../../models/transaction_schema");
 
 /**
  * ✅ GET /api/transactions
@@ -35,6 +35,24 @@ exports.getTransactions = async (req, res) => {
      */
     const query = { userId };
 
+    /* ---------------------------------------------------
+     * QUERY PARAMS
+     * ---------------------------------------------------
+     *
+     */
+    const {
+      dateFrom,
+      dateTo,
+      // month,
+      // year,
+      type,
+      category,
+
+    } = req.query;
+    /*
+     * Đề xuất expand phần filter bên dưới để tránh lỗi khi người dùng chỉ truyền month hoặc year mà không truyền cả hai.
+     * Đồng thời thêm filter date range, category, amount min/max và type để tăng tính linh hoạt.
+    */
     /* ---------------------------------------------------
      * 3. OPTIONAL FILTER: month & year
      * ---------------------------------------------------
