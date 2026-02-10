@@ -90,9 +90,9 @@ class AuthService {
         );
       }
 
-      // Lưu token
+      // Lưu token (sử dụng key chuẩn)
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('accessToken', accessToken);
+      await prefs.setString('access_token', accessToken);
 
       return AuthResult(
         success: true,
@@ -161,7 +161,7 @@ class AuthService {
 
       if (accessToken != null) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('accessToken', accessToken);
+        await prefs.setString('access_token', accessToken);
       }
 
       return AuthResult(
