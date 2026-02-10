@@ -34,6 +34,11 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
 
+  # State Management
+  provider: ^6.1.1
+
+  # HTTP Client
+  dio: ^5.4.0
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.

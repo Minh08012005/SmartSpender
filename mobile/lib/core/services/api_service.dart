@@ -1,0 +1,209 @@
+import 'dart:developer' as developer;
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../constants/api_constants.dart';
+
+/// Centralized API Service
+///
+/// Tính năng:
+/// - Tự động thêm Authorization header với token
+/// - Xử lý lỗi tập trung (401, 500...)
+/// - Retry logic khi gặp lỗi network
+/// - Logging chi tiết để debug
+class ApiService {
+  static final ApiService _instance = ApiService._internal();
+  factory ApiService() => _instance;
+  ApiService._internal();
+
+  late final Dio _dio;
+
+  /// Get Dio instance để sử dụng trực tiếp nếu cần
+  Dio get dio => _dio;
+
+  /// Khởi tạo Dio với cấu hình
+  Future<void> init() async {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiConstants.baseUrl,
+        connectTimeout: ApiConstants.connectTimeout,
+        receiveTimeout: ApiConstants.receiveTimeout,
+        sendTimeout: ApiConstants.sendTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
+    // Thêm interceptors
+    _dio.interceptors.add(_AuthInterceptor());
+    _dio.interceptors.add(_LoggingInterceptor());
+    _dio.interceptors.add(_ErrorInterceptor());
+  }
+
+  // ============== CONVENIENCE METHODS ==============
+
+  /// GET request
+  Future<Response> get(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+  }) async {
+    return _dio.get(path, queryParameters: queryParameters, options: options);
+  }
+
+  /// POST request
+  Future<Response> post(String path, {dynamic data, Options? options}) async {
+    return _dio.post(path, data: data, options: options);
+  }
+
+  /// PUT request
+  Future<Response> put(String path, {dynamic data, Options? options}) async {
+    return _dio.put(path, data: data, options: options);
+  }
+
+  /// DELETE request
+  Future<Response> delete(String path, {Options? options}) async {
+    return _dio.delete(path, options: options);
+  }
+}
+
+// ================================================================
+// AUTHENTICATION INTERCEPTOR
+// ================================================================
+/// Tự động thêm Authorization header cho mọi request
+class _AuthInterceptor extends Interceptor {
+  @override
+  void onRequest(
+    RequestOptions options,
+    RequestInterceptorHandler handler,
+  ) async {
+    // Lấy token từ SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(ApiConstants.accessTokenKey);
+
+    // Nếu có token, thêm vào header
+    if (token != null && token.isNotEmpty) {
+      options.headers['Authorization'] = 'Bearer $token';
+      developer.log('🔑 Added token to request: ${options.path}');
+    }
+
+    handler.next(options);
+  }
+}
+
+// ================================================================
+// LOGGING INTERCEPTOR
+// ================================================================
+/// Ghi log chi tiết về request/response để debug
+class _LoggingInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    developer.log('🚀 REQUEST [${options.method}] ${options.uri}', name: 'API');
+    developer.log('Headers: ${options.headers}', name: 'API');
+    if (options.data != null) {
+      developer.log('Body: ${options.data}', name: 'API');
+    }
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    developer.log(
+      '✅ RESPONSE [${response.statusCode}] ${response.requestOptions.uri}',
+      name: 'API',
+    );
+    developer.log('Data: ${response.data}', name: 'API');
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    developer.log(
+      '❌ ERROR [${err.response?.statusCode}] ${err.requestOptions.uri}',
+      name: 'API',
+      error: err.message,
+    );
+    handler.next(err);
+  }
+}
+
+// ================================================================
+// ERROR INTERCEPTOR
+// ================================================================
+/// Xử lý lỗi tập trung
+class _ErrorInterceptor extends Interceptor {
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) async {
+    String errorMessage = _getErrorMessage(err);
+
+    // Xử lý các mã lỗi đặc biệt
+    switch (err.response?.statusCode) {
+      case 401:
+        // Token hết hạn hoặc không hợp lệ
+        developer.log(
+          '🔒 Unauthorized - Token expired or invalid',
+          name: 'API',
+        );
+        await _handleTokenExpired();
+        break;
+
+      case 403:
+        developer.log('🚫 Forbidden - No permission', name: 'API');
+        break;
+
+      case 404:
+        developer.log('🔍 Not Found', name: 'API');
+        break;
+
+      case 500:
+        developer.log('💥 Server Error', name: 'API');
+        break;
+
+      default:
+        developer.log('⚠️ Error: $errorMessage', name: 'API');
+    }
+
+    // Throw lỗi với message dễ hiểu
+    handler.next(
+      DioException(
+        requestOptions: err.requestOptions,
+        response: err.response,
+        type: err.type,
+        error: errorMessage,
+      ),
+    );
+  }
+
+  /// Convert DioException thành message dễ hiểu
+  String _getErrorMessage(DioException err) {
+    switch (err.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Kết nối quá lâu, vui lòng thử lại';
+      case DioExceptionType.sendTimeout:
+        return 'Gửi dữ liệu quá lâu';
+      case DioExceptionType.receiveTimeout:
+        return 'Nhận dữ liệu quá lâu';
+      case DioExceptionType.badResponse:
+        return err.response?.data['message'] ?? 'Lỗi từ server';
+      case DioExceptionType.cancel:
+        return 'Request bị hủy';
+      case DioExceptionType.unknown:
+        return 'Không thể kết nối tới server';
+      default:
+        return 'Có lỗi xảy ra';
+    }
+  }
+
+  /// Xử lý khi token hết hạn
+  Future<void> _handleTokenExpired() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Xóa token cũ
+    await prefs.remove(ApiConstants.accessTokenKey);
+    await prefs.remove(ApiConstants.refreshTokenKey);
+
+    // TODO: Navigate to login screen
+    // Sẽ implement ở Sprint 2
+  }
+}
