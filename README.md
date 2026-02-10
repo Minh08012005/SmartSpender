@@ -8,13 +8,13 @@ Dự án phát triển ứng dụng quản lý tài chính cá nhân dành cho n
 
 ## 👥 Thành viên nhóm
 
-| Vai trò | Thành viên | Nhiệm vụ Sprint 2 |
-|---------|------------|-------------------|
-| **👨‍💼 Leader** | Mai Huy Minh | State Management, Base Code, Code Review 100% |
-| **🧑‍💻 Backend** | Nguyễn Văn Duy | API Filter & Statistics |
-| **🧑‍💻 Backend** | Vũ Nguyễn Ngọc Bảo | CRUD APIs, Swagger Docs, Unit Tests |
-| **📱 Mobile** | Trịnh Thái Sơn | Home Screen Integration, API Connection |
-| **📱 Mobile** | Lê Đức Anh | Form Add/Edit Transaction, Validation |
+| Vai trò        | Thành viên         | Nhiệm vụ Sprint 2                             |
+| -------------- | ------------------ | --------------------------------------------- |
+| **👨‍💼 Leader**  | Mai Huy Minh       | State Management, Base Code, Code Review 100% |
+| **🧑‍💻 Backend** | Nguyễn Văn Duy     | API Filter & Statistics                       |
+| **🧑‍💻 Backend** | Vũ Nguyễn Ngọc Bảo | CRUD APIs, Swagger Docs, Unit Tests           |
+| **📱 Mobile**  | Trịnh Thái Sơn     | Home Screen Integration, API Connection       |
+| **📱 Mobile**  | Lê Đức Anh         | Form Add/Edit Transaction, Validation         |
 
 ---
 
@@ -55,6 +55,7 @@ SmartSpender/
 - [x] Setup Git Flow & Code Review process
 
 **Thành tựu:**
+
 - ✅ Backend API hoạt động ổn định
 - ✅ Mobile UI/UX đẹp, smooth animations
 - ✅ Authentication flow hoàn chỉnh
@@ -68,6 +69,7 @@ SmartSpender/
 #### Giai đoạn 1: TẬP TRUNG CAO ĐỘ (10/02 - 16/02)
 
 **Backend:**
+
 - [ ] 🔍 API Filter Transaction nâng cao (Ngày, Loại, Category)
 - [ ] 📊 API Statistics (Aggregation) tính tổng thu/chi
 - [ ] ✏️ API CRUD Transaction (Create/Update/Delete)
@@ -75,6 +77,7 @@ SmartSpender/
 - [ ] ✅ Unit Tests cho các API
 
 **Mobile:**
+
 - [ ] 🏠 Integration Home Screen với API thật (thay Dummy Data)
 - [ ] 🔄 UI States: Loading, Empty, Error
 - [ ] ↻ Pull-to-refresh transactions
@@ -83,6 +86,7 @@ SmartSpender/
 - [ ] 🎨 State Management (Provider/Riverpod)
 
 #### Giai đoạn 2: NHẸ NHÀNG (16/02 - 20/02)
+
 - [ ] 🧪 Unit Tests (Backend + Mobile)
 - [ ] 📖 Viết Documentation
 - [ ] 🎨 Polish UI/UX
@@ -124,6 +128,7 @@ git push origin feat/your-feature-name
 ```
 
 **⚠️ QUY TẮC VÀNG:**
+
 - ❌ KHÔNG code trực tiếp trên `main` hoặc `dev`
 - ✅ MỌI task phải qua Pull Request
 - ✅ Cần ít nhất 1 người review & approve
@@ -133,7 +138,7 @@ git push origin feat/your-feature-name
 ```bash
 # ✅ ĐÚNG
 feat(auth): add persistent login
-fix(ui): fix button alignment  
+fix(ui): fix button alignment
 docs: update README for Sprint 2
 
 # ❌ SAI
@@ -162,6 +167,7 @@ npm start        # Development mode
 ```
 
 **Environment Variables:**
+
 ```env
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/smartspender
@@ -177,6 +183,7 @@ flutter run      # Chọn device (Android/iOS)
 ```
 
 **Lưu ý:**
+
 - Android Emulator: API tự động dùng `10.0.2.2:3000`
 - iOS Simulator: API tự động dùng `localhost:3000`
 - Physical Device: Đổi `localNetworkIP` trong `app_config.dart`
@@ -193,18 +200,19 @@ flutter run      # Chọn device (Android/iOS)
 
 ## 🎯 Sprint 2 Progress
 
-| Task | Assigned | Status | Note |
-|------|----------|--------|------|
-| Persistent Login | Leader | ✅ Done | Đã merge vào dev |
-| Clean Architecture Setup | Leader | ✅ Done | ApiService, Providers ready |
-| API Filter | Backend (Duy) | 🔄 In Progress | - |
-| API CRUD | Backend (Bảo) | 🔄 In Progress | - |
-| Home Integration | Mobile (Sơn) | 🔄 In Progress | - |
-| Form Transaction | Mobile (Anh) | 🔄 In Progress | - |
+| Task                     | Assigned      | Status         | Note                        |
+| ------------------------ | ------------- | -------------- | --------------------------- |
+| Persistent Login         | Leader        | ✅ Done        | Đã merge vào dev            |
+| Clean Architecture Setup | Leader        | ✅ Done        | ApiService, Providers ready |
+| API Filter               | Backend (Duy) | 🔄 In Progress | -                           |
+| API CRUD                 | Backend (Bảo) | 🔄 In Progress | -                           |
+| Home Integration         | Mobile (Sơn)  | 🔄 In Progress | -                           |
+| Form Transaction         | Mobile (Anh)  | 🔄 In Progress | -                           |
 
 ---
 
 **📞 Liên hệ & Hỗ trợ:**
+
 - Có vấn đề? Hỏi trong group chat team
 - Cần review? Tag @MaiHuyMinh trong PR
 - Gặp lỗi? Tạo Issue trên GitHub với label `bug`
