@@ -5,7 +5,8 @@ const transactionSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
+      index: true,
     },
 
     amount: {
@@ -17,30 +18,33 @@ const transactionSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ["income", "expense"]
+      enum: ["income", "expense"],
     },
 
     category: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     date: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
 
     note: {
       type: String,
-      default: ""
-    }
+      trim: true,
+      default: "",
+    },
   },
   {
-    timestamps: true
-  }
+    timestamps: true,
+  },
 );
 
 transactionSchema.index({ userId: 1, date: -1 });
+transactionSchema.index({ userId: 1, type: 1, category: 1});
+transactionSchema.index({ note: "text", tiltle: "text"});
 
 module.exports = mongoose.model("Transaction", transactionSchema);
