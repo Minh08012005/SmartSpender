@@ -48,6 +48,10 @@ connectDB();
 app.use('/api/auth', registerRoute);
 app.use('/api/auth', loginRoute);
 
+// Transaction Routes
+const transactionRoutes = require("./routes/transaction_routes");
+app.use("/api/transactions", transactionRoutes);
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -60,21 +64,6 @@ app.get('/health', (req, res) => {
 // Global error handling middleware
 app.use(errorHandler);
 
-// Khởi động server
-const PORT = process.env.PORT || 3000; // Sử dụng port từ env hoặc mặc định 3000
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
-
-// ---------------- Transaction Routes ----------------
-
-
-const transactionRoutes = require("./routes/transaction_routes");
-
-// API route
-app.use("/api/transactions", transactionRoutes);
-
-// module.exports = app; (chỉ export nếu bạn dùng test)
 // Khởi động server
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
