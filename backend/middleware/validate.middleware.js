@@ -11,7 +11,11 @@
  */
 const validate = (schema, property = 'body') => {
   return (req, res, next) => {
-    const { error } = schema.validate(req[property], { abortEarly: false });
+    const { value, error } = schema.validate(req[property], { 
+      abortEarly: false, // Thu thập tất cả lỗi
+      convert: true, // Tự ép kiểu dữ liệu
+      stripUnknown: true // Loại bỏ các trường không xác định
+    });
 
     if (error) {
       const errors = error.details.map(detail => ({
@@ -27,6 +31,7 @@ const validate = (schema, property = 'body') => {
       });
     }
 
+    req[property] = value;
     next();
   };
 };

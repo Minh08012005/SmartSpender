@@ -32,7 +32,7 @@ const authenticate = async (req, res, next) => {
     const { payload } = await jwtVerify(token, secretKey);
 
     // Đính kèm user ID vào request object
-    req.user = { id: payload.userId };
+    req.user = {_id: payload.userId };
 
     next();
   } catch (error) {
