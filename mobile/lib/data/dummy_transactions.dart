@@ -1,4 +1,4 @@
-import '../models/transaction_model.dart';
+import './models/transaction_model.dart';
 
 final List<TransactionModel> dummyTransactions = [
   TransactionModel(
