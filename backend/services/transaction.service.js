@@ -1,5 +1,6 @@
 const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
+const AppError = require("../utils/appError");
 
 /**
  * Fetch filtered transactions with pagination and statistics
@@ -15,10 +16,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
     type,
     category,
     search,
-    page,
-    limit,
-    sortBy,
-    order,
+    page = 1,
+    limit = 20,
+    sortBy = "date",
+    order = "desc",
   } = filters;
 
   //Khởi tạo query object
@@ -31,6 +32,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59); // Ngày cuối cùng của tháng
     query.date = { $gte: startDate, $lte: endDate };
+  } else {
+    throw new AppError("Please provide either 'from' and 'to' dates or 'month' and 'year' for filtering.", 400);
   }
 
   // Xử lý Type
@@ -47,15 +50,14 @@ exports.getFilteredTransactions = async (userId, filters) => {
   // Xử lý Search (Partial match trên field 'note')
   if (search) {
     query.note = { $regex: search, $options: "i" };
-    query.text = { $regex: search, $options: "i" };
   }
 
   // Thực thi Query với Pagination & Sorting
-  const skip = (Number(page) - 1) * Number(limit);
+  const skip = (page - 1) * limit;
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
 
   const [transactions, totalCount, stats] = await Promise.all([
-    Transaction.find(query).sort(sortOptions).skip(skip).limit(Number(limit)),
+    Transaction.find(query).sort(sortOptions).skip(skip).limit(Number(limit)).lean(),
     Transaction.countDocuments(query),
     // Statistics (Income/Expense/Balance)
     Transaction.aggregate([
@@ -86,6 +88,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
     return { 
         transactions, 
         totalCount, 
-        finalStats
+        finalStats,
+        page: Number(page),
+        limit: Number(limit)
     };
 };

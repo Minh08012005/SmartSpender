@@ -25,6 +25,7 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
+      enum: ["food", "travel", "shopping", "salary", "entertainment", "utility", "other"],
     },
 
     date: {
@@ -37,6 +38,13 @@ const transactionSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      default: "",
+    },
   },
   {
     timestamps: true,
@@ -45,6 +53,6 @@ const transactionSchema = new mongoose.Schema(
 
 transactionSchema.index({ userId: 1, date: -1 });
 transactionSchema.index({ userId: 1, type: 1, category: 1});
-transactionSchema.index({ note: "text", tiltle: "text"});
+transactionSchema.index({ title: "text", note: "text" });
 
 module.exports = mongoose.model("Transaction", transactionSchema);

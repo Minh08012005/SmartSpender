@@ -31,21 +31,12 @@ exports.getTransactions = async (req, res, next) => {
     const userId = req.user._id; // Lấy từ auth middleware
     const filter = req.query;
 
-    const { transactions, totalCount, finalStats } =
-      await transactionService.getfetchFilteredTransactions(userId, filter);
+    const result = await transactionService.getFilteredTransactions(userId, filter);
 
     // response
-    return res.status(200).json({
-      success: true,
-      data: transactions,
-      meta: {
-        page: Number(page),
-        limit: Number(limit),
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limit),
-        statistics: finalStats,
-      },
-    });
+    return res
+      .status(200)
+      .json(successResponse(200, "Transactions fetched successfully", result));
   } catch (error) {
     next(error);
   }
