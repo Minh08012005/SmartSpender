@@ -32,6 +32,11 @@ const handleTokenExpiredError = () => ({
   message: "Token expired",
 });
 
+const handleCastError = (err) => ({
+  statusCode: 400,
+  message: `Invalid ${err.path}: ${err.value}`,
+});
+
 /**
  * Log error
  */
@@ -115,6 +120,12 @@ const errorHandler = (err, req, res, next) => {
       message,
       errors,
     });
+  }
+
+  if (err.name === "CastError") {
+    const result = handleCastError(err);
+    statusCode = result.statusCode;
+    message = result.message;
   }
 
   // Programming/System error → hide
