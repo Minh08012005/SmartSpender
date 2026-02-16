@@ -1,7 +1,11 @@
+/**
+ * Service xử lý logic liên quan đến giao dịch
+ */
+
 const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
-
+const escapeStringRegexp = require("regex-escape");
 /**
  * Fetch filtered transactions with pagination and statistics
  * @param {string} userId - ID của người dùng
@@ -33,7 +37,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
     const endDate = new Date(year, month, 0, 23, 59, 59); // Ngày cuối cùng của tháng
     query.date = { $gte: startDate, $lte: endDate };
   } else {
-    throw new AppError("Please provide either 'from' and 'to' dates or 'month' and 'year' for filtering.", 400);
+    throw new AppError(
+      "Please provide either 'from' and 'to' dates or 'month' and 'year' for filtering.",
+      400,
+    );
   }
 
   // Xử lý Type
@@ -49,7 +56,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
 
   // Xử lý Search (Partial match trên field 'note')
   if (search) {
-    query.note = { $regex: search, $options: "i" };
+    const escapedSearch = escapeStringRegexp(search);
+    query.note = { $regex: escapedSearch, $options: "i" };
   }
 
   // Thực thi Query với Pagination & Sorting
@@ -57,39 +65,18 @@ exports.getFilteredTransactions = async (userId, filters) => {
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
 
   const [transactions, totalCount, stats] = await Promise.all([
-    Transaction.find(query).sort(sortOptions).skip(skip).limit(Number(limit)).lean(),
+    Transaction.find(query)
+      .sort(sortOptions)
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(),
     Transaction.countDocuments(query),
-    // Statistics (Income/Expense/Balance)
-    Transaction.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalIncome: {
-            $sum: { $cond: [{ $eq: ["$type", "income"] }, "$amount", 0] },
-          },
-          totalExpense: {
-            $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0] },
-          },
-        },
-      },
-    ]),
   ]);
 
-  const finalStats =
-    stats.length > 0
-      ? {
-          totalIncome: stats[0].totalIncome,
-          totalExpense: stats[0].totalExpense,
-          balance: stats[0].totalIncome - stats[0].totalExpense,
-        }
-      : { totalIncome: 0, totalExpense: 0, balance: 0 };
-
-    return { 
-        transactions, 
-        totalCount, 
-        finalStats,
-        page: Number(page),
-        limit: Number(limit)
-    };
+  return {
+    transactions,
+    totalCount,
+    page: Number(page),
+    limit: Number(limit),
+  };
 };

@@ -1,3 +1,7 @@
+/**
+ * @description Controller for handling transaction-related requests.
+ */
+
 // const Transaction = require("../../models/transaction_schema");
 const transactionService = require("../services/transaction.service");
 const { successResponse } = require("../utils/response.util");
@@ -12,6 +16,8 @@ const { successResponse } = require("../utils/response.util");
 //  * Example:
 //  * GET /api/transactions?month=2&year=2026
 //  */
+
+// Controller to get transactions with optional filters
 exports.getTransactions = async (req, res, next) => {
   try {
     // /* ---------------------------------------------------
@@ -29,8 +35,9 @@ exports.getTransactions = async (req, res, next) => {
     // }
 
     const userId = req.user._id; // Lấy từ auth middleware
-    const filter = req.query;
+    const filter = req.query; // Có thể chứa month, year, type, from, to,...
 
+    // Call service to get filtered transactions
     const result = await transactionService.getFilteredTransactions(userId, filter);
 
     // response

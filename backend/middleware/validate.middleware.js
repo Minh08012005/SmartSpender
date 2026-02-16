@@ -16,7 +16,8 @@ const validate = (schema, property = 'body') => {
       convert: true, // Tự ép kiểu dữ liệu
       stripUnknown: true // Loại bỏ các trường không xác định
     });
-
+    
+    // Nếu có lỗi, trả về response lỗi với chi tiết
     if (error) {
       const errors = error.details.map(detail => ({
         field: detail.path.join('.'),
@@ -31,7 +32,7 @@ const validate = (schema, property = 'body') => {
       });
     }
 
-    req[property] = value;
+    req[property] = value; // Cập nhật request với dữ liệu đã được validate và chuyển đổi
     next();
   };
 };

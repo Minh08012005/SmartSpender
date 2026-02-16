@@ -3,6 +3,7 @@
  * Chức năng: Bắt và xử lý lỗi một cách nhất quán trên toàn bộ ứng dụng.
  */
 
+// Các hàm xử lý lỗi cụ thể
 const handleValidationError = (err) => {
   const errors = Object.values(err.errors).map((e) => e.message);
 
@@ -13,6 +14,7 @@ const handleValidationError = (err) => {
   };
 };
 
+// Xử lý lỗi duplicate key (ví dụ: email đã tồn tại)
 const handleDuplicateKeyError = (err) => {
   const field = Object.keys(err.keyValue)[0];
 
@@ -22,16 +24,19 @@ const handleDuplicateKeyError = (err) => {
   };
 };
 
+// Xử lý lỗi JWT
 const handleJWTError = () => ({
   statusCode: 401,
   message: "Invalid token",
 });
 
+// Xử lý lỗi token hết hạn
 const handleTokenExpiredError = () => ({
   statusCode: 401,
   message: "Token expired",
 });
 
+// Xử lý lỗi CastError (ví dụ: ObjectId không hợp lệ)
 const handleCastError = (err) => ({
   statusCode: 400,
   message: `Invalid ${err.path}: ${err.value}`,
@@ -39,6 +44,7 @@ const handleCastError = (err) => ({
 
 /**
  * Log error
+ * Ghi log lỗi chi tiết để phục vụ việc debug và theo dõi sau này.
  */
 const logError = (err, req) => {
   console.error("ERROR:", {
@@ -91,6 +97,7 @@ const errorHandler = (err, req, res, next) => {
     message = result.message;
   }
 
+  // JWT Expired
   if (err.name === "TokenExpiredError") {
     const result = handleTokenExpiredError();
     statusCode = result.statusCode;
@@ -122,6 +129,7 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
+  // CastError (ví dụ: ObjectId không hợp lệ)
   if (err.name === "CastError") {
     const result = handleCastError(err);
     statusCode = result.statusCode;

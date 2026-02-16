@@ -1,4 +1,11 @@
-// k6 script
+/** 
+ * k6 load testing script
+ * Mục tiêu:
+ *   - Thực hiện load testing cho endpoint transactions để đánh giá hiệu suất dưới tải
+ *   Sử dụng k6 để mô phỏng nhiều người dùng truy cập đồng thời
+ *   Kiểm tra thời gian phản hồi và tỷ lệ lỗi khi có 50 user truy cập trong 1 phút
+ *   Cung cấp thông tin về khả năng chịu tải của server và điểm nghẽn tiềm năng
+ */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 

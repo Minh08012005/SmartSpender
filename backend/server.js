@@ -8,6 +8,7 @@ require('dotenv').config(); // Tải biến môi trường từ file .env
 const app = require('./app');
 const connectDB = require('./config/db'); // Hàm kết nối MongoDB
 
+// Cấu hình cổng server
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
@@ -15,6 +16,7 @@ const startServer = async () => {
     // Kết nối đến MongoDB
     await connectDB();
 
+    // Khởi động server sau khi kết nối database thành công
     app.listen(PORT, () => {
     console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
 });
@@ -24,4 +26,5 @@ const startServer = async () => {
   }
 };
 
+// Gọi hàm khởi động server
 startServer();

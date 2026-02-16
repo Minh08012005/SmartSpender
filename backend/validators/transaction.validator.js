@@ -1,3 +1,14 @@
+/**
+ * Validator for transaction-related endpoints.
+ * Mục tiêu:
+ *   - Validate input parameters cho endpoint lấy danh sách giao dịch với nhiều tùy chọn lọc và phân trang.
+ *   - Sử dụng Joi để đảm bảo dữ liệu đầu vào đúng định dạng, hợp lệ và an toàn.
+ *   - Hỗ trợ 2 mode lọc: theo khoảng thời gian (from-to) hoặc theo tháng-năm (month-year).
+ *   - Cho phép lọc theo loại giao dịch (income/expense), danh mục, và tìm kiếm theo mô tả.
+ *   - Cung cấp các thông báo lỗi chi tiết khi validation thất bại.
+ *   - Đảm bảo tính linh hoạt và dễ sử dụng cho client khi tương tác với API.
+ *   - Hỗ trợ phân trang và sắp xếp kết quả trả về.
+ */
 const Joi = require("joi");
 
 const getTransactionsSchema = Joi.object({
@@ -14,7 +25,25 @@ const getTransactionsSchema = Joi.object({
 
   // Filters
   type: Joi.string().valid("income", "expense"),
-  category: Joi.string(), //csv format
+  category: Joi.string().custom((value, helpers) => { // Cho phép gửi nhiều category dưới dạng chuỗi phân tách bằng dấu phẩy
+    const categories = value.split(",").map((c) => c.trim()); // Tách chuỗi thành mảng và loại bỏ khoảng trắng
+    const validCategories = [
+      "food",
+      "travel",
+      "shopping",
+      "salary",
+      "entertainment",
+      "utility",
+      "other",
+    ];
+    // Kiểm tra từng category trong mảng có hợp lệ không
+    for (let cat of categories) {
+      if (!validCategories.includes(cat)) {
+        return helpers.error("any.invalid", { value: cat });
+      }
+    }
+    return value;
+  }, "Category validation"),
   search: Joi.string().max(100).allow(""),
 
   // Pagination & Sorting
@@ -28,10 +57,12 @@ const getTransactionsSchema = Joi.object({
   // Quy tắc: Phải có (from+to) HOẶC (month+year).
   // Không được gửi cả 2 mode cùng lúc
   .oxor("from", "month")
+  // Thông báo lỗi tùy chỉnh cho các trường hợp validation thất bại
   .messages({
     "object.and":
       "Both 'from' and 'to' or both 'month' and 'year' must be provided together.",
     "object.oxor":
       "Please provide either 'from' and 'to' dates or 'month' and 'year', not both.",
+    "any.invalid": "Category '{{#value}}' is not allowed",
   });
 module.exports = { getTransactionsSchema };

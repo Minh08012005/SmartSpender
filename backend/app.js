@@ -1,3 +1,12 @@
+/**
+ * File: app.js
+ * Mục tiêu:
+ *   - Thiết lập ứng dụng Express với các middleware cần thiết (helmet, morgan, rate limiting)
+ *   - Cấu hình Swagger để tạo tài liệu API tự động
+ *   Định tuyến các route cho authentication, transactions, và statistics
+ *   Cung cấp endpoint health check để kiểm tra trạng thái server
+ *   Sử dụng middleware xử lý lỗi toàn cục để đảm bảo phản hồi lỗi nhất quán
+ */
 const express = require('express'); // Framework web cho Node.js
 const helmet = require('helmet'); // Bảo mật HTTP headers
 const morgan = require('morgan'); // Ghi log HTTP requests
@@ -15,7 +24,8 @@ const { registerSchema, loginSchema } = require('./validators/auth.validator');
 // Import routes
 const registerRoute = require('./routes/auth/register.route'); // Routes cho registration
 const loginRoute = require('./routes/auth/login.route'); // Routes cho login
-const transactionRoutes = require("./routes/transaction_routes");
+const transactionRoutes = require("./routes/transaction_routes"); // Routes cho transactions
+const statisticRoutes = require("./routes/statistic_routes"); // Routes cho thống kê
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -63,6 +73,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api/auth', registerRoute);
 app.use('/api/auth', loginRoute);
 app.use("/api/transactions", transactionRoutes);
+app.use("/api/statistics", statisticRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
