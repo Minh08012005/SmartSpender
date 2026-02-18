@@ -17,7 +17,7 @@ const getStatistics = async (userId, filters) => {
     match.date = { $gte: new Date(from), $lte: new Date(to) };
   } else if (month && year) {
     const start = new Date(year, month - 1, 1);
-    const end = new Date(year, month, 1); // đầu tháng sau
+    const end = new Date(year, month, 0, 23, 59, 59);
     match.date = { $gte: start, $lt: end };
   }
 

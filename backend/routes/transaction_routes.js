@@ -86,7 +86,7 @@ const {
  *         name: sortBy
  *         schema:
  *           type: string
- *           enum: [date, amount]
+ *           enum: [date, amount, category, createdAt]
  *           default: date
  *         description: "Trường sắp xếp"
  *       - in: query

@@ -15,7 +15,7 @@ describe("Transaction Validator - GET /api/transactions", () => {
     expect(error).toBeUndefined();
   });
 
-  // Edge Case: Logic mâu thuẫn
+  // Logic mâu thuẫn
   it("should fail if both range mode (from/to) and monthly mode (month/year) are provided", () => {
     const data = {
       from: "2026-01-01",
@@ -25,31 +25,31 @@ describe("Transaction Validator - GET /api/transactions", () => {
     };
     const { error } = getTransactionsSchema.validate(data);
     expect(error).toBeDefined();
-    // Logic: Dùng .oxor('from', 'month') trong Joi để bắt lỗi này
+    //Dùng .oxor('from', 'month') trong Joi để bắt lỗi này
   });
 
-  // Edge Case: Ngày bắt đầu lớn hơn ngày kết thúc
+  // Ngày bắt đầu lớn hơn ngày kết thúc
   it('should fail if "from" date is greater than "to" date', () => {
     const data = { from: "2026-12-31", to: "2026-01-01" };
     const { error } = getTransactionsSchema.validate(data);
     expect(error).toBeDefined();
   });
 
-  // Edge Case: Giá trị không hợp lệ
+  // Giá trị không hợp lệ
   it("should fail if month is 13 or year is in the past too far", () => {
     const data = { month: 13, year: 2026 };
     const { error } = getTransactionsSchema.validate(data);
     expect(error).toBeDefined();
   });
 
-  // Edge Case: Loại giao dịch không hợp lệ
+  // Loại giao dịch không hợp lệ
   it('should fail if type is not "income" or "expense"', () => {
     const data = { type: "invalid_type" };
     const { error } = getTransactionsSchema.validate(data);
     expect(error).toBeDefined();
   });
 
-  // Edge Case: Danh mục chứa giá trị không hợp lệ
+  // Danh mục chứa giá trị không hợp lệ
   it("should fail if category contains invalid value", () => {
     const data = { category: "food,invalid", month: 2, year: 2026 };
     const { error } = getTransactionsSchema.validate(data);
@@ -57,7 +57,7 @@ describe("Transaction Validator - GET /api/transactions", () => {
     expect(error.details[0].message).toMatch(/category.*not allowed/i);
   });
 
-  // Edge Case: Thiếu tham số bắt buộc
+  // Thiếu tham số bắt buộc
   it("should fail if from > to", () => {
     const data = { from: "2026-12-31", to: "2026-01-01" };
     const { error } = getTransactionsSchema.validate(data);
@@ -67,9 +67,29 @@ describe("Transaction Validator - GET /api/transactions", () => {
     );
   });
 
-  // Edge Case: Năm nhỏ hơn 2000
+  // Năm nhỏ hơn 2000
   it("should fail if year < 2000", () => {
     const data = { month: 2, year: 1999 };
+    const { error } = getTransactionsSchema.validate(data);
+    expect(error).toBeDefined();
+  });
+
+  // Cho phép giá trị sắp xếp hợp lệ
+  it("should allow valid sortBy values", () => {
+    const validValues = ["date", "amount", "category", "createdAt"];
+    validValues.forEach((value) => {
+      const { error } = getTransactionsSchema.validate({
+        sortBy: value,
+        month: 2,
+        year: 2026,
+      });
+      expect(error).toBeUndefined();
+    });
+  });
+
+  // Từ chối giá trị sắp xếp không hợp lệ
+  it("should reject invalid sortBy value", () => {
+    const data = { sortBy: "invalid", month: 2, year: 2026 };
     const { error } = getTransactionsSchema.validate(data);
     expect(error).toBeDefined();
   });

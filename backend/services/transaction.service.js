@@ -64,13 +64,28 @@ exports.getFilteredTransactions = async (userId, filters) => {
   const skip = (page - 1) * limit;
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
 
-  const [transactions, totalCount, stats] = await Promise.all([
+  const [transactions, totalCount, statsData] = await Promise.all([
     Transaction.find(query)
       .sort(sortOptions)
       .skip(skip)
       .limit(Number(limit))
       .lean(),
     Transaction.countDocuments(query),
+    Transaction.aggregate([
+      { $match: query },
+      {
+        $group: {
+          _id: null,
+          totalAmount: { $sum: "$amount" },
+          totalIncome: {
+            $sum: { $cond: [{ $eq: ["$type", "income"] }, "$amount", 0] },
+          },
+          totalExpense: {
+            $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0] },
+          },
+        },
+      },
+    ]),
   ]);
 
   return {
@@ -78,5 +93,13 @@ exports.getFilteredTransactions = async (userId, filters) => {
     totalCount,
     page: Number(page),
     limit: Number(limit),
+    stats:
+      statsData.length > 0
+        ? statsData[0]
+        : {
+            totalAmount: 0,
+            totalIncome: 0,
+            totalExpense: 0,
+          },
   };
 };

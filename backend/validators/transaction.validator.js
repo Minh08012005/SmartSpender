@@ -10,6 +10,7 @@
  *   - Hỗ trợ phân trang và sắp xếp kết quả trả về.
  */
 const Joi = require("joi");
+const { VALID_CATEGORIES } = require('./constants');
 
 const getTransactionsSchema = Joi.object({
   // Date Range Mode
@@ -25,20 +26,10 @@ const getTransactionsSchema = Joi.object({
 
   // Filters
   type: Joi.string().valid("income", "expense"),
-  category: Joi.string().custom((value, helpers) => { // Cho phép gửi nhiều category dưới dạng chuỗi phân tách bằng dấu phẩy
-    const categories = value.split(",").map((c) => c.trim()); // Tách chuỗi thành mảng và loại bỏ khoảng trắng
-    const validCategories = [
-      "food",
-      "travel",
-      "shopping",
-      "salary",
-      "entertainment",
-      "utility",
-      "other",
-    ];
-    // Kiểm tra từng category trong mảng có hợp lệ không
+  category: Joi.string().custom((value, helpers) => {
+    const categories = value.split(",").map((c) => c.trim());
     for (let cat of categories) {
-      if (!validCategories.includes(cat)) {
+      if (!VALID_CATEGORIES.includes(cat)) {
         return helpers.error("any.invalid", { value: cat });
       }
     }
@@ -49,7 +40,7 @@ const getTransactionsSchema = Joi.object({
   // Pagination & Sorting
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  sortBy: Joi.string().valid("date", "amount").default("date"),
+  sortBy: Joi.string().valid("date", "amount", "category", "createdAt").default("date"),
   order: Joi.string().valid("asc", "desc").default("desc"),
 })
   .and("from", "to") // Nếu gửi from thì bắt buộc có to

@@ -1,10 +1,11 @@
 /**
  * Transaction Schema
- * Mô tả: Đây là schema định nghĩa cấu trúc của một giao dịch (transaction) trong hệ thống quản lý chi tiêu cá nhân. 
+ * Mô tả: Đây là schema định nghĩa cấu trúc của một giao dịch (transaction) trong hệ thống quản lý chi tiêu cá nhân.
  * Mỗi giao dịch sẽ bao gồm thông tin về người dùng, số tiền, loại giao dịch, danh mục, ngày tháng, ghi chú và tiêu đề.
  */
 
 const mongoose = require("mongoose");
+const { VALID_CATEGORIES } = require("../validators/constants");
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -30,8 +31,7 @@ const transactionSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      trim: true, // Loại bỏ khoảng trắng thừa
-      enum: ["food", "travel", "shopping", "salary", "entertainment", "utility", "other"], // Các loại category phổ biến, có thể mở rộng thêm nếu cần
+      enum: VALID_CATEGORIES, // call trong #validators/constant
     },
 
     date: {
@@ -58,7 +58,7 @@ const transactionSchema = new mongoose.Schema(
 
 // Tạo index để tối ưu hóa truy vấn theo userId và date (phổ biến cho việc lấy giao dịch theo ngày)
 transactionSchema.index({ userId: 1, date: -1 });
-transactionSchema.index({ userId: 1, type: 1, category: 1});
+transactionSchema.index({ userId: 1, type: 1, category: 1 });
 transactionSchema.index({ title: "text", note: "text" });
 
 module.exports = mongoose.model("Transaction", transactionSchema);
