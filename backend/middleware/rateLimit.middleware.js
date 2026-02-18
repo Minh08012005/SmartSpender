@@ -34,8 +34,8 @@ const generalLimiter = rateLimit({
     statusCode: 429,
     message: 'Too many requests, please try again later'
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  standardHeaders: true, // Trả về thông tin rate limit trong headers `RateLimit-*`
+  legacyHeaders: false, // Tắt headers `X-RateLimit-*`
 });
 
 module.exports = {
