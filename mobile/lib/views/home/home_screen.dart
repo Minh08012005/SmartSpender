@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/balance_card.dart';
+import 'states/home_loading.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -60,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBody(TransactionProvider provider) {
     // 1️⃣ Loading
     if (provider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const HomeLoading();
     }
 
     // 2️⃣ Error
