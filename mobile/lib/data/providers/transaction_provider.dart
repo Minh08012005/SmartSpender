@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../models/transaction_model.dart';
+import '../dummy_transactions.dart';
 
 /// Transaction Provider
 ///
@@ -170,6 +171,20 @@ class TransactionProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+  // ============== DUMMY LOAD ==============
+
+Future<void> loadDummyTransactions() async {
+  _setLoading(true);
+  _clearError();
+
+  await Future.delayed(const Duration(seconds: 2)); // giả lập loading
+
+  _transactions = dummyTransactions;
+  //_transactions = []; // 👈 ÉP RỖNG test empty
+  //_setError("Failed to load transactions"); // 👈 ÉP LỖI test error
+  _setLoading(false);
+}
+
 
   // ============== STATE MANAGEMENT ==============
 

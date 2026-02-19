@@ -12,7 +12,7 @@ class HomeEmpty extends StatelessWidget {
           Icon(Icons.receipt_long, size: 70, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-            "No transactions yet",
+            "không có giao dịch nào",
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,

@@ -4,6 +4,8 @@ import '../../data/providers/transaction_provider.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/balance_card.dart';
 import 'states/home_loading.dart';
+import 'states/home_error.dart';
+import 'states/home_empty.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -19,7 +21,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Gọi API khi màn hình mở
     Future.microtask(() {
-      context.read<TransactionProvider>().fetchTransactions();
+      //context.read<TransactionProvider>().fetchTransactions();
+      context.read<TransactionProvider>().loadDummyTransactions(); //dummy_trans
+
     });
   }
 
@@ -66,15 +70,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 2️⃣ Error
     if (provider.hasError) {
-      return Center(
-        child: Text(provider.error, style: const TextStyle(color: Colors.red)),
-      );
-    }
+    return HomeError(
+      message: provider.error,
+      onRetry: () {
+        context.read<TransactionProvider>().loadDummyTransactions();
+        // Nếu dùng API thật thì gọi fetchTransactions()
+      },
+    );
+  }
 
     // 3️⃣ Empty
-    if (provider.transactions.isEmpty) {
-      return const Center(child: Text("No transactions yet"));
-    }
+     if (provider.transactions.isEmpty) {
+    return const HomeEmpty();
+  }
 
     // 4️⃣ Data
     return ListView.builder(

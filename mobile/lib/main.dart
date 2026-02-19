@@ -77,36 +77,36 @@ class _MyAppState extends State<MyApp> {
         theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
 
         // ===== AUTO-LOGIN LOGIC =====
-        home: FutureBuilder<bool>(
-          future: _authCheckFuture,
-          builder: (context, snapshot) {
-            // Đang kiểm tra token
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Scaffold(
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      CircularProgressIndicator(),
-                      SizedBox(height: 16),
-                      Text('Loading...', style: TextStyle(color: Colors.grey)),
-                    ],
-                  ),
-                ),
-              );
-            }
+        // home: FutureBuilder<bool>(
+        //   future: _authCheckFuture,
+        //   builder: (context, snapshot) {
+        //     // Đang kiểm tra token
+        //     if (snapshot.connectionState == ConnectionState.waiting) {
+        //       return Scaffold(
+        //         body: Center(
+        //           child: Column(
+        //             mainAxisAlignment: MainAxisAlignment.center,
+        //             children: const [
+        //               CircularProgressIndicator(),
+        //               SizedBox(height: 16),
+        //               Text('Loading...', style: TextStyle(color: Colors.grey)),
+        //             ],
+        //           ),
+        //         ),
+        //       );
+        //     }
 
-            // Đã có kết quả
-            if (snapshot.hasData && snapshot.data == true) {
-              // Có token → HomeScreen
-              return const HomeScreen();
-            } else {
-              // Không có token → LoginScreen
-              return LoginScreen();
-            }
-          },
-        ),
-        //home: const HomeScreen(),
+        //     // Đã có kết quả
+        //     if (snapshot.hasData && snapshot.data == true) {
+        //       // Có token → HomeScreen
+        //       return const HomeScreen();
+        //     } else {
+        //       // Không có token → LoginScreen
+        //       return LoginScreen();
+        //     }
+        //   },
+        // ),
+        home: const HomeScreen(),
       ),
     );
   }
