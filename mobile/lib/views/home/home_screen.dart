@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/dummy_transactions.dart';
 import 'widgets/transaction_item.dart';
-import '../../models/transaction_model.dart';
+import '../../data/models/transaction_model.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
