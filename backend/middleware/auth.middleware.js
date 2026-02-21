@@ -16,8 +16,9 @@ const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
  */
 const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization; // Lấy Authorization header
 
+    // Kiểm tra nếu header không tồn tại hoặc không bắt đầu bằng
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -32,7 +33,7 @@ const authenticate = async (req, res, next) => {
     const { payload } = await jwtVerify(token, secretKey);
 
     // Đính kèm user ID vào request object
-    req.user = { id: payload.userId };
+    req.user = {_id: payload.userId };
 
     next();
   } catch (error) {
