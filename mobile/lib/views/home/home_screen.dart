@@ -23,7 +23,6 @@ class _HomeScreenState extends State<HomeScreen> {
     Future.microtask(() {
       //context.read<TransactionProvider>().fetchTransactions();
       context.read<TransactionProvider>().loadDummyTransactions(); //dummy_trans
-
     });
   }
 
@@ -70,26 +69,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 2️⃣ Error
     if (provider.hasError) {
-    return HomeError(
-      message: provider.error,
-      onRetry: () {
-        context.read<TransactionProvider>().loadDummyTransactions();
-        // Nếu dùng API thật thì gọi fetchTransactions()
-      },
-    );
-  }
+      return HomeError(
+        message: provider.error,
+        onRetry: () {
+          context.read<TransactionProvider>().loadDummyTransactions();
+          // Nếu dùng API thật thì gọi fetchTransactions()
+        },
+      );
+    }
 
     // 3️⃣ Empty
-     if (provider.transactions.isEmpty) {
-    return const HomeEmpty();
-  }
+    if (provider.transactions.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async {
+          context.read<TransactionProvider>().loadDummyTransactions();
+          // Sau này dùng API:
+          // await context.read<TransactionProvider>().fetchTransactions();
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [SizedBox(height: 100), HomeEmpty()],
+        ),
+      );
+    }
 
     // 4️⃣ Data
-    return ListView.builder(
-      itemCount: provider.transactions.length,
-      itemBuilder: (context, index) {
-        return TransactionItem(transaction: provider.transactions[index]);
+    return RefreshIndicator(
+      onRefresh: () async {
+        context.read<TransactionProvider>().loadDummyTransactions();
+        // Sau này dùng API:
+        // await context.read<TransactionProvider>().fetchTransactions();
       },
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: provider.transactions.length,
+        itemBuilder: (context, index) {
+          return TransactionItem(transaction: provider.transactions[index]);
+        },
+      ),
     );
   }
 }
