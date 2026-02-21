@@ -1,0 +1,201 @@
+openapi: 3.0.0
+info:
+  title: SmartSpender API
+  version: 1.0.0
+  description: API Documentation for SmartSpender Backend
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local server
+
+tags:
+  - name: Transactions
+    description: Transaction CRUD APIs
+
+paths:
+  /transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Create new transaction
+      description: Add a new income or expense transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+            examples:
+              example-1:
+                value:
+                  amount: 1000
+                  category: "Food"
+                  date: "2026-02-21"
+                  note: "Lunch with friends"
+      responses:
+        "201":
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          description: Validation error
+
+    get:
+      tags:
+        - Transactions
+      summary: Get all transactions
+      description: Retrieve transaction list of logged in user
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        "200":
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+
+    put:
+      tags:
+        - Transactions
+      summary: Update transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+            examples:
+              example-1:
+                value:
+                  amount: 1500
+                  category: "Transport"
+                  date: "2026-02-22"
+                  note: "Taxi fare"
+      responses:
+        "200":
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          description: Validation error
+        "404":
+          description: Not found
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: "12345"
+      responses:
+        "200":
+          description: Deleted successfully
+        "404":
+          description: Not found
+
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the transaction
+        amount:
+          type: number
+          description: Amount of the transaction
+        category:
+          type: string
+          description: Category of the transaction
+        date:
+          type: string
+          format: date
+          description: Date of the transaction
+        note:
+          type: string
+          description: Additional notes for the transaction
+
+    TransactionInput:
+      type: object
+      properties:
+        amount:
+          type: number
+          description: Amount of the transaction
+        category:
+          type: string
+          description: Category of the transaction
+        date:
+          type: string
+          format: date
+          description: Date of the transaction
+        note:
+          type: string
+          description: Additional notes for the transaction
+
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the transaction
+        amount:
+          type: number
+          description: Amount of the transaction
+        category:
+          type: string
+          description: Category of the transaction
+        date:
+          type: string
+          format: date
+          description: Date of the transaction
+        note:
+          type: string
+          description: Additional notes for the transaction
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
