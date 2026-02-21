@@ -25,6 +25,13 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/TransactionInput"
+            examples:
+              example-1:
+                value:
+                  amount: 1000
+                  category: "Food"
+                  date: "2026-02-21"
+                  note: "Lunch with friends"
       responses:
         "201":
           description: Transaction created successfully
@@ -61,6 +68,7 @@ paths:
           required: true
           schema:
             type: string
+          example: "12345"
       responses:
         "200":
           description: Transaction detail
@@ -81,12 +89,20 @@ paths:
           required: true
           schema:
             type: string
+          example: "12345"
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/TransactionInput"
+            examples:
+              example-1:
+                value:
+                  amount: 1500
+                  category: "Transport"
+                  date: "2026-02-22"
+                  note: "Taxi fare"
       responses:
         "200":
           description: Updated successfully
@@ -94,6 +110,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          description: Validation error
+        "404":
+          description: Not found
 
     delete:
       tags:
@@ -105,9 +125,12 @@ paths:
           required: true
           schema:
             type: string
+          example: "12345"
       responses:
         "200":
           description: Deleted successfully
+        "404":
+          description: Not found
 
 components:
   schemas:
@@ -167,3 +190,12 @@ components:
         note:
           type: string
           description: Additional notes for the transaction
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
