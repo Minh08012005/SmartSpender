@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../data/dummy_transactions.dart';
-import 'widgets/transaction_item.dart';
 import '../../data/models/transaction_model.dart';
+import '../../screens/add_transaction_screen.dart';
+import 'widgets/transaction_item.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // ===== FORMATTER TIỀN VIỆT =====
     final formatter = NumberFormat('#,###', 'vi_VN');
 
-    // ===== TÍNH TOÁN TIỀN =====
     final totalIncome = dummyTransactions
         .where((t) => t.type == TransactionType.income)
         .fold<double>(0, (sum, t) => sum + t.amount);
@@ -28,7 +27,6 @@ class HomeScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // ================= HEADER + BALANCE =================
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
@@ -42,7 +40,6 @@ class HomeScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ===== HEADER =====
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -77,10 +74,7 @@ class HomeScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 24),
-
-                  // ===== BALANCE CARD =====
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -100,7 +94,7 @@ class HomeScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${formatter.format(totalBalance)} ₫',
+                          '${formatter.format(totalBalance)} VND',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 26,
@@ -114,12 +108,12 @@ class HomeScreen extends StatelessWidget {
                             _BalanceInfo(
                               icon: Icons.arrow_downward,
                               title: 'Income',
-                              amount: '${formatter.format(totalIncome)} ₫',
+                              amount: '${formatter.format(totalIncome)} VND',
                             ),
                             _BalanceInfo(
                               icon: Icons.arrow_upward,
                               title: 'Expenses',
-                              amount: '${formatter.format(totalExpense)} ₫',
+                              amount: '${formatter.format(totalExpense)} VND',
                             ),
                           ],
                         ),
@@ -129,10 +123,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 20),
-
-            // ================= TITLE =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -146,10 +137,7 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 8),
-
-            // ================= LIST =================
             Expanded(
               child: ListView.builder(
                 itemCount: dummyTransactions.length,
@@ -161,11 +149,23 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xff2A7C76),
+        foregroundColor: Colors.white,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AddTransactionScreen(),
+            ),
+          );
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
 }
 
-// ================= BALANCE INFO =================
 class _BalanceInfo extends StatelessWidget {
   final IconData icon;
   final String title;
