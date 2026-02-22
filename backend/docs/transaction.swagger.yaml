@@ -14,6 +14,41 @@ tags:
 
 paths:
   /transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get all transactions
+      description: Retrieve transaction list of logged-in user with metadata and statistics
+      responses:
+        "200":
+          description: Transaction list with metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/TransactionResponse"
+                  meta:
+                    type: object
+                    properties:
+                      statistics:
+                        type: object
+                        properties:
+                          totalIncome:
+                            type: number
+                            description: Total income of the user
+                          totalExpense:
+                            type: number
+                            description: Total expense of the user
+                          balance:
+                            type: number
+                            description: Balance (totalIncome - totalExpense)
+        "401":
+          description: Unauthorized
+
     post:
       tags:
         - Transactions
@@ -29,9 +64,10 @@ paths:
               example-1:
                 value:
                   amount: 1000
-                  category: "Food"
+                  type: "income"
+                  category: "salary"
                   date: "2026-02-21"
-                  note: "Lunch with friends"
+                  note: "Monthly salary"
       responses:
         "201":
           description: Transaction created successfully
@@ -41,21 +77,8 @@ paths:
                 $ref: "#/components/schemas/TransactionResponse"
         "400":
           description: Validation error
-
-    get:
-      tags:
-        - Transactions
-      summary: Get all transactions
-      description: Retrieve transaction list of logged in user
-      responses:
-        "200":
-          description: Transaction list
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Transaction"
+        "401":
+          description: Unauthorized
 
   /transactions/{id}:
     get:
@@ -68,16 +91,18 @@ paths:
           required: true
           schema:
             type: string
-          example: "12345"
+          example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         "200":
           description: Transaction detail
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Transaction"
+                $ref: "#/components/schemas/TransactionResponse"
         "404":
           description: Not found
+        "401":
+          description: Unauthorized
 
     put:
       tags:
@@ -89,7 +114,7 @@ paths:
           required: true
           schema:
             type: string
-          example: "12345"
+          example: "123e4567-e89b-12d3-a456-426614174000"
       requestBody:
         required: true
         content:
@@ -100,12 +125,13 @@ paths:
               example-1:
                 value:
                   amount: 1500
-                  category: "Transport"
+                  type: "expense"
+                  category: "travel"
                   date: "2026-02-22"
                   note: "Taxi fare"
       responses:
         "200":
-          description: Updated successfully
+          description: Transaction updated successfully
           content:
             application/json:
               schema:
@@ -114,6 +140,8 @@ paths:
           description: Validation error
         "404":
           description: Not found
+        "401":
+          description: Unauthorized
 
     delete:
       tags:
@@ -125,77 +153,61 @@ paths:
           required: true
           schema:
             type: string
-          example: "12345"
+          example: "123e4567-e89b-12d3-a456-426614174000"
       responses:
         "200":
-          description: Deleted successfully
+          description: Transaction deleted successfully
         "404":
           description: Not found
+        "401":
+          description: Unauthorized
 
 components:
   schemas:
-    Transaction:
+    TransactionBase:
       type: object
       properties:
-        id:
-          type: string
-          description: Unique identifier for the transaction
         amount:
           type: number
+          minimum: 0
+          maximum: 1000000000
           description: Amount of the transaction
+        type:
+          type: string
+          enum:
+            - income
+            - expense
+          description: Type of the transaction
         category:
           type: string
+          enum:
+            - food
+            - travel
+            - shopping
+            - salary
+            - entertainment
+            - utility
+            - other
           description: Category of the transaction
         date:
           type: string
           format: date
-          description: Date of the transaction
+          description: Date of the transaction (YYYY-MM-DD)
         note:
           type: string
+          maxLength: 200
           description: Additional notes for the transaction
 
     TransactionInput:
-      type: object
-      properties:
-        amount:
-          type: number
-          description: Amount of the transaction
-        category:
-          type: string
-          description: Category of the transaction
-        date:
-          type: string
-          format: date
-          description: Date of the transaction
-        note:
-          type: string
-          description: Additional notes for the transaction
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
 
     TransactionResponse:
-      type: object
-      properties:
-        id:
-          type: string
-          description: Unique identifier for the transaction
-        amount:
-          type: number
-          description: Amount of the transaction
-        category:
-          type: string
-          description: Category of the transaction
-        date:
-          type: string
-          format: date
-          description: Date of the transaction
-        note:
-          type: string
-          description: Additional notes for the transaction
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
-security:
-  - bearerAuth: []
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: Unique identifier for the transaction
