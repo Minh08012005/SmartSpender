@@ -4,7 +4,7 @@ final List<TransactionModel> dummyTransactions = [
   TransactionModel(
     id: 't1',
     amount: 120000,
-    category: 'Salary',
+    category: 'salary',
     date: DateTime(2026, 2, 2),
     note: 'Monthly salary',
     type: TransactionType.income,
@@ -12,7 +12,7 @@ final List<TransactionModel> dummyTransactions = [
   TransactionModel(
     id: 't2',
     amount: 45000,
-    category: 'Food',
+    category: 'food',
     date: DateTime(2026, 2, 1),
     note: 'Lunch',
     type: TransactionType.expense,
@@ -20,7 +20,7 @@ final List<TransactionModel> dummyTransactions = [
   TransactionModel(
     id: 't3',
     amount: 200000,
-    category: 'Freelance',
+    category: 'bonus',
     date: DateTime(2026, 1, 30),
     note: 'Side project',
     type: TransactionType.income,

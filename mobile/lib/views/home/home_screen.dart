@@ -5,7 +5,7 @@ import '../../data/models/transaction_model.dart';
 import '../../screens/add_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
@@ -16,11 +16,24 @@ class HomeScreen extends StatelessWidget {
         .where((t) => t.type == TransactionType.income)
         .fold<double>(0, (sum, t) => sum + t.amount);
 
-    final totalExpense = dummyTransactions
-        .where((t) => t.type == TransactionType.expense)
-        .fold<double>(0, (sum, t) => sum + t.amount);
+    // TODO: Switch to fetchTransactions() when Backend Task #33 CRUD is completed
+    Future.microtask(_loadTransactions);
+  }
 
-    final totalBalance = totalIncome - totalExpense;
+  /// Load transactions (used for initial load and retry)
+  void _loadTransactions() {
+    context.read<TransactionProvider>().loadDummyTransactions();
+  }
+
+  /// Refresh transactions (used for pull-to-refresh)
+  Future<void> _refreshTransactions() async {
+    // TODO: Replace with fetchTransactions() when API is ready
+    context.read<TransactionProvider>().loadDummyTransactions();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TransactionProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),
@@ -128,7 +141,7 @@ class HomeScreen extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'Transactions History',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -164,47 +177,38 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-}
 
 class _BalanceInfo extends StatelessWidget {
   final IconData icon;
   final String title;
   final String amount;
 
-  const _BalanceInfo({
-    required this.icon,
-    required this.title,
-    required this.amount,
-  });
+    // 2️⃣ Error
+    if (provider.hasError) {
+      return HomeError(message: provider.error, onRetry: _loadTransactions);
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.25),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 18),
+    // 3️⃣ Empty
+    if (provider.transactions.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _refreshTransactions,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: const [SizedBox(height: 100), HomeEmpty()],
         ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(title, style: const TextStyle(color: Colors.white70)),
-            const SizedBox(height: 2),
-            Text(
-              amount,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-      ],
+      );
+    }
+
+    // 4️⃣ Data
+    return RefreshIndicator(
+      onRefresh: _refreshTransactions,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: provider.transactions.length,
+        itemBuilder: (context, index) {
+          return TransactionItem(transaction: provider.transactions[index]);
+        },
+      ),
     );
   }
 }
