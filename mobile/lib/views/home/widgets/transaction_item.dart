@@ -28,7 +28,8 @@ class TransactionItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.category,
+                  transaction.category[0].toUpperCase() +
+                      transaction.category.substring(1),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
