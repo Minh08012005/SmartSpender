@@ -20,9 +20,18 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     // TODO: Switch to fetchTransactions() when Backend Task #33 CRUD is completed
-    Future.microtask(() {
-      context.read<TransactionProvider>().loadDummyTransactions();
-    });
+    Future.microtask(_loadTransactions);
+  }
+
+  /// Load transactions (used for initial load and retry)
+  void _loadTransactions() {
+    context.read<TransactionProvider>().loadDummyTransactions();
+  }
+
+  /// Refresh transactions (used for pull-to-refresh)
+  Future<void> _refreshTransactions() async {
+    // TODO: Replace with fetchTransactions() when API is ready
+    context.read<TransactionProvider>().loadDummyTransactions();
   }
 
   @override
@@ -68,23 +77,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 2️⃣ Error
     if (provider.hasError) {
-      return HomeError(
-        message: provider.error,
-        onRetry: () {
-          context.read<TransactionProvider>().loadDummyTransactions();
-          // Nếu dùng API thật thì gọi fetchTransactions()
-        },
-      );
+      return HomeError(message: provider.error, onRetry: _loadTransactions);
     }
 
     // 3️⃣ Empty
     if (provider.transactions.isEmpty) {
       return RefreshIndicator(
-        onRefresh: () async {
-          context.read<TransactionProvider>().loadDummyTransactions();
-          // Sau này dùng API:
-          // await context.read<TransactionProvider>().fetchTransactions();
-        },
+        onRefresh: _refreshTransactions,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: const [SizedBox(height: 100), HomeEmpty()],
@@ -94,11 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 4️⃣ Data
     return RefreshIndicator(
-      onRefresh: () async {
-        context.read<TransactionProvider>().loadDummyTransactions();
-        // Sau này dùng API:
-        // await context.read<TransactionProvider>().fetchTransactions();
-      },
+      onRefresh: _refreshTransactions,
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: provider.transactions.length,
