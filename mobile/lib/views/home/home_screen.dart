@@ -19,10 +19,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
 
-    // Gọi API khi màn hình mở
+    // TODO: Switch to fetchTransactions() when Backend Task #33 CRUD is completed
     Future.microtask(() {
-      //context.read<TransactionProvider>().fetchTransactions();
-      context.read<TransactionProvider>().loadDummyTransactions(); //dummy_trans
+      context.read<TransactionProvider>().loadDummyTransactions();
     });
   }
 
