@@ -73,18 +73,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'So tien la bat buoc';
+      return 'Số tiền là bắt buộc';
     }
 
     final amount = _parseAmount(value);
     if (amount == null) {
-      return 'So tien khong hop le';
+      return 'Số tiền không hợp lệ';
     }
     if (amount <= 0) {
-      return 'So tien phai lon hon 0';
+      return 'Số tiền phải lớn hơn 0';
     }
     if (amount > TransactionModel.maxAmount) {
-      return 'So tien khong duoc vuot qua 1 ty';
+      return 'Số tiền không được vượt quá 1 tỷ';
     }
 
     return null;
@@ -93,7 +93,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _validateNote(String? value) {
     if (value == null || value.isEmpty) return null;
     if (value.length > TransactionModel.maxNoteLength) {
-      return 'Ghi chu toi da 200 ky tu';
+      return 'Ghi chú tối đa 200 ký tự';
     }
 
     return null;
@@ -101,10 +101,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String? _validateCategory(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Danh muc la bat buoc';
+      return 'Danh mục là bắt buộc';
     }
     if (!TransactionModel.isCategoryValid(_selectedType, value)) {
-      return 'Danh muc khong hop le voi loai giao dich';
+      return 'Danh mục không hợp lệ với loại giao dịch';
     }
 
     return null;
@@ -132,7 +132,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Them giao dich thanh cong')),
+        const SnackBar(content: Text('Thêm giao dịch thành công')),
       );
       Navigator.pop(context, true);
       return;
@@ -142,7 +142,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       SnackBar(
         content: Text(
           provider.error.isEmpty
-              ? 'Khong the them giao dich'
+              ? 'Không thể thêm giao dịch'
               : provider.error,
         ),
       ),
@@ -152,114 +152,147 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     final dateText = DateFormat('dd/MM/yyyy').format(_selectedDate ?? DateTime.now());
+    final baseTheme = Theme.of(context);
+    final teal = Colors.teal;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Them giao dich'),
+    return Theme(
+      data: baseTheme.copyWith(
+        colorScheme: baseTheme.colorScheme.copyWith(
+          primary: teal,
+          secondary: teal,
+        ),
+        inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
+          labelStyle: TextStyle(color: teal),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: teal.withOpacity(0.5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: teal, width: 2),
+          ),
+        ),
       ),
-      body: Consumer<TransactionProvider>(
-        builder: (context, provider, _) {
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _amountController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                    ],
-                    decoration: const InputDecoration(
-                      labelText: 'So tien',
-                      hintText: 'Nhap so tien',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: _validateAmount,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<TransactionType>(
-                    value: _selectedType,
-                    decoration: const InputDecoration(
-                      labelText: 'Loai giao dich',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(
-                        value: TransactionType.income,
-                        child: Text('Income'),
-                      ),
-                      DropdownMenuItem(
-                        value: TransactionType.expense,
-                        child: Text('Expense'),
-                      ),
-                    ],
-                    onChanged: _onTypeChanged,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Danh muc',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: _categoryOptions
-                        .map((category) => DropdownMenuItem<String>(
-                              value: category,
-                              child: Text(category),
-                            ))
-                        .toList(),
-                    onChanged: (value) {
-                      if (value == null) return;
-                      setState(() {
-                        _selectedCategory = value;
-                      });
-                    },
-                    validator: _validateCategory,
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: _pickDate,
-                    child: InputDecorator(
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: teal,
+          foregroundColor: Colors.white,
+          title: const Text('Add Transaction'),
+        ),
+        body: Consumer<TransactionProvider>(
+          builder: (context, provider, _) {
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TextFormField(
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                      ],
                       decoration: const InputDecoration(
-                        labelText: 'Ngay giao dich',
+                        labelText: 'Amount',
+                        hintText: 'Nhập số tiền',
                         border: OutlineInputBorder(),
                       ),
-                      child: Text(dateText),
+                      validator: _validateAmount,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _noteController,
-                    maxLength: TransactionModel.maxNoteLength,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: 'Ghi chu (khong bat buoc)',
-                      border: OutlineInputBorder(),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<TransactionType>(
+                      value: _selectedType,
+                      decoration: const InputDecoration(
+                        labelText: 'Tranction Type',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: TransactionType.income,
+                          child: Text('Income'),
+                        ),
+                        DropdownMenuItem(
+                          value: TransactionType.expense,
+                          child: Text('Expense'),
+                        ),
+                      ],
+                      onChanged: _onTypeChanged,
                     ),
-                    validator: _validateNote,
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: provider.isLoading ? null : _submit,
-                      child: provider.isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text('Luu giao dich'),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Category',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _categoryOptions
+                          .map((category) => DropdownMenuItem<String>(
+                                value: category,
+                                child: Text(
+                                  TransactionModel.formatCategoryForUi(category),
+                                ),
+                              ))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _selectedCategory = value;
+                        });
+                      },
+                      validator: _validateCategory,
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: _pickDate,
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Date',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(
+                          dateText,
+                          style: TextStyle(color: teal),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _noteController,
+                      maxLength: TransactionModel.maxNoteLength,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Note',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: _validateNote,
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: teal,
+                          foregroundColor: Colors.white,
+                        ),
+                        onPressed: provider.isLoading ? null : _submit,
+                        child: provider.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Save Transaction'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

@@ -8,22 +8,16 @@ class TransactionModel {
 
   static const Map<TransactionType, List<String>> categoriesByType = {
     TransactionType.income: [
-      'Salary',
-      'Freelance',
-      'Bonus',
-      'Gift',
-      'Investment',
-      'Other Income',
+      'salary',
+      'other income',
     ],
     TransactionType.expense: [
-      'Food',
-      'Transport',
-      'Shopping',
-      'Bills',
-      'Entertainment',
-      'Health',
-      'Education',
-      'Other Expense',
+      'food',
+      'travel',
+      'shopping',
+      'entertainment',
+      'utility',
+      'other expense',
     ],
   };
 
@@ -37,15 +31,16 @@ class TransactionModel {
   TransactionModel({
     required this.id,
     required this.amount,
-    required this.category,
+    required String category,
     required this.date,
     required this.note,
     required this.type,
-  })  : assert(amount > 0, 'Amount must be > 0'),
+  })  : category = _normalizeCategory(category, type),
+        assert(amount > 0, 'Amount must be > 0'),
         assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
         assert(note.length <= maxNoteLength, 'Note too long'),
         assert(
-          isCategoryValid(type, category),
+          isCategoryValid(type, _normalizeCategory(category, type)),
           'Category is not valid for transaction type',
         );
 
@@ -66,7 +61,7 @@ class TransactionModel {
     return {
       'id': id,
       'amount': amount,
-      'category': category,
+      'category': _normalizeCategory(category, type),
       'date': date.toIso8601String(),
       'note': note,
       'type': type.name,
@@ -104,17 +99,32 @@ class TransactionModel {
   }
 
   static bool isCategoryValid(TransactionType type, String category) {
-    return categoriesByType[type]?.contains(category) ?? false;
+    final normalized = _normalizeRawCategory(category);
+    return categoriesByType[type]?.contains(normalized) ?? false;
   }
 
   static String defaultCategoryFor(TransactionType type) {
     return categoriesByType[type]!.first;
   }
 
+  static String _normalizeRawCategory(dynamic value) {
+    return value?.toString().trim().toLowerCase() ?? '';
+  }
+
   static String _normalizeCategory(dynamic value, TransactionType type) {
-    final parsed = value?.toString() ?? '';
+    final parsed = _normalizeRawCategory(value);
     if (isCategoryValid(type, parsed)) return parsed;
     return defaultCategoryFor(type);
+  }
+
+  static String formatCategoryForUi(String category) {
+    final normalized = _normalizeRawCategory(category);
+    if (normalized.isEmpty) return '';
+    return normalized[0].toUpperCase() + normalized.substring(1);
+  }
+
+  String get categoryForUi {
+    return formatCategoryForUi(category);
   }
 
   String get formattedDate {
