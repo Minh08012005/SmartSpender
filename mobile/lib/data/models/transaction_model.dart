@@ -2,11 +2,25 @@ import 'package:intl/intl.dart';
 
 enum TransactionType { income, expense }
 
-/// Transaction Model
-///
-/// Đại diện cho một giao dịch thu/chi
-/// Hỗ trợ parse từ JSON API và format hiển thị
 class TransactionModel {
+  static const double maxAmount = 1000000000;
+  static const int maxNoteLength = 200;
+
+  static const Map<TransactionType, List<String>> categoriesByType = {
+    TransactionType.income: [
+      'salary',
+      'other income',
+    ],
+    TransactionType.expense: [
+      'food',
+      'travel',
+      'shopping',
+      'entertainment',
+      'utility',
+      'other expense',
+    ],
+  };
+
   final String id;
   final double amount;
   final String category;
@@ -17,50 +31,51 @@ class TransactionModel {
   TransactionModel({
     required this.id,
     required this.amount,
-    required this.category,
+    required String category,
     required this.date,
     required this.note,
     required this.type,
-  }) : assert(amount >= 0, 'Amount must be >= 0');
+  })  : category = _normalizeCategory(category, type),
+        assert(amount > 0, 'Amount must be > 0'),
+        assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
+        assert(note.length <= maxNoteLength, 'Note too long'),
+        assert(
+          isCategoryValid(type, _normalizeCategory(category, type)),
+          'Category is not valid for transaction type',
+        );
 
-  // ============== JSON PARSING ==============
-
-  /// Parse từ JSON API (với null safety)
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    final parsedType = _parseType(json['type']);
+
     return TransactionModel(
       id: json['_id'] ?? json['id'] ?? '',
       amount: _parseAmount(json['amount']),
-      category: json['category'] ?? 'Uncategorized',
+      category: _normalizeCategory(json['category'], parsedType),
       date: _parseDate(json['date']),
-      note: json['note'] ?? '',
-      type: _parseType(json['type']),
+      note: _parseNote(json['note']),
+      type: parsedType,
     );
   }
 
-  /// Convert sang JSON để gửi API
   Map<String, dynamic> toJson() {
     return {
       'id': id,
       'amount': amount,
-      'category': category,
+      'category': _normalizeCategory(category, type),
       'date': date.toIso8601String(),
       'note': note,
       'type': type.name,
     };
   }
 
-  // ============== HELPER METHODS ==============
-
-  /// Parse amount với null safety
   static double _parseAmount(dynamic value) {
-    if (value == null) return 0.0;
+    if (value == null) return 1.0;
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
+    if (value is String) return double.tryParse(value) ?? 1.0;
+    return 1.0;
   }
 
-  /// Parse date với null safety
   static DateTime _parseDate(dynamic value) {
     if (value == null) return DateTime.now();
     if (value is DateTime) return value;
@@ -68,7 +83,6 @@ class TransactionModel {
     return DateTime.now();
   }
 
-  /// Parse type với null safety
   static TransactionType _parseType(dynamic value) {
     if (value == null) return TransactionType.expense;
     final typeStr = value.toString().toLowerCase();
@@ -77,20 +91,51 @@ class TransactionModel {
         : TransactionType.expense;
   }
 
-  // ============== DISPLAY FORMATTING ==============
+  static String _parseNote(dynamic value) {
+    if (value == null) return '';
+    final parsed = value.toString();
+    if (parsed.length <= maxNoteLength) return parsed;
+    return parsed.substring(0, maxNoteLength);
+  }
 
-  /// Format date để hiển thị (dd MMM yyyy)
+  static bool isCategoryValid(TransactionType type, String category) {
+    final normalized = _normalizeRawCategory(category);
+    return categoriesByType[type]?.contains(normalized) ?? false;
+  }
+
+  static String defaultCategoryFor(TransactionType type) {
+    return categoriesByType[type]!.first;
+  }
+
+  static String _normalizeRawCategory(dynamic value) {
+    return value?.toString().trim().toLowerCase() ?? '';
+  }
+
+  static String _normalizeCategory(dynamic value, TransactionType type) {
+    final parsed = _normalizeRawCategory(value);
+    if (isCategoryValid(type, parsed)) return parsed;
+    return defaultCategoryFor(type);
+  }
+
+  static String formatCategoryForUi(String category) {
+    final normalized = _normalizeRawCategory(category);
+    if (normalized.isEmpty) return '';
+    return normalized[0].toUpperCase() + normalized.substring(1);
+  }
+
+  String get categoryForUi {
+    return formatCategoryForUi(category);
+  }
+
   String get formattedDate {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  /// Format amount với dấu phẩy (123,456.00 ₫)
   String get formattedAmount {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} ₫';
+    return '${formatter.format(amount)} VND';
   }
 
-  /// Copy với một số trường thay đổi
   TransactionModel copyWith({
     String? id,
     double? amount,

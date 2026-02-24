@@ -58,10 +58,10 @@ class AppConfig {
 
   /// Your machine's local IP (for physical devices on same WiFi)
   /// Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find it
-  static const String localNetworkIP = '172.20.18.151';
+  static const String localNetworkIP = '192.168.1.11';
   
   /// Set to true when testing on PHYSICAL devices (not emulator)
-  static const bool usePhysicalDevice = false;
+  static const bool usePhysicalDevice = true ;
 
   /// Ngrok URL - paste here for remote testing
   /// Example: 'https://abc123.ngrok.io'

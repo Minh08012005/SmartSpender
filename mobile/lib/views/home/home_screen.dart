@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../screens/add_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/balance_card.dart';
 import 'states/home_loading.dart';
@@ -65,6 +66,17 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(child: _buildBody(provider)),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: const Color(0xff2A7C76),
+        foregroundColor: Colors.white,
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
+          );
+        },
+        child: const Icon(Icons.add),
       ),
     );
   }

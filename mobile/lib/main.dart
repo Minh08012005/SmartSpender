@@ -74,7 +74,10 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'SmartSpender',
-        theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.teal,
+        ),
 
         // ===== AUTO-LOGIN LOGIC =====
         // home: FutureBuilder<bool>(
