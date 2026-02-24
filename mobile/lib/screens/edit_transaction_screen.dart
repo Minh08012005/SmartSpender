@@ -7,28 +7,42 @@ import '../data/models/transaction_model.dart';
 import '../data/providers/transaction_provider.dart';
 import '../widgets/category_dropdown.dart';
 
-class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+class EditTransactionScreen extends StatefulWidget {
+  const EditTransactionScreen({
+    super.key,
+    required this.transaction,
+  });
+
+  final TransactionModel transaction;
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<EditTransactionScreen> createState() => _EditTransactionScreenState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
+class _EditTransactionScreenState extends State<EditTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
   bool _showValidationErrors = false;
 
-  TransactionType _selectedType = TransactionType.expense;
+  late TransactionType _selectedType;
   late String _selectedCategory;
   DateTime? _selectedDate;
 
   @override
   void initState() {
     super.initState();
-    _selectedCategory = TransactionModel.defaultCategoryFor(_selectedType);
-    _selectedDate = DateTime.now();
+    final transaction = widget.transaction;
+    _selectedType = transaction.type;
+    _selectedCategory = TransactionModel.isCategoryValid(
+      transaction.type,
+      transaction.category,
+    )
+        ? transaction.category
+        : TransactionModel.defaultCategoryFor(transaction.type);
+    _selectedDate = transaction.date;
+    _amountController.text = transaction.amount.toStringAsFixed(0);
+    _noteController.text = transaction.note;
   }
 
   @override
@@ -75,7 +89,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Số tiền là bắt buộc';
+      return 'Số tiền là bắt buộc';
     }
 
     final amount = _parseAmount(value);
@@ -114,8 +128,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final amount = _parseAmount(_amountController.text.trim());
     if (amount == null) return;
 
-    final transaction = TransactionModel(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
+    final transaction = widget.transaction.copyWith(
       amount: amount,
       type: _selectedType,
       category: _selectedCategory,
@@ -124,13 +137,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
 
     final provider = context.read<TransactionProvider>();
-    final success = await provider.addTransaction(transaction);
+    final success = await provider.updateTransaction(transaction);
 
     if (!mounted) return;
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thêm giao dịch thành công')),
+        const SnackBar(content: Text('Cập nhật giao dịch thành công')),
       );
       Navigator.pop(context, true);
       return;
@@ -140,7 +153,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       SnackBar(
         content: Text(
           provider.error.isEmpty
-              ? 'Không thể thêm giao dịch'
+              ? 'Không thể cập nhật giao dịch'
               : provider.error,
         ),
       ),
@@ -149,7 +162,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = DateFormat('dd/MM/yyyy').format(_selectedDate ?? DateTime.now());
+    final dateText =
+        DateFormat('dd/MM/yyyy').format(_selectedDate ?? DateTime.now());
     final baseTheme = Theme.of(context);
     final teal = Colors.teal;
 
@@ -173,7 +187,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         appBar: AppBar(
           backgroundColor: teal,
           foregroundColor: Colors.white,
-          title: const Text('Add Transaction'),
+          title: const Text('Edit Transaction'),
         ),
         body: Consumer<TransactionProvider>(
           builder: (context, provider, _) {
@@ -191,13 +205,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   children: [
                     TextFormField(
                       controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                       ],
                       decoration: const InputDecoration(
                         labelText: 'Amount',
-                        hintText: 'Nhập số tiền',
                         border: OutlineInputBorder(),
                       ),
                       validator: _validateAmount,
@@ -206,7 +220,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     DropdownButtonFormField<TransactionType>(
                       value: _selectedType,
                       decoration: const InputDecoration(
-                        labelText: 'Tranction Type',
+                        labelText: 'Transaction Type',
                         border: OutlineInputBorder(),
                       ),
                       items: const [
@@ -275,7 +289,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Save Transaction'),
+                            : const Text('Update Transaction'),
                       ),
                     ),
                   ],

@@ -111,14 +111,17 @@ class TransactionProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      final payload = Map<String, dynamic>.from(transaction.toJson())
+        ..remove('id');
       final response = await _apiService.post(
         ApiConstants.transactions,
-        data: transaction.toJson(),
+        data: payload,
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         // Thêm vào list local
-        _transactions.insert(0, transaction);
+        final created = _extractTransactionFromResponse(response.data);
+        _transactions.insert(0, created ?? transaction);
         notifyListeners();
 
         debugPrint('✅ Transaction added successfully');
@@ -171,6 +174,59 @@ class TransactionProvider extends ChangeNotifier {
       _setLoading(false);
     }
   }
+  /// Update transaction
+  Future<bool> updateTransaction(TransactionModel transaction) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final response = await _apiService.put(
+        ApiConstants.transactionById(transaction.id),
+        data: transaction.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        final updated =
+            _extractTransactionFromResponse(response.data) ?? transaction;
+        final index = _transactions.indexWhere((t) => t.id == transaction.id);
+        if (index >= 0) {
+          _transactions[index] = updated;
+        } else {
+          _transactions.insert(0, updated);
+        }
+        notifyListeners();
+
+        debugPrint('Transaction updated successfully');
+        return true;
+      }
+
+      throw Exception('Failed to update transaction');
+    } on DioException catch (e) {
+      _setError(e.error?.toString() ?? 'Khong the cap nhat giao dich');
+      debugPrint('Update transaction failed: ${e.message}');
+      return false;
+    } catch (e) {
+      _setError('Co loi xay ra: $e');
+      debugPrint('Unexpected error: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  TransactionModel? _extractTransactionFromResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final payload = data['data'];
+      if (payload is Map<String, dynamic>) {
+        return TransactionModel.fromJson(payload);
+      }
+      if (data.containsKey('_id') || data.containsKey('amount')) {
+        return TransactionModel.fromJson(data);
+      }
+    }
+    return null;
+  }
+
   // ============== DUMMY LOAD ==============
 
 Future<void> loadDummyTransactions() async {

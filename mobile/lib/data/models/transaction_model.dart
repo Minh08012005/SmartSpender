@@ -9,7 +9,7 @@ class TransactionModel {
   static const Map<TransactionType, List<String>> categoriesByType = {
     TransactionType.income: [
       'salary',
-      'other income',
+      'other',
     ],
     TransactionType.expense: [
       'food',
@@ -17,7 +17,7 @@ class TransactionModel {
       'shopping',
       'entertainment',
       'utility',
-      'other expense',
+      'other',
     ],
   };
 
@@ -160,3 +160,4 @@ class TransactionModel {
         'date: $formattedDate, type: ${type.name})';
   }
 }
+
