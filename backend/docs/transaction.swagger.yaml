@@ -24,6 +24,100 @@ components:
       bearerFormat: JWT
       description: JWT token from login/register endpoint
 
+  schemas:
+    TransactionBase:
+      type: object
+      required:
+        - title
+        - amount
+        - type
+        - category
+        - date
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Transaction title (e.g., "Lunch", "Monthly salary")
+        amount:
+          type: number
+          minimum: 0
+          maximum: 1000000000
+          description: Amount of the transaction (in local currency)
+        type:
+          type: string
+          enum:
+            - income
+            - expense
+          description: Type of the transaction
+        category:
+          type: string
+          enum:
+            - food
+            - travel
+            - shopping
+            - salary
+            - entertainment
+            - utility
+            - other
+          description: Category of the transaction (must be lowercase)
+        date:
+          type: string
+          format: date
+          description: Date of the transaction (YYYY-MM-DD)
+        note:
+          type: string
+          maxLength: 200
+          description: Additional notes for the transaction (optional)
+
+    TransactionInput:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+
+    TransactionResponse:
+      allOf:
+        - $ref: "#/components/schemas/TransactionBase"
+        - type: object
+          properties:
+            _id:
+              type: string
+              description: Unique identifier for the transaction (MongoDB ObjectId)
+            userId:
+              type: string
+              description: User ID who owns this transaction
+            createdAt:
+              type: string
+              format: date-time
+              description: Timestamp when transaction was created
+            updatedAt:
+              type: string
+              format: date-time
+              description: Timestamp when transaction was last updated
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "amount"
+              message:
+                type: string
+                example: "Amount is required"
+
 paths:
   /transactions:
     get:
@@ -156,62 +250,11 @@ paths:
                             type: number
                             example: 500000
         "400":
-          description: Validation error (missing required params or invalid format)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 400
-                  message:
-                    type: string
-                    example: "Validation failed"
-                  errors:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        field:
-                          type: string
-                        message:
-                          type: string
+          $ref: "#/components/schemas/ErrorResponse"
         "401":
-          description: Unauthorized (missing or invalid token)
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 401
-                  message:
-                    type: string
-                    example: "Invalid token or token expired"
+          $ref: "#/components/schemas/ErrorResponse"
         "500":
-          description: Server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 500
-                  message:
-                    type: string
-                    example: "Internal Server Error"
+          $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -263,28 +306,11 @@ paths:
                   data:
                     $ref: "#/components/schemas/TransactionResponse"
         "400":
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  statusCode:
-                    type: integer
-                    example: 400
-                  message:
-                    type: string
-                  errors:
-                    type: array
-                    items:
-                      type: object
+          $ref: "#/components/schemas/ErrorResponse"
         "401":
-          description: Unauthorized
+          $ref: "#/components/schemas/ErrorResponse"
         "500":
-          description: Server error
+          $ref: "#/components/schemas/ErrorResponse"
 
   /transactions/{id}:
     get:
@@ -322,13 +348,13 @@ paths:
                   data:
                     $ref: "#/components/schemas/TransactionResponse"
         "401":
-          description: Unauthorized
+          $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Forbidden (transaction belongs to another user)
+          $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: Transaction not found
+          $ref: "#/components/schemas/ErrorResponse"
         "500":
-          description: Server error
+          $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
@@ -381,15 +407,15 @@ paths:
                   data:
                     $ref: "#/components/schemas/TransactionResponse"
         "400":
-          description: Validation error
+          $ref: "#/components/schemas/ErrorResponse"
         "401":
-          description: Unauthorized
+          $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Forbidden (transaction belongs to another user)
+          $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: Transaction not found
+          $ref: "#/components/schemas/ErrorResponse"
         "500":
-          description: Server error
+          $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
@@ -425,89 +451,10 @@ paths:
                     type: string
                     example: "Transaction deleted successfully"
         "401":
-          description: Unauthorized
+          $ref: "#/components/schemas/ErrorResponse"
         "403":
-          description: Forbidden (transaction belongs to another user)
+          $ref: "#/components/schemas/ErrorResponse"
         "404":
-          description: Transaction not found
+          $ref: "#/components/schemas/ErrorResponse"
         "500":
-          description: Server error
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT token from login/register endpoint
-
-  schemas:
-    TransactionBase:
-      type: object
-      required:
-        - title
-        - amount
-        - type
-        - category
-        - date
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Transaction title (e.g., "Lunch", "Monthly salary")
-        amount:
-          type: number
-          minimum: 0
-          maximum: 1000000000
-          description: Amount of the transaction (in local currency)
-        type:
-          type: string
-          enum:
-            - income
-            - expense
-          description: Type of the transaction
-        category:
-          type: string
-          enum:
-            - food
-            - travel
-            - shopping
-            - salary
-            - entertainment
-            - utility
-            - other
-          description: Category of the transaction (must be lowercase)
-        date:
-          type: string
-          format: date
-          description: Date of the transaction (YYYY-MM-DD)
-        note:
-          type: string
-          maxLength: 200
-          description: Additional notes for the transaction (optional)
-
-    TransactionInput:
-      allOf:
-        - $ref: "#/components/schemas/TransactionBase"
-
-    TransactionResponse:
-      allOf:
-        - $ref: "#/components/schemas/TransactionBase"
-        - type: object
-          properties:
-            _id:
-              type: string
-              description: Unique identifier for the transaction (MongoDB ObjectId)
-            userId:
-              type: string
-              description: User ID who owns this transaction
-            createdAt:
-              type: string
-              format: date-time
-              description: Timestamp when transaction was created
-            updatedAt:
-              type: string
-              format: date-time
-              description: Timestamp when transaction was last updated
-# 
+          $ref: "#/components/schemas/ErrorResponse"
