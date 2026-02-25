@@ -43,17 +43,34 @@ const getTransactionsSchema = Joi.object({
   sortBy: Joi.string().valid("date", "amount", "category", "createdAt").default("date"),
   order: Joi.string().valid("asc", "desc").default("desc"),
 })
-  .and("from", "to") // Nếu gửi from thì bắt buộc có to
-  .and("month", "year") // Nếu gửi month thì bắt buộc có year
-  // Quy tắc: Phải có (from+to) HOẶC (month+year).
-  // Không được gửi cả 2 mode cùng lúc
-  .oxor("from", "month")
-  // Thông báo lỗi tùy chỉnh cho các trường hợp validation thất bại
-  .messages({
-    "object.and":
-      "Both 'from' and 'to' or both 'month' and 'year' must be provided together.",
-    "object.oxor":
-      "Please provide either 'from' and 'to' dates or 'month' and 'year', not both.",
-    "any.invalid": "Category '{{#value}}' is not allowed",
-  });
-module.exports = { getTransactionsSchema };
+
+/**
+ * Validate body cho API tạo giao dịch
+ */
+const createTransactionSchema = Joi.object({
+  title: Joi.string().trim().min(2).max(100).required(),
+  amount: Joi.number().positive().required(),
+  type: Joi.string().valid("income", "expense").required(),
+  category: Joi.string().valid(...VALID_CATEGORIES).required(),
+  date: Joi.date().optional(),
+  note: Joi.string().allow("").optional(),
+});
+
+/**
+ * Validate body cho API cập nhật giao dịch
+ */
+const updateTransactionSchema = Joi.object({
+  title: Joi.string().trim().min(2).max(100).optional(),
+  amount: Joi.number().positive().optional(),
+  type: Joi.string().valid("income", "expense").optional(),
+  category: Joi.string().valid(...VALID_CATEGORIES).optional(),
+  date: Joi.date().optional(),
+  note: Joi.string().allow("").optional(),
+});
+
+module.exports = {
+  getTransactionsSchema,
+  createTransactionSchema,
+  updateTransactionSchema,
+};
+

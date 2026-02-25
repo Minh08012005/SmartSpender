@@ -1,0 +1,178 @@
+openapi: 3.0.0
+info:
+  title: SmartSpender API
+  version: 1.0.0
+  description: API Documentation for SmartSpender Backend
+
+servers:
+  - url: http://localhost:5000/api
+    description: Local server
+
+tags:
+  - name: Transactions
+    description: Transaction CRUD APIs
+
+paths:
+  /transactions:
+    post:
+      tags:
+        - Transactions
+      summary: Create new transaction
+      description: Add a new income or expense transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+        "400":
+          description: Validation error
+
+    get:
+      tags:
+        - Transactions
+      summary: Get all transactions
+      description: Retrieve transaction list of logged in user
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      tags:
+        - Transactions
+      summary: Get transaction detail
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Transaction detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "404":
+          description: Not found
+
+    put:
+      tags:
+        - Transactions
+      summary: Update transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "200":
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionResponse"
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted successfully
+
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 65c88df8b2f8a1c21c23abcd
+        userId:
+          type: string
+          example: 65c87aa21b23bcd9999abcd1
+        amount:
+          type: number
+          example: 50000
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+          example: Food
+        note:
+          type: string
+          example: Lunch
+        date:
+          type: string
+          format: date
+          example: 2025-02-11
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TransactionInput:
+      type: object
+      required:
+        - amount
+        - type
+        - category
+        - date
+      properties:
+        amount:
+          type: number
+          example: 50000
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+          example: Transport
+        note:
+          type: string
+          example: Grab ride
+        date:
+          type: string
+          format: date
+          example: 2025-02-11
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Transaction"
