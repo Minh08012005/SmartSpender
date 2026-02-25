@@ -5,11 +5,12 @@
 
 const express = require("express");
 const router = express.Router();
-const { getTransactions } = require("../controllers/transaction_controller");
+const { getTransactions, createTransaction } = require("../controllers/transaction_controller");
 const authenticate = require("../middleware/auth.middleware");
 const validate = require("../middleware/validate.middleware");
 const {
   getTransactionsSchema,
+  createTransactionSchema,
 } = require("../validators/transaction.validator");
 
 /**
@@ -219,6 +220,13 @@ router.get(
   authenticate,
   validate(getTransactionsSchema, "query"),
   getTransactions,
+);
+
+router.post(
+  "/",
+  authenticate,
+  validate(createTransactionSchema, "body"),
+  createTransaction
 );
 
 module.exports = router;
