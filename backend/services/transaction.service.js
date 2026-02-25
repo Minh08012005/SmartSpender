@@ -103,3 +103,34 @@ exports.getFilteredTransactions = async (userId, filters) => {
           },
   };
 };
+
+/**
+ * Create new transaction
+ */
+exports.createTransaction = async (userId, payload) => {
+  return await Transaction.create({
+    ...payload,
+    userId,
+  });
+};
+
+/**
+ * Update transaction (only owner)
+ */
+exports.updateTransaction = async (userId, transactionId, payload) => {
+  return await Transaction.findOneAndUpdate(
+    { _id: transactionId, userId },
+    payload,
+    { new: true }
+  );
+};
+
+/**
+ * Delete transaction (only owner)
+ */
+exports.deleteTransaction = async (userId, transactionId) => {
+  return await Transaction.findOneAndDelete({
+    _id: transactionId,
+    userId,
+  });
+};
