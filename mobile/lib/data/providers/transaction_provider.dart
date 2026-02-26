@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../models/transaction_model.dart';
@@ -14,6 +15,10 @@ class TransactionProvider extends ChangeNotifier {
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
   String _error = '';
+  // Optional stats returned by backend
+  double? _remoteTotalAmount;
+  double? _remoteTotalIncome;
+  double? _remoteTotalExpense;
 
   // API Service instance
   final ApiService _apiService = ApiService();
@@ -28,16 +33,18 @@ class TransactionProvider extends ChangeNotifier {
 
   /// Tổng thu nhập
   double get totalIncome {
+    if (_remoteTotalIncome != null) return _remoteTotalIncome!;
     return _transactions
-        .where((t) => t.type == TransactionType.income)
-        .fold(0.0, (sum, t) => sum + t.amount);
+      .where((t) => t.type == TransactionType.income)
+      .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   /// Tổng chi tiêu
   double get totalExpense {
+    if (_remoteTotalExpense != null) return _remoteTotalExpense!;
     return _transactions
-        .where((t) => t.type == TransactionType.expense)
-        .fold(0.0, (sum, t) => sum + t.amount);
+      .where((t) => t.type == TransactionType.expense)
+      .fold(0.0, (sum, t) => sum + t.amount);
   }
 
   /// Số dư hiện tại
@@ -60,15 +67,31 @@ class TransactionProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      // Build query parameters
-      final queryParams = <String, dynamic>{};
-      if (month != null) queryParams['month'] = month;
-      if (year != null) queryParams['year'] = year;
+      // Build query parameters — default to current month/year when not provided
+      final now = DateTime.now();
+      final int useMonth = month ?? now.month;
+      final int useYear = year ?? now.year;
+
+      final queryParams = <String, dynamic>{'month': useMonth, 'year': useYear};
+
+      // Retrieve access token from SharedPreferences and attach to headers
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(ApiConstants.accessTokenKey) ?? '';
+
+      final Options? options = token.isNotEmpty
+          ? Options(
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+          : null;
 
       // Gọi API
       final response = await _apiService.get(
         ApiConstants.transactions,
         queryParameters: queryParams,
+        options: options,
       );
 
       // Parse response
@@ -77,7 +100,25 @@ class TransactionProvider extends ChangeNotifier {
 
         // Xử lý response dựa vào format API
         if (data is Map<String, dynamic> && data['success'] == true) {
-          final transactionsData = data['data'] as List?;
+          final payload = data['data'];
+
+          // transactions may be directly a List or nested under payload['transactions']
+          List<dynamic>? transactionsData;
+
+          if (payload is List) {
+            transactionsData = payload as List<dynamic>?;
+          } else if (payload is Map<String, dynamic>) {
+            transactionsData = (payload['transactions'] as List<dynamic>?) ??
+                (payload['data'] as List<dynamic>?);
+
+            // extract stats if present
+            final stats = payload['stats'] as Map<String, dynamic>?;
+            if (stats != null) {
+              _remoteTotalAmount = (stats['totalAmount'] as num?)?.toDouble();
+              _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+              _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+            }
+          }
 
           if (transactionsData != null) {
             _transactions = transactionsData
@@ -173,18 +214,17 @@ class TransactionProvider extends ChangeNotifier {
   }
   // ============== DUMMY LOAD ==============
 
-Future<void> loadDummyTransactions() async {
-  _setLoading(true);
-  _clearError();
+  Future<void> loadDummyTransactions() async {
+    _setLoading(true);
+    _clearError();
 
-  await Future.delayed(const Duration(seconds: 2)); // giả lập loading
+    await Future.delayed(const Duration(seconds: 2)); // giả lập loading
 
-  _transactions = dummyTransactions;
-  //_transactions = []; // 👈 ÉP RỖNG test empty
-  //_setError("Failed to load transactions"); // 👈 ÉP LỖI test error
-  _setLoading(false);
-}
-
+    _transactions = dummyTransactions;
+    //_transactions = []; // 👈 ÉP RỖNG test empty
+    //_setError("Failed to load transactions"); // 👈 ÉP LỖI test error
+    _setLoading(false);
+  }
 
   // ============== STATE MANAGEMENT ==============
 

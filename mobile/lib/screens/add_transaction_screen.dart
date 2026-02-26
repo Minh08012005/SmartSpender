@@ -121,6 +121,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       amount: amount,
       type: _selectedType,
       category: _selectedCategory,
+      title: _noteController.text.trim().isNotEmpty
+          ? _noteController.text.trim()
+          : (_selectedCategory.isNotEmpty
+                ? _selectedCategory[0].toUpperCase() +
+                      _selectedCategory.substring(1)
+                : ''),
       date: _selectedDate ?? DateTime.now(),
       note: _noteController.text.trim(),
     );
@@ -141,9 +147,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty
-              ? 'Không thể thêm giao dịch'
-              : provider.error,
+          provider.error.isEmpty ? 'Không thể thêm giao dịch' : provider.error,
         ),
       ),
     );
@@ -151,7 +155,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dateText = DateFormat('dd/MM/yyyy').format(_selectedDate ?? DateTime.now());
+    final dateText = DateFormat(
+      'dd/MM/yyyy',
+    ).format(_selectedDate ?? DateTime.now());
     final baseTheme = Theme.of(context);
     final teal = Colors.teal;
 
@@ -188,7 +194,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   children: [
                     TextFormField(
                       controller: _amountController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                       ],
@@ -226,12 +234,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         border: OutlineInputBorder(),
                       ),
                       items: _categoryOptions
-                          .map((category) => DropdownMenuItem<String>(
-                                value: category,
-                                child: Text(
-                                  TransactionModel.formatCategoryForUi(category),
-                                ),
-                              ))
+                          .map(
+                            (category) => DropdownMenuItem<String>(
+                              value: category,
+                              child: Text(
+                                TransactionModel.formatCategoryForUi(category),
+                              ),
+                            ),
+                          )
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
@@ -249,10 +259,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           labelText: 'Date',
                           border: OutlineInputBorder(),
                         ),
-                        child: Text(
-                          dateText,
-                          style: TextStyle(color: teal),
-                        ),
+                        child: Text(dateText, style: TextStyle(color: teal)),
                       ),
                     ),
                     const SizedBox(height: 16),

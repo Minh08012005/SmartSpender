@@ -61,7 +61,9 @@ class AppConfig {
   static const String localNetworkIP = '192.168.1.11';
   
   /// Set to true when testing on PHYSICAL devices (not emulator)
-  static const bool usePhysicalDevice = true ;
+  /// For Android emulator testing on host machine, keep this `false` so
+  /// the emulator resolves host via 10.0.2.2.
+  static const bool usePhysicalDevice = false;
 
   /// Ngrok URL - paste here for remote testing
   /// Example: 'https://abc123.ngrok.io'

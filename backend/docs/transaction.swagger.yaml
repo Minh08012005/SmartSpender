@@ -94,6 +94,41 @@ components:
               format: date-time
               description: Timestamp when transaction was last updated
 
+    Stats:
+      type: object
+      properties:
+        totalAmount:
+          type: number
+          example: 5000000
+        totalIncome:
+          type: number
+          example: 5500000
+        totalExpense:
+          type: number
+          example: 500000
+
+    TransactionListResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/TransactionResponse"
+        totalCount:
+          type: integer
+          example: 45
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalPages:
+          type: integer
+          example: 3
+        stats:
+          $ref: "#/components/schemas/Stats"
+
     ErrorResponse:
       type: object
       properties:
@@ -219,36 +254,7 @@ paths:
                     type: string
                     example: "Transactions fetched successfully"
                   data:
-                    type: object
-                    properties:
-                      transactions:
-                        type: array
-                        items:
-                          $ref: "#/components/schemas/TransactionResponse"
-                      totalCount:
-                        type: integer
-                        example: 45
-                      page:
-                        type: integer
-                        example: 1
-                      limit:
-                        type: integer
-                        example: 20
-                      totalPages:
-                        type: integer
-                        example: 3
-                      stats:
-                        type: object
-                        properties:
-                          totalAmount:
-                            type: number
-                            example: 5000000
-                          totalIncome:
-                            type: number
-                            example: 5500000
-                          totalExpense:
-                            type: number
-                            example: 500000
+                    $ref: "#/components/schemas/TransactionListResponse"
         "400":
           $ref: "#/components/schemas/ErrorResponse"
         "401":
