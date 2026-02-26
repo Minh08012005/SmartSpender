@@ -26,13 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Load transactions (used for initial load and retry)
   void _loadTransactions() {
-    context.read<TransactionProvider>().loadDummyTransactions();
+    // Switch to real API fetch
+    context.read<TransactionProvider>().fetchTransactions();
   }
 
   /// Refresh transactions (used for pull-to-refresh)
   Future<void> _refreshTransactions() async {
-    // TODO: Replace with fetchTransactions() when API is ready
-    context.read<TransactionProvider>().loadDummyTransactions();
+    // Refresh from real API
+    await context.read<TransactionProvider>().fetchTransactions();
   }
 
   @override

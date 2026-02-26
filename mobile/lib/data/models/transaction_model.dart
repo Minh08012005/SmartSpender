@@ -7,10 +7,7 @@ class TransactionModel {
   static const int maxNoteLength = 200;
 
   static const Map<TransactionType, List<String>> categoriesByType = {
-    TransactionType.income: [
-      'salary',
-      'other income',
-    ],
+    TransactionType.income: ['salary', 'other income'],
     TransactionType.expense: [
       'food',
       'travel',
@@ -24,6 +21,7 @@ class TransactionModel {
   final String id;
   final double amount;
   final String category;
+  final String title;
   final DateTime date;
   final String note;
   final TransactionType type;
@@ -32,17 +30,18 @@ class TransactionModel {
     required this.id,
     required this.amount,
     required String category,
+    required this.title,
     required this.date,
     required this.note,
     required this.type,
-  })  : category = _normalizeCategory(category, type),
-        assert(amount > 0, 'Amount must be > 0'),
-        assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
-        assert(note.length <= maxNoteLength, 'Note too long'),
-        assert(
-          isCategoryValid(type, _normalizeCategory(category, type)),
-          'Category is not valid for transaction type',
-        );
+  }) : category = _normalizeCategory(category, type),
+       assert(amount > 0, 'Amount must be > 0'),
+       assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
+       assert(note.length <= maxNoteLength, 'Note too long'),
+       assert(
+         isCategoryValid(type, _normalizeCategory(category, type)),
+         'Category is not valid for transaction type',
+       );
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     final parsedType = _parseType(json['type']);
@@ -51,6 +50,7 @@ class TransactionModel {
       id: json['_id'] ?? json['id'] ?? '',
       amount: _parseAmount(json['amount']),
       category: _normalizeCategory(json['category'], parsedType),
+      title: json['title'] ?? 'No Title',
       date: _parseDate(json['date']),
       note: _parseNote(json['note']),
       type: parsedType,
@@ -62,6 +62,7 @@ class TransactionModel {
       'id': id,
       'amount': amount,
       'category': _normalizeCategory(category, type),
+      'title': title,
       'date': date.toIso8601String(),
       'note': note,
       'type': type.name,
@@ -140,6 +141,7 @@ class TransactionModel {
     String? id,
     double? amount,
     String? category,
+    String? title,
     DateTime? date,
     String? note,
     TransactionType? type,
@@ -148,6 +150,7 @@ class TransactionModel {
       id: id ?? this.id,
       amount: amount ?? this.amount,
       category: category ?? this.category,
+      title: title ?? this.title,
       date: date ?? this.date,
       note: note ?? this.note,
       type: type ?? this.type,
@@ -156,7 +159,7 @@ class TransactionModel {
 
   @override
   String toString() {
-    return 'Transaction(id: $id, amount: $amount, category: $category, '
+    return 'Transaction(id: $id, title: $title, amount: $amount, category: $category, '
         'date: $formattedDate, type: ${type.name})';
   }
 }
