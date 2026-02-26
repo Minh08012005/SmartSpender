@@ -125,11 +125,7 @@ class EditTransactionForm extends StatelessWidget {
                     backgroundColor: teal,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed:
-                      (isLoading ||
-                          !(formKey.currentState?.validate() ?? false))
-                      ? null
-                      : onSubmit,
+                  onPressed: isLoading ? null : onSubmit,
                   child: isLoading
                       ? const SizedBox(
                           width: 20,

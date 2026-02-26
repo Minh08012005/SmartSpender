@@ -120,6 +120,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   }
 
   Future<void> _submit() async {
+    final provider = context.read<TransactionProvider>();
+    if (provider.isLoading) return;
+
     final isValid = _formKey.currentState?.validate() ?? false;
     if (!isValid) {
       setState(() {
@@ -148,23 +151,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       note: _noteController.text.trim(),
     );
 
-    final provider = context.read<TransactionProvider>();
-    final deleted = await provider.deleteTransaction(widget.transaction.id);
-    if (!deleted) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            provider.error.isEmpty
-                ? 'Cannot update transaction'
-                : provider.error,
-          ),
-        ),
-      );
-      return;
-    }
-
-    final success = await provider.addTransaction(transaction);
+    final success = await provider.updateTransaction(transaction);
 
     if (!mounted) return;
 
