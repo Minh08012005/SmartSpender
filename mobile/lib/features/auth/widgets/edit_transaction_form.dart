@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../widgets/category_dropdown.dart';
 
-class EditTransactionForm extends StatelessWidget {
+class EditTransactionForm extends StatefulWidget {
   const EditTransactionForm({
     super.key,
     required this.formKey,
@@ -41,23 +41,48 @@ class EditTransactionForm extends StatelessWidget {
   final String? Function(String?) validateNote;
 
   @override
+  State<EditTransactionForm> createState() => _EditTransactionFormState();
+}
+
+class _EditTransactionFormState extends State<EditTransactionForm> {
+  bool _isFormValid = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateFormValidity();
+    });
+  }
+
+  void _updateFormValidity() {
+    final isValid = widget.formKey.currentState?.validate() ?? false;
+    if (_isFormValid != isValid) {
+      setState(() {
+        _isFormValid = isValid;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final teal = Colors.teal;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Form(
-        key: formKey,
-        autovalidateMode: showValidationErrors
+        key: widget.formKey,
+        onChanged: _updateFormValidity,
+        autovalidateMode: widget.showValidationErrors
             ? AutovalidateMode.onUserInteraction
             : AutovalidateMode.disabled,
         child: IgnorePointer(
-          ignoring: isLoading,
+          ignoring: widget.isLoading,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
-                controller: amountController,
+                controller: widget.amountController,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -68,11 +93,11 @@ class EditTransactionForm extends StatelessWidget {
                   labelText: 'Amount',
                   border: OutlineInputBorder(),
                 ),
-                validator: validateAmount,
+                validator: widget.validateAmount,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<TransactionType>(
-                value: selectedType,
+                value: widget.selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Transaction Type',
                   border: OutlineInputBorder(),
@@ -87,35 +112,35 @@ class EditTransactionForm extends StatelessWidget {
                     child: Text('Expense'),
                   ),
                 ],
-                onChanged: onTypeChanged,
+                onChanged: widget.onTypeChanged,
               ),
               const SizedBox(height: 16),
               CategoryDropdown(
-                value: selectedCategory,
-                categories: categoryOptions,
-                onChanged: onCategoryChanged,
+                value: widget.selectedCategory,
+                categories: widget.categoryOptions,
+                onChanged: widget.onCategoryChanged,
               ),
               const SizedBox(height: 16),
               InkWell(
-                onTap: onPickDate,
+                onTap: widget.onPickDate,
                 child: InputDecorator(
                   decoration: const InputDecoration(
                     labelText: 'Date',
                     border: OutlineInputBorder(),
                   ),
-                  child: Text(dateText, style: TextStyle(color: teal)),
+                  child: Text(widget.dateText, style: TextStyle(color: teal)),
                 ),
               ),
               const SizedBox(height: 16),
               TextFormField(
-                controller: noteController,
+                controller: widget.noteController,
                 maxLength: TransactionModel.maxNoteLength,
                 maxLines: 3,
                 decoration: const InputDecoration(
                   labelText: 'Note',
                   border: OutlineInputBorder(),
                 ),
-                validator: validateNote,
+                validator: widget.validateNote,
               ),
               const SizedBox(height: 24),
               SizedBox(
@@ -125,8 +150,11 @@ class EditTransactionForm extends StatelessWidget {
                     backgroundColor: teal,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: isLoading ? null : onSubmit,
-                  child: isLoading
+                  onPressed:
+                      (widget.isLoading || !_isFormValid)
+                      ? null
+                      : widget.onSubmit,
+                  child: widget.isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,

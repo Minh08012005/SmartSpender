@@ -93,7 +93,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Amout is required';
+      return 'Amount is required';
     }
 
     final amount = _parseAmount(value);
@@ -104,7 +104,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       return 'Amount must be greater than 0';
     }
     if (amount > TransactionModel.maxAmount) {
-      return 'Amount cannot exceed 1 billion';
+      return 'Amount must not exceed 1 billion';
     }
 
     return null;
@@ -113,7 +113,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   String? _validateNote(String? value) {
     if (value == null || value.isEmpty) return null;
     if (value.length > TransactionModel.maxNoteLength) {
-      return 'Note cannot exceed 200 characters';
+      return 'Note must not exceed 200 characters';
     }
 
     return null;
