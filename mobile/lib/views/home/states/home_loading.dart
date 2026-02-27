@@ -18,7 +18,7 @@ class _TransactionListSkeleton extends StatelessWidget {
     return ListView.separated(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: 6,
-      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
       itemBuilder: (context, index) {
         return Shimmer.fromColors(
           baseColor: Colors.grey.shade300,
