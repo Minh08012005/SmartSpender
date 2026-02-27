@@ -51,14 +51,14 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Tài liệu API cho ứng dụng quản lý chi tiêu',
     },
-    servers: [{ url: 'http://localhost:3000' }],
+    servers: [{ url: 'http://localhost:3000/api' }],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
       }
     }
   },
-  apis: ['./routes/*.js', './routes/auth/*.js'], // Đường dẫn đến các file định nghĩa API
+  apis: ['./routes/*.js', './routes/auth/*.js', './docs/*.yaml'], // Đường dẫn đến các file định nghĩa API
 };
 
 // Thiết lập Swagger UI
