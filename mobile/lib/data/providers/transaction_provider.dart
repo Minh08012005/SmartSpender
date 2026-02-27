@@ -16,7 +16,6 @@ class TransactionProvider extends ChangeNotifier {
   bool _isLoading = false;
   String _error = '';
   // Optional stats returned by backend
-  double? _remoteTotalAmount;
   double? _remoteTotalIncome;
   double? _remoteTotalExpense;
 
@@ -115,7 +114,6 @@ class TransactionProvider extends ChangeNotifier {
             // extract stats if present
             final stats = payload['stats'] as Map<String, dynamic>?;
             if (stats != null) {
-              _remoteTotalAmount = (stats['totalAmount'] as num?)?.toDouble();
               _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
               _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
             }

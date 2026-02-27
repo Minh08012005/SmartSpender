@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// Environment configuration for the app
 enum Environment { development, staging, production }
@@ -32,7 +33,7 @@ class AppConfig {
     if (ngrokUrl.isNotEmpty) {
       return ngrokUrl;
     }
-    
+
     // If testing on physical device, use local network IP
     if (usePhysicalDevice) {
       return 'http://$localNetworkIP:$backendPort';
@@ -59,7 +60,7 @@ class AppConfig {
   /// Your machine's local IP (for physical devices on same WiFi)
   /// Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find it
   static const String localNetworkIP = '192.168.1.11';
-  
+
   /// Set to true when testing on PHYSICAL devices (not emulator)
   /// For Android emulator testing on host machine, keep this `false` so
   /// the emulator resolves host via 10.0.2.2.
@@ -86,11 +87,15 @@ class AppConfig {
 
   /// Print current config (for debugging)
   static void printConfig() {
-    print('╔══════════════════════════════════════╗');
-    print('║       SmartSpender App Config        ║');
-    print('╠══════════════════════════════════════╣');
-    print('║ Environment: ${_environment.name.padRight(21)}║');
-    print('║ API Base: ${apiBaseUrl.padRight(24)}║');
-    print('╚══════════════════════════════════════╝');
+    // Only print in debug mode via debugPrint (not for production)
+    assert(() {
+      debugPrint('╔══════════════════════════════════════╗');
+      debugPrint('║       SmartSpender App Config        ║');
+      debugPrint('╠══════════════════════════════════════╣');
+      debugPrint('║ Environment: ${_environment.name.padRight(21)}║');
+      debugPrint('║ API Base: ${apiBaseUrl.padRight(24)}║');
+      debugPrint('╚══════════════════════════════════════╝');
+      return true;
+    }());
   }
 }
