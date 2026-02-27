@@ -19,8 +19,16 @@ class TransactionProvider extends ChangeNotifier {
   double? _remoteTotalIncome;
   double? _remoteTotalExpense;
 
-  // API Service instance
-  final ApiService _apiService = ApiService();
+  // API Service instance (injectable for testing)
+  late final ApiService _apiService;
+
+  TransactionProvider({
+    ApiService? apiService,
+    List<TransactionModel>? initialTransactions,
+  }) {
+    _apiService = apiService ?? ApiService();
+    if (initialTransactions != null) _transactions = initialTransactions;
+  }
 
   // ============== GETTERS ==============
   List<TransactionModel> get transactions => _transactions;
