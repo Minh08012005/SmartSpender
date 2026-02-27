@@ -170,7 +170,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
           labelStyle: TextStyle(color: teal),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: teal.withOpacity(0.5)),
+            borderSide: BorderSide(color: teal.withAlpha(128)),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: teal, width: 2),
@@ -209,7 +209,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<TransactionType>(
-                      value: _selectedType,
+                      initialValue: _selectedType,
                       decoration: const InputDecoration(
                         labelText: 'Tranction Type',
                         border: OutlineInputBorder(),
@@ -228,7 +228,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: _selectedCategory,
+                      initialValue: _selectedCategory,
                       decoration: const InputDecoration(
                         labelText: 'Category',
                         border: OutlineInputBorder(),
