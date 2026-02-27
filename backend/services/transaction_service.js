@@ -4,7 +4,7 @@
 
 const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
-const AppError = require("../utils/appError");
+const AppError = require("../utils/app_error");
 const escapeStringRegexp = require("regex-escape");
 /**
  * Fetch filtered transactions with pagination and statistics
@@ -102,4 +102,36 @@ exports.getFilteredTransactions = async (userId, filters) => {
             totalExpense: 0,
           },
   };
+};
+
+/**
+ * Create a new transaction for user
+ * @param {string} userId - ID của người dùng
+ * @param {object} payload - Dữ liệu giao dịch
+ */
+exports.createTransaction = async (userId, payload) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
+  if (!payload || typeof payload !== "object") {
+    throw new AppError("Invalid transaction payload", 400);
+  }
+
+  const parsedDate = new Date(`${payload.date}T00:00:00.000Z`);
+  if (Number.isNaN(parsedDate.getTime())) {
+    throw new AppError("Invalid date value", 400);
+  }
+
+  const transactionToCreate = {
+    userId: new mongoose.Types.ObjectId(userId),
+    title: payload.title,
+    amount: payload.amount,
+    type: payload.type,
+    category: payload.category,
+    date: parsedDate,
+    note: payload.note || "",
+  };
+
+  return Transaction.create(transactionToCreate);
 };

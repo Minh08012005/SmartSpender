@@ -1,16 +1,19 @@
-/**
- * Validator for transaction-related endpoints.
- * Mục tiêu:
- *   - Validate input parameters cho endpoint lấy danh sách giao dịch với nhiều tùy chọn lọc và phân trang.
- *   - Sử dụng Joi để đảm bảo dữ liệu đầu vào đúng định dạng, hợp lệ và an toàn.
- *   - Hỗ trợ 2 mode lọc: theo khoảng thời gian (from-to) hoặc theo tháng-năm (month-year).
- *   - Cho phép lọc theo loại giao dịch (income/expense), danh mục, và tìm kiếm theo mô tả.
- *   - Cung cấp các thông báo lỗi chi tiết khi validation thất bại.
- *   - Đảm bảo tính linh hoạt và dễ sử dụng cho client khi tương tác với API.
- *   - Hỗ trợ phân trang và sắp xếp kết quả trả về.
- */
+/** Transaction validators */
 const Joi = require("joi");
 const { VALID_CATEGORIES } = require("./constants");
+
+const strictDateValidator = Joi.string()
+  .pattern(/^\d{4}-\d{2}-\d{2}$/)
+  .custom((value, helpers) => {
+    const parsedDate = new Date(`${value}T00:00:00.000Z`);
+    if (
+      Number.isNaN(parsedDate.getTime()) ||
+      parsedDate.toISOString().slice(0, 10) !== value
+    ) {
+      return helpers.error("date.format");
+    }
+    return value;
+  }, "Strict YYYY-MM-DD date validation");
 
 const getTransactionsSchema = Joi.object({
   // Date Range Mode
@@ -59,14 +62,7 @@ const getTransactionsSchema = Joi.object({
     "any.invalid": "Category '{{#value}}' is not allowed",
   });
 
-/**
- * Validator for creating a new transaction (POST /transactions)
- * Mục tiêu:
- *   - Validate input data khi tạo giao dịch mới
- *   - Đảm bảo tất cả các trường bắt buộc được cung cấp
- *   - Kiểm tra định dạng và giá trị của từng trường
- *   - Cung cấp thông báo lỗi chi tiết cho client
- */
+/** POST /transactions */
 const createTransactionSchema = Joi.object({
   title: Joi.string().min(1).max(100).required().messages({
     "string.empty": "Title is required",
@@ -89,8 +85,8 @@ const createTransactionSchema = Joi.object({
       "any.only": "Category must be one of: {{#valids}}",
       "any.required": "Category is required",
     }),
-  date: Joi.date().iso().required().messages({
-    "date.base": "Date must be a valid date",
+  date: strictDateValidator.required().messages({
+    "string.pattern.base": "Date must be in YYYY-MM-DD format",
     "date.format": "Date must be in YYYY-MM-DD format",
     "any.required": "Date is required",
   }),
@@ -99,13 +95,7 @@ const createTransactionSchema = Joi.object({
   }),
 });
 
-/**
- * Validator for updating a transaction (PUT /transactions/{id})
- * Mục tiêu:
- *   - Validate input data khi cập nhật giao dịch
- *   - Hỗ trợ cập nhật từng trường một hoặc nhiều trường cùng lúc
- *   - Sử dụng cùng các quy tắc validate như createTransactionSchema
- */
+/** PUT /transactions/:id */
 const updateTransactionSchema = Joi.object({
   title: Joi.string().min(1).max(100).optional().messages({
     "string.empty": "Title cannot be empty",
@@ -124,8 +114,8 @@ const updateTransactionSchema = Joi.object({
     .messages({
       "any.only": "Category must be one of: {{#valids}}",
     }),
-  date: Joi.date().iso().optional().messages({
-    "date.base": "Date must be a valid date",
+  date: strictDateValidator.optional().messages({
+    "string.pattern.base": "Date must be in YYYY-MM-DD format",
     "date.format": "Date must be in YYYY-MM-DD format",
   }),
   note: Joi.string().max(200).allow("").optional().messages({

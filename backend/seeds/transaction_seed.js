@@ -13,7 +13,7 @@ require("dotenv").config();
 
 // Import Models
 const Transaction = require("../models/transaction_schema");
-const User = require("../models/users.model"); // đúng tên file User model của bạn
+const User = require("../models/users_model"); // đúng tên file User model của bạn
 
 // ============================================================
 // CATEGORY LISTS - Tách riêng theo loại giao dịch

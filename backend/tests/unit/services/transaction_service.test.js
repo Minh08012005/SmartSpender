@@ -1,27 +1,19 @@
-/**
- * File này chứa các bài test đơn vị cho service xử lý giao dịch
- * Mục tiêu:
- *   - Đảm bảo service trả về dữ liệu đúng theo filter và phân trang
- *   - Kiểm tra logic xử lý category dạng CSV và search với regex
- *   - Xử lý các trường hợp lỗi như thiếu date filter
- *   - Mock Transaction.find, countDocuments, aggregate để test logic mà không cần DB thật
- */
+/** Unit tests for transaction service */
 
-const AppError = require("../../../utils/appError");
+const AppError = require("../../../utils/app_error");
 const mongoose = require("mongoose");
 
 jest.mock("../../../models/transaction_schema", () => ({
   find: jest.fn(),
   countDocuments: jest.fn(),
   aggregate: jest.fn(),
+  create: jest.fn(),
 }));
 
 const Transaction = require("../../../models/transaction_schema");
-const transactionService = require("../../../services/transaction.service");
+const transactionService = require("../../../services/transaction_service");
 
-// Bộ test này tập trung vào việc kiểm tra hàm getFilteredTransactions trong service xử lý giao dịch. Chúng ta sẽ mock Transaction.find, countDocuments và aggregate để trả về dữ liệu giả và kiểm tra xem hàm có trả về dữ liệu đúng theo filter và phân trang không, cũng như xử lý logic category dạng CSV và search với regex. Ngoài ra, chúng ta cũng sẽ kiểm tra các trường hợp lỗi như thiếu date filter.
 describe("Transaction Service - getFilteredTransactions", () => {
-  // Mock query builder để kiểm tra các phương thức như sort, skip, limit, lean mà không cần kết nối đến DB thật.
   const mockQuery = {
     sort: jest.fn().mockReturnThis(),
     skip: jest.fn().mockReturnThis(),
@@ -31,26 +23,22 @@ describe("Transaction Service - getFilteredTransactions", () => {
 
   const userId = new mongoose.Types.ObjectId().toString();
 
-  // Trước mỗi test, chúng ta sẽ xóa tất cả các mock và thiết lập Transaction.find trả về mockQuery, countDocuments trả về 0 và aggregate trả về một mảng rỗng để đảm bảo rằng các test không bị ảnh hưởng bởi dữ liệu cũ.
   beforeEach(() => {
     Transaction.find.mockReturnValue(mockQuery);
     Transaction.countDocuments.mockResolvedValue(0);
     Transaction.aggregate.mockResolvedValue([]);
   });
 
-  // Sau mỗi test, chúng ta sẽ xóa tất cả các mock để đảm bảo rằng các test tiếp theo không bị ảnh hưởng bởi dữ liệu cũ.
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  // Test cho hàm getFilteredTransactions, chúng ta sẽ kiểm tra xem hàm có trả về dữ liệu đúng theo filter và phân trang không, cũng như xử lý logic category dạng CSV và search với regex. Ngoài ra, chúng ta cũng sẽ kiểm tra các trường hợp lỗi như thiếu date filter.
   it("should throw AppError if no date filter provided", async () => {
     await expect(
       transactionService.getFilteredTransactions(userId, { page: 1 }),
     ).rejects.toThrow(AppError);
   });
 
-  // Test cho hàm getFilteredTransactions, chúng ta sẽ kiểm tra xem hàm có trả về dữ liệu đúng theo filter và phân trang không khi có dữ liệu giả.
   it("should handle multiple categories in CSV format", async () => {
     await transactionService.getFilteredTransactions(userId, {
       category: "food,travel",
@@ -64,7 +52,6 @@ describe("Transaction Service - getFilteredTransactions", () => {
     );
   });
 
-  // Test cho hàm getFilteredTransactions, chúng ta sẽ kiểm tra xem hàm có xử lý search với regex đúng không khi có dữ liệu giả.
   it("should handle search with special characters", async () => {
     const searchTerm = ".*+?^${}()|[]\\";
     await transactionService.getFilteredTransactions(userId, {
@@ -82,7 +69,6 @@ describe("Transaction Service - getFilteredTransactions", () => {
     );
   });
 
-  // Test Security
   it("should always include userId in the query to prevent data leaking", async () => {
     await transactionService.getFilteredTransactions(userId, {
       page: 1,
@@ -98,7 +84,6 @@ describe("Transaction Service - getFilteredTransactions", () => {
     );
   });
 
-  // Test Logic Tính toán Aggregation
   it("should correctly format finalStats even if no data exists", async () => {
     const result = await transactionService.getFilteredTransactions(userId, {
       page: 1,
@@ -109,5 +94,76 @@ describe("Transaction Service - getFilteredTransactions", () => {
 
     expect(result.transactions).toEqual([]);
     expect(result.totalCount).toBe(0);
+  });
+});
+
+describe("Transaction Service - createTransaction", () => {
+  const userId = new mongoose.Types.ObjectId().toString();
+
+  beforeEach(() => {
+    Transaction.create.mockResolvedValue({
+      _id: new mongoose.Types.ObjectId().toString(),
+      userId,
+      title: "Lunch",
+      amount: 50000,
+      type: "expense",
+      category: "food",
+      date: new Date("2026-02-24T00:00:00.000Z"),
+      note: "Lunch with friends",
+    });
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should create transaction successfully", async () => {
+    const payload = {
+      title: "Lunch",
+      amount: 50000,
+      type: "expense",
+      category: "food",
+      date: "2026-02-24",
+      note: "Lunch with friends",
+    };
+
+    const result = await transactionService.createTransaction(userId, payload);
+
+    expect(Transaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: new mongoose.Types.ObjectId(userId),
+        title: "Lunch",
+        amount: 50000,
+        type: "expense",
+        category: "food",
+        date: new Date("2026-02-24T00:00:00.000Z"),
+        note: "Lunch with friends",
+      }),
+    );
+    expect(result).toBeDefined();
+  });
+
+  it("should throw AppError when date format is invalid", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Lunch",
+        amount: 50000,
+        type: "expense",
+        category: "food",
+        date: "24-02-2026",
+      }),
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw AppError when userId is invalid", async () => {
+    await expect(
+      transactionService.createTransaction("invalid-id", {
+        title: "Lunch",
+        amount: 50000,
+        type: "expense",
+        category: "food",
+        date: "2026-02-24",
+      }),
+    ).rejects.toThrow(AppError);
   });
 });
