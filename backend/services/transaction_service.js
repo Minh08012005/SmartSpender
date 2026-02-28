@@ -128,7 +128,7 @@ exports.createTransaction = async (userId, payload) => {
     title: payload.title,
     amount: payload.amount,
     type: payload.type,
-    category: payload.category,
+    category: String(payload.category).toLowerCase(),
     date: parsedDate,
     note: payload.note || "",
   };

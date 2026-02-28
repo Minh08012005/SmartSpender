@@ -166,4 +166,20 @@ describe("Transaction Service - createTransaction", () => {
       }),
     ).rejects.toThrow(AppError);
   });
+
+  it("should persist category in lowercase", async () => {
+    await transactionService.createTransaction(userId, {
+      title: "Lunch",
+      amount: 50000,
+      type: "expense",
+      category: "FOOD",
+      date: "2026-02-24",
+    });
+
+    expect(Transaction.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: "food",
+      }),
+    );
+  });
 });

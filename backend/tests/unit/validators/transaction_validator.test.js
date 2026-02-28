@@ -108,4 +108,14 @@ describe("Transaction Validator - POST /api/transactions", () => {
     });
     expect(error).toBeDefined();
   });
+
+  it("should normalize category to lowercase", () => {
+    const { error, value } = createTransactionSchema.validate({
+      ...validPayload,
+      category: "FOOD",
+    });
+
+    expect(error).toBeUndefined();
+    expect(value.category).toBe("food");
+  });
 });
