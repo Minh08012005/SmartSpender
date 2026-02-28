@@ -19,7 +19,8 @@ class CategoryDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value,
+      key: ValueKey(Object.hash(value, Object.hashAll(categories))),
+      initialValue: value,
       decoration: InputDecoration(
         labelText: labelText,
         border: const OutlineInputBorder(),

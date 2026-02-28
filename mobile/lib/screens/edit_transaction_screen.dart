@@ -18,6 +18,7 @@ class EditTransactionScreen extends StatefulWidget {
 class _EditTransactionScreenState extends State<EditTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _titleController = TextEditingController();
   final _noteController = TextEditingController();
   bool _showValidationErrors = false;
 
@@ -39,12 +40,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         ? transaction.amount.toStringAsFixed(0)
         : transaction.amount.toStringAsFixed(2);
     _amountController.text = formatted;
+    _titleController.text = transaction.title;
     _noteController.text = transaction.note;
   }
 
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -119,6 +122,17 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     return null;
   }
 
+  String? _validateTitle(String? value) {
+    final title = value?.trim() ?? '';
+    if (title.isEmpty) {
+      return 'Title is required';
+    }
+    if (title.length > 100) {
+      return 'Title must not exceed 100 characters';
+    }
+    return null;
+  }
+
   Future<void> _submit() async {
     final provider = context.read<TransactionProvider>();
     if (provider.isLoading) return;
@@ -147,6 +161,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
       amount: amount,
       type: _selectedType,
       category: _selectedCategory,
+      title: _titleController.text.trim(),
       date: _selectedDate ?? DateTime.now(),
       note: _noteController.text.trim(),
     );
@@ -189,7 +204,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         inputDecorationTheme: baseTheme.inputDecorationTheme.copyWith(
           labelStyle: TextStyle(color: teal),
           enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: teal.withOpacity(0.5)),
+            borderSide: BorderSide(color: teal.withValues(alpha: 0.5)),
           ),
           focusedBorder: OutlineInputBorder(
             borderSide: BorderSide(color: teal, width: 2),
@@ -207,6 +222,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
             return EditTransactionForm(
               formKey: _formKey,
               amountController: _amountController,
+              titleController: _titleController,
               noteController: _noteController,
               showValidationErrors: _showValidationErrors,
               selectedType: _selectedType,
@@ -219,6 +235,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               onPickDate: _pickDate,
               onSubmit: _submit,
               validateAmount: _validateAmount,
+              validateTitle: _validateTitle,
               validateNote: _validateNote,
             );
           },

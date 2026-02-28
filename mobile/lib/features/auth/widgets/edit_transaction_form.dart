@@ -9,6 +9,7 @@ class EditTransactionForm extends StatefulWidget {
     super.key,
     required this.formKey,
     required this.amountController,
+    required this.titleController,
     required this.noteController,
     required this.showValidationErrors,
     required this.selectedType,
@@ -21,11 +22,13 @@ class EditTransactionForm extends StatefulWidget {
     required this.onPickDate,
     required this.onSubmit,
     required this.validateAmount,
+    required this.validateTitle,
     required this.validateNote,
   });
 
   final GlobalKey<FormState> formKey;
   final TextEditingController amountController;
+  final TextEditingController titleController;
   final TextEditingController noteController;
   final bool showValidationErrors;
   final TransactionType selectedType;
@@ -38,6 +41,7 @@ class EditTransactionForm extends StatefulWidget {
   final VoidCallback onPickDate;
   final VoidCallback onSubmit;
   final String? Function(String?) validateAmount;
+  final String? Function(String?) validateTitle;
   final String? Function(String?) validateNote;
 
   @override
@@ -96,8 +100,20 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                 validator: widget.validateAmount,
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: widget.titleController,
+                maxLength: 100,
+                decoration: const InputDecoration(
+                  labelText: 'Title',
+                  hintText: 'e.g. Lunch with friends',
+                  border: OutlineInputBorder(),
+                ),
+                validator: widget.validateTitle,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<TransactionType>(
-                value: widget.selectedType,
+                key: ValueKey(widget.selectedType),
+                initialValue: widget.selectedType,
                 decoration: const InputDecoration(
                   labelText: 'Transaction Type',
                   border: OutlineInputBorder(),

@@ -16,6 +16,7 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
+  final _titleController = TextEditingController();
   final _noteController = TextEditingController();
 
   TransactionType _selectedType = TransactionType.expense;
@@ -32,6 +33,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   void dispose() {
     _amountController.dispose();
+    _titleController.dispose();
     _noteController.dispose();
     super.dispose();
   }
@@ -73,18 +75,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Số tiền là bắt buộc';
+      return 'Amount is required';
     }
 
     final amount = _parseAmount(value);
     if (amount == null) {
-      return 'Số tiền không hợp lệ';
+      return 'Invalid amount';
     }
     if (amount <= 0) {
-      return 'Số tiền phải lớn hơn 0';
+      return 'Amount must be greater than 0';
     }
     if (amount > TransactionModel.maxAmount) {
-      return 'Số tiền không được vượt quá 1 tỷ';
+      return 'Amount must not exceed 1 billion';
     }
 
     return null;
@@ -93,18 +95,29 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _validateNote(String? value) {
     if (value == null || value.isEmpty) return null;
     if (value.length > TransactionModel.maxNoteLength) {
-      return 'Ghi chú tối đa 200 ký tự';
+      return 'Note must not exceed 200 characters';
     }
 
     return null;
   }
 
+  String? _validateTitle(String? value) {
+    final title = value?.trim() ?? '';
+    if (title.isEmpty) {
+      return 'Title is required';
+    }
+    if (title.length > 100) {
+      return 'Title must not exceed 100 characters';
+    }
+    return null;
+  }
+
   String? _validateCategory(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Danh mục là bắt buộc';
+      return 'Category is required';
     }
     if (!TransactionModel.isCategoryValid(_selectedType, value)) {
-      return 'Danh mục không hợp lệ với loại giao dịch';
+      return 'Category is not valid for selected transaction type';
     }
 
     return null;
@@ -121,12 +134,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       amount: amount,
       type: _selectedType,
       category: _selectedCategory,
-      title: _noteController.text.trim().isNotEmpty
-          ? _noteController.text.trim()
-          : (_selectedCategory.isNotEmpty
-                ? _selectedCategory[0].toUpperCase() +
-                      _selectedCategory.substring(1)
-                : ''),
+      title: _titleController.text.trim(),
       date: _selectedDate ?? DateTime.now(),
       note: _noteController.text.trim(),
     );
@@ -138,7 +146,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Thêm giao dịch thành công')),
+        const SnackBar(content: Text('Transaction added successfully')),
       );
       Navigator.pop(context, true);
       return;
@@ -147,7 +155,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty ? 'Không thể thêm giao dịch' : provider.error,
+          provider.error.isEmpty ? 'Failed to add transaction' : provider.error,
         ),
       ),
     );
@@ -250,6 +258,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         });
                       },
                       validator: _validateCategory,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _titleController,
+                      maxLength: 100,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        hintText: 'e.g. Lunch with friends',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: _validateTitle,
                     ),
                     const SizedBox(height: 16),
                     InkWell(
