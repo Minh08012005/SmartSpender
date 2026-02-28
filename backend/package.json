@@ -28,7 +28,6 @@
     "jose": "^4.15.9",
     "mongoose": "^9.1.5",
     "morgan": "^1.10.0",
-    "regex-escape": "^3.4.11",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"

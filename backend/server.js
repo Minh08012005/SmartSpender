@@ -13,6 +13,11 @@ const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is required to start the server');
+      process.exit(1);
+    }
+
     // Kết nối đến MongoDB
     await connectDB();
 

@@ -5,7 +5,9 @@
 const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
 const AppError = require("../utils/app_error");
-const escapeStringRegexp = require("regex-escape");
+
+const escapeStringRegexp = (str) =>
+  str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 /**
  * Fetch filtered transactions with pagination and statistics
  * @param {string} userId - ID của người dùng
@@ -26,15 +28,36 @@ exports.getFilteredTransactions = async (userId, filters) => {
     order = "desc",
   } = filters;
 
+  const pageNum = Math.max(1, Number(page) || 1);
+  const limitNum = Math.max(1, Math.min(100, Number(limit) || 20));
+  const monthNum = month !== undefined ? Number(month) : undefined;
+  const yearNum = year !== undefined ? Number(year) : undefined;
+
   //Khởi tạo query object
   const query = { userId: new mongoose.Types.ObjectId(userId) };
 
   // Xử lý Date Logic (Priority: from/to > month/year)
   if (from && to) {
-    query.date = { $gte: new Date(from), $lte: new Date(to) };
+    const fromDate = new Date(from);
+    const toDate = new Date(to);
+
+    if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+      throw new AppError("Invalid 'from' or 'to' date format.", 400);
+    }
+
+    query.date = { $gte: fromDate, $lte: toDate };
   } else if (month && year) {
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 0, 23, 59, 59); // Ngày cuối cùng của tháng
+    if (
+      !Number.isInteger(monthNum) ||
+      !Number.isInteger(yearNum) ||
+      monthNum < 1 ||
+      monthNum > 12
+    ) {
+      throw new AppError("Invalid 'month' or 'year' value.", 400);
+    }
+
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1, 0, 0, 0, 0));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
     query.date = { $gte: startDate, $lte: endDate };
   } else {
     throw new AppError(
@@ -61,14 +84,14 @@ exports.getFilteredTransactions = async (userId, filters) => {
   }
 
   // Thực thi Query với Pagination & Sorting
-  const skip = (page - 1) * limit;
+  const skip = (pageNum - 1) * limitNum;
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
 
   const [transactions, totalCount, statsData] = await Promise.all([
     Transaction.find(query)
       .sort(sortOptions)
       .skip(skip)
-      .limit(Number(limit))
+      .limit(limitNum)
       .lean(),
     Transaction.countDocuments(query),
     Transaction.aggregate([
@@ -91,8 +114,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
   return {
     transactions,
     totalCount,
-    page: Number(page),
-    limit: Number(limit),
+    page: pageNum,
+    limit: limitNum,
     stats:
       statsData.length > 0
         ? statsData[0]
@@ -118,15 +141,38 @@ exports.createTransaction = async (userId, payload) => {
     throw new AppError("Invalid transaction payload", 400);
   }
 
-  const parsedDate = new Date(`${payload.date}T00:00:00.000Z`);
-  if (Number.isNaN(parsedDate.getTime())) {
+  const [yearString, monthString, dayString] = String(payload.date).split("-");
+  const yearNum = Number(yearString);
+  const monthNum = Number(monthString);
+  const dayNum = Number(dayString);
+
+  if (
+    !Number.isInteger(yearNum) ||
+    !Number.isInteger(monthNum) ||
+    !Number.isInteger(dayNum)
+  ) {
     throw new AppError("Invalid date value", 400);
+  }
+
+  const parsedDate = new Date(Date.UTC(yearNum, monthNum - 1, dayNum));
+  const isSameDate =
+    parsedDate.getUTCFullYear() === yearNum &&
+    parsedDate.getUTCMonth() === monthNum - 1 &&
+    parsedDate.getUTCDate() === dayNum;
+
+  if (!isSameDate) {
+    throw new AppError("Invalid date value", 400);
+  }
+
+  const amountNum = Number(payload.amount);
+  if (Number.isNaN(amountNum)) {
+    throw new AppError("Invalid amount value", 400);
   }
 
   const transactionToCreate = {
     userId: new mongoose.Types.ObjectId(userId),
     title: payload.title,
-    amount: payload.amount,
+    amount: amountNum,
     type: payload.type,
     category: String(payload.category).toLowerCase(),
     date: parsedDate,
