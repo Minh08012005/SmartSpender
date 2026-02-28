@@ -142,12 +142,17 @@ exports.createTransaction = async (userId, payload) => {
     throw new AppError("Invalid date value", 400);
   }
 
+  const amountNum = Number(payload.amount);
+  if (Number.isNaN(amountNum)) {
+    throw new AppError("Invalid amount value", 400);
+  }
+
   const transactionToCreate = {
     userId: new mongoose.Types.ObjectId(userId),
     title: payload.title,
     amount,
     type: payload.type,
-    category: payload.category,
+    category: String(payload.category).toLowerCase(),
     date: parsedDate,
     note: payload.note || "",
   };

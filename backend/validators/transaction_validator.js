@@ -79,6 +79,7 @@ const createTransactionSchema = Joi.object({
     "any.required": "Type is required",
   }),
   category: Joi.string()
+    .lowercase()
     .valid(...VALID_CATEGORIES)
     .required()
     .messages({
@@ -109,6 +110,7 @@ const updateTransactionSchema = Joi.object({
     "any.only": "Type must be either 'income' or 'expense'",
   }),
   category: Joi.string()
+    .lowercase()
     .valid(...VALID_CATEGORIES)
     .optional()
     .messages({

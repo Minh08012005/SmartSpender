@@ -17,6 +17,11 @@ const startServer = async () => {
     process.exit(1);
   }
   try {
+    if (!process.env.JWT_SECRET) {
+      console.error('JWT_SECRET is required to start the server');
+      process.exit(1);
+    }
+
     // Kết nối đến MongoDB
     await connectDB();
 
