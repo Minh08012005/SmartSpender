@@ -32,7 +32,8 @@ const authenticate = async (req, res, next) => {
     // Xác thực JWT token
     const { payload } = await jwtVerify(token, secretKey);
 
-    if (payload.userId === undefined) {
+    // Đảm bảo token chứa userId hợp lệ
+    if (!payload.userId) {
       return res.status(401).json({
         success: false,
         statusCode: 401,

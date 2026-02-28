@@ -12,12 +12,11 @@ const connectDB = require('./config/db'); // Hàm kết nối MongoDB
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
+  if (!process.env.JWT_SECRET) {
+    console.error('FATAL: JWT_SECRET environment variable is not set');
+    process.exit(1);
+  }
   try {
-    if (!process.env.JWT_SECRET) {
-      console.error('JWT_SECRET is required to start the server');
-      process.exit(1);
-    }
-
     // Kết nối đến MongoDB
     await connectDB();
 
