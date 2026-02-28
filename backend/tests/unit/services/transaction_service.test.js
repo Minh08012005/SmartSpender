@@ -95,6 +95,18 @@ describe("Transaction Service - getFilteredTransactions", () => {
     expect(result.transactions).toEqual([]);
     expect(result.totalCount).toBe(0);
   });
+
+  it("should coerce string page and limit values", async () => {
+    await transactionService.getFilteredTransactions(userId, {
+      page: "2",
+      limit: "10",
+      month: "2",
+      year: "2026",
+    });
+
+    expect(mockQuery.skip).toHaveBeenCalledWith(10);
+    expect(mockQuery.limit).toHaveBeenCalledWith(10);
+  });
 });
 
 describe("Transaction Service - createTransaction", () => {
@@ -181,5 +193,29 @@ describe("Transaction Service - createTransaction", () => {
         category: "food",
       }),
     );
+  });
+
+  it("should throw AppError for invalid amount", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Lunch",
+        amount: "invalid",
+        type: "expense",
+        category: "food",
+        date: "2026-02-24",
+      }),
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw AppError for invalid category", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Lunch",
+        amount: 50000,
+        type: "expense",
+        category: "invalid",
+        date: "2026-02-24",
+      }),
+    ).rejects.toThrow(AppError);
   });
 });

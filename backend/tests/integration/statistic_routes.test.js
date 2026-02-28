@@ -10,6 +10,8 @@ const mongoose = require("mongoose");
 const { SignJWT } = require("jose");
 const { TextEncoder } = require("util");
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-key";
+
 // Mock service để tránh truy cập DB thật
 jest.mock("../../services/statistic_service", () => ({
   getMonthlyStatistics: jest.fn(),

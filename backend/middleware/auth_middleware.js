@@ -16,6 +16,14 @@ const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
  */
 const authenticate = async (req, res, next) => {
   try {
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({
+        success: false,
+        statusCode: 500,
+        message: 'Server authentication configuration error'
+      });
+    }
+
     const authHeader = req.headers.authorization; // Lấy Authorization header
 
     // Kiểm tra nếu header không tồn tại hoặc không bắt đầu bằng

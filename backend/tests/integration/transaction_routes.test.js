@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const { SignJWT } = require("jose");
 const { TextEncoder } = require("util");
 
+process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-key";
+
 jest.mock("../../services/transaction_service", () => ({
   getFilteredTransactions: jest.fn(),
   createTransaction: jest.fn(),
@@ -90,6 +92,22 @@ describe("Transaction API Integration Tests", () => {
     );
   });
 
+  it("GET /api/transactions - should return 400 for conflicting date filters", async () => {
+    const res = await request(app)
+      .get("/api/transactions")
+      .set("Authorization", `Bearer ${token}`)
+      .query({
+        from: "2026-02-01",
+        to: "2026-02-28",
+        month: 2,
+        year: 2026,
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(transactionService.getFilteredTransactions).not.toHaveBeenCalled();
+  });
+
   it("should return 401 if token expired", async () => {
     const expiredToken = await new SignJWT({ userId: mockUserId })
       .setProtectedHeader({ alg: "HS256" })
@@ -160,5 +178,19 @@ describe("Transaction API Integration Tests", () => {
 
     expect(res.statusCode).toBe(401);
     expect(res.body.success).toBe(false);
+  });
+
+  it("POST /api/transactions - should return 400 when category is invalid", async () => {
+    const res = await request(app)
+      .post("/api/transactions")
+      .set("Authorization", `Bearer ${token}`)
+      .send({
+        ...createTransactionPayload,
+        category: "invalid-category",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(transactionService.createTransaction).not.toHaveBeenCalled();
   });
 });
