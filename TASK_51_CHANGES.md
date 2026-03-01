@@ -52,3 +52,19 @@
 ---
 
 Nếu bạn đồng ý, tôi sẽ commit & push các thay đổi này lên nhánh `feat/post-transaction` (đã thực hiện) và bạn có thể tạo PR merge sau khi CI pass.
+
+## Addendum — Post-pull verification (01/03/2026)
+- Mục tiêu: xử lý blocker CI do `package.json` và `package-lock.json` chưa đồng bộ sau khi thêm dependency `escape-string-regexp`.
+- Thao tác an toàn đã thực hiện:
+   - Chạy `npm install` trong thư mục `backend` để sync lockfile (không thay đổi logic code backend).
+   - Chạy `npm ci --dry-run` để verify pipeline install không còn lỗi đồng bộ lockfile.
+   - Chạy lại test trọng điểm: `npm test -- transaction_routes.test.js`.
+- Kết quả:
+   - `npm ci --dry-run`: pass.
+   - Transaction integration tests: `10/10` pass.
+
+## Addendum — Pre-merge hardening completed (01/03/2026)
+- Cập nhật unit test `transaction_service` để khớp implementation mới dùng `aggregate + $facet`.
+- Chạy full test backend: `6/6` test suites pass, `45/45` tests pass.
+- Chạy remediation bảo mật non-breaking: `npm audit fix`.
+- Trạng thái bảo mật hiện tại: `npm audit` báo `0 vulnerabilities`.

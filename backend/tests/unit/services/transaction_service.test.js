@@ -14,19 +14,16 @@ const Transaction = require("../../../models/transaction_schema");
 const transactionService = require("../../../services/transaction_service");
 
 describe("Transaction Service - getFilteredTransactions", () => {
-  const mockQuery = {
-    sort: jest.fn().mockReturnThis(),
-    skip: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    lean: jest.fn().mockResolvedValue([]),
-  };
-
   const userId = new mongoose.Types.ObjectId().toString();
 
   beforeEach(() => {
-    Transaction.find.mockReturnValue(mockQuery);
-    Transaction.countDocuments.mockResolvedValue(0);
-    Transaction.aggregate.mockResolvedValue([]);
+    Transaction.aggregate.mockResolvedValue([
+      {
+        docs: [],
+        totalCount: [{ count: 0 }],
+        stats: [],
+      },
+    ]);
   });
 
   afterEach(() => {
@@ -45,7 +42,9 @@ describe("Transaction Service - getFilteredTransactions", () => {
       month: 2,
       year: 2026,
     });
-    expect(Transaction.find).toHaveBeenCalledWith(
+
+    const pipeline = Transaction.aggregate.mock.calls[0][0];
+    expect(pipeline[0].$match).toEqual(
       expect.objectContaining({
         category: { $in: ["food", "travel"] },
       }),
@@ -59,12 +58,19 @@ describe("Transaction Service - getFilteredTransactions", () => {
       month: 2,
       year: 2026,
     });
-    expect(Transaction.find).toHaveBeenCalledWith(
+
+    const pipeline = Transaction.aggregate.mock.calls[0][0];
+    expect(pipeline[0].$match.$or).toHaveLength(2);
+    expect(pipeline[0].$match.$or[0].note).toEqual(
       expect.objectContaining({
-        note: expect.objectContaining({
-          $regex: expect.any(String),
-          $options: "i",
-        }),
+        $regex: expect.any(String),
+        $options: "i",
+      }),
+    );
+    expect(pipeline[0].$match.$or[1].title).toEqual(
+      expect.objectContaining({
+        $regex: expect.any(String),
+        $options: "i",
       }),
     );
   });
@@ -77,7 +83,8 @@ describe("Transaction Service - getFilteredTransactions", () => {
       year: 2026,
     });
 
-    expect(Transaction.find).toHaveBeenCalledWith(
+    const pipeline = Transaction.aggregate.mock.calls[0][0];
+    expect(pipeline[0].$match).toEqual(
       expect.objectContaining({
         userId: new mongoose.Types.ObjectId(userId),
       }),
@@ -104,8 +111,12 @@ describe("Transaction Service - getFilteredTransactions", () => {
       year: "2026",
     });
 
-    expect(mockQuery.skip).toHaveBeenCalledWith(10);
-    expect(mockQuery.limit).toHaveBeenCalledWith(10);
+    const pipeline = Transaction.aggregate.mock.calls[0][0];
+    expect(pipeline[1].$facet.docs).toEqual([
+      { $sort: { date: -1 } },
+      { $skip: 10 },
+      { $limit: 10 },
+    ]);
   });
 });
 
