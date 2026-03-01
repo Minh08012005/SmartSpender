@@ -90,22 +90,27 @@ exports.getFilteredTransactions = async (userId, filters) => {
   // Xử lý Search (Partial match trên field 'note')
   if (search) {
     const escapedSearch = escapeStringRegexp(search);
-    query.note = { $regex: escapedSearch, $options: "i" };
+    // Search trong cả title và note để phù hợp với UX
+    query.$or = [
+      { note: { $regex: escapedSearch, $options: "i" } },
+      { title: { $regex: escapedSearch, $options: "i" } },
+    ];
   }
 
   // Thực thi Query với Pagination & Sorting
   const skip = (pageNum - 1) * limitNum;
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
+  // Sử dụng aggregate + $facet để lấy documents (với paging), totalCount và stats trong 1 pipeline.
+  const pipeline = [{ $match: query }];
 
-  const [transactions, totalCount, statsData] = await Promise.all([
-    Transaction.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limitNum)
-      .lean(),
-    Transaction.countDocuments(query),
-    Transaction.aggregate([
-      { $match: query },
+  const facet = {
+    docs: [
+      { $sort: sortOptions },
+      { $skip: skip },
+      { $limit: limitNum },
+    ],
+    totalCount: [{ $count: "count" }],
+    stats: [
       {
         $group: {
           _id: null,
@@ -118,11 +123,17 @@ exports.getFilteredTransactions = async (userId, filters) => {
           },
         },
       },
-    ]),
-  ]);
+    ],
+  };
+
+  const aggregated = await Transaction.aggregate([...pipeline, { $facet: facet }]);
+
+  const docs = (aggregated[0] && aggregated[0].docs) || [];
+  const totalCount = (aggregated[0] && aggregated[0].totalCount[0] && aggregated[0].totalCount[0].count) || 0;
+  const statsData = (aggregated[0] && aggregated[0].stats) || [];
 
   return {
-    transactions,
+    transactions: docs,
     totalCount,
     page: pageNum,
     limit: limitNum,
