@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/strings.dart';
 import '../models/transaction_model.dart';
 import '../dummy_transactions.dart';
 
@@ -146,7 +147,7 @@ class TransactionProvider extends ChangeNotifier {
       _setError(e.error?.toString() ?? 'Cannot fetch transactions');
       debugPrint('❌ Fetch transactions failed: ${e.message}');
     } catch (e) {
-      _setError('Có lỗi xảy ra: $e');
+      _setError('An error occurred: $e');
       debugPrint('❌ Unexpected error: $e');
     } finally {
       _setLoading(false);
@@ -157,6 +158,13 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> addTransaction(TransactionModel transaction) async {
     _setLoading(true);
     _clearError();
+
+    final title = transaction.title.trim();
+    if (title.isEmpty) {
+      _setError(AppStrings.titleRequired);
+      _setLoading(false);
+      return false;
+    }
 
     try {
       final response = await _apiService.post(
@@ -179,9 +187,9 @@ class TransactionProvider extends ChangeNotifier {
         return true;
       }
 
-      throw Exception('Failed to add transaction');
+      throw Exception(AppStrings.failedToAddTransaction);
     } on DioException catch (e) {
-      _setError(e.error?.toString() ?? 'Cannot add transaction');
+      _setError(_extractApiErrorMessage(e, 'Cannot add transaction'));
       debugPrint('❌ Add transaction failed: ${e.message}');
       return false;
     } catch (e) {
@@ -229,6 +237,14 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> updateTransaction(TransactionModel transaction) async {
     _setLoading(true);
     _clearError();
+
+    final title = transaction.title.trim();
+    if (title.isEmpty) {
+      _setError(AppStrings.titleRequired);
+      _setLoading(false);
+      return false;
+    }
+
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     final previousTransaction = index != -1 ? _transactions[index] : null;
     final didOptimisticUpdate = index != -1;
@@ -267,7 +283,7 @@ class TransactionProvider extends ChangeNotifier {
         _transactions[index] = previousTransaction;
         notifyListeners();
       }
-      _setError(e.error?.toString() ?? 'Cannot update transaction');
+      _setError(_extractApiErrorMessage(e, AppStrings.cannotUpdateTransaction));
       debugPrint('Update transaction failed: ${e.message}');
       return false;
     } catch (e) {
@@ -306,6 +322,33 @@ class TransactionProvider extends ChangeNotifier {
     _setLoading(false);
   }
 
+  String _extractApiErrorMessage(DioException e, String fallback) {
+    final data = e.response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final message = data['message']?.toString().trim();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+
+      final error = data['error']?.toString().trim();
+      if (error != null && error.isNotEmpty) {
+        return error;
+      }
+    } else if (data is String) {
+      final message = data.trim();
+      if (message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    final error = e.error?.toString().trim();
+    if (error != null && error.isNotEmpty && error != 'null') {
+      return error;
+    }
+
+    return fallback;
+  }
   // ============== STATE MANAGEMENT ==============
 
   void _setLoading(bool value) {

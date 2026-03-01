@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../core/strings.dart';
 import '../data/models/transaction_model.dart';
 import '../data/providers/transaction_provider.dart';
 
@@ -75,18 +76,18 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Amount is required';
+      return AppStrings.amountRequired;
     }
 
     final amount = _parseAmount(value);
     if (amount == null) {
-      return 'Invalid amount';
+      return AppStrings.invalidAmount;
     }
     if (amount <= 0) {
-      return 'Amount must be greater than 0';
+      return AppStrings.amountMustBeGreaterThanZero;
     }
     if (amount > TransactionModel.maxAmount) {
-      return 'Amount must not exceed 1 billion';
+      return AppStrings.amountMustNotExceedOneBillion;
     }
 
     return null;
@@ -95,7 +96,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _validateNote(String? value) {
     if (value == null || value.isEmpty) return null;
     if (value.length > TransactionModel.maxNoteLength) {
-      return 'Note must not exceed 200 characters';
+      return AppStrings.noteMustNotExceed200Characters;
     }
 
     return null;
@@ -104,20 +105,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String? _validateTitle(String? value) {
     final title = value?.trim() ?? '';
     if (title.isEmpty) {
-      return 'Title is required';
+      return AppStrings.titleRequired;
     }
     if (title.length > 100) {
-      return 'Title must not exceed 100 characters';
+      return AppStrings.titleMustNotExceed100Characters;
     }
     return null;
   }
 
   String? _validateCategory(String? value) {
     if (value == null || value.isEmpty) {
-      return 'Category is required';
+      return AppStrings.pleaseSelectCategory;
     }
     if (!TransactionModel.isCategoryValid(_selectedType, value)) {
-      return 'Category is not valid for selected transaction type';
+      return AppStrings.categoryInvalidForSelectedTransactionType;
     }
 
     return null;
@@ -146,7 +147,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaction added successfully')),
+        const SnackBar(content: Text(AppStrings.transactionAddedSuccessfully)),
       );
       Navigator.pop(context, true);
       return;
@@ -155,7 +156,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty ? 'Failed to add transaction' : provider.error,
+          provider.error.isEmpty ? AppStrings.failedToAddTransaction : provider.error,
         ),
       ),
     );

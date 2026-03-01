@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../data/models/transaction_model.dart';
 import '../data/providers/transaction_provider.dart';
 import '../features/auth/widgets/edit_transaction_form.dart';
+import '../core/strings.dart';
 
 class EditTransactionScreen extends StatefulWidget {
   const EditTransactionScreen({super.key, required this.transaction});
@@ -96,18 +97,18 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
   String? _validateAmount(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Amount is required';
+      return AppStrings.amountRequired;
     }
 
     final amount = _parseAmount(value);
     if (amount == null) {
-      return 'Invalid amount';
+      return AppStrings.invalidAmount;
     }
     if (amount <= 0) {
-      return 'Amount must be greater than 0';
+      return AppStrings.amountMustBeGreaterThanZero;
     }
     if (amount > TransactionModel.maxAmount) {
-      return 'Amount must not exceed 1 billion';
+      return AppStrings.amountMustNotExceedOneBillion;
     }
 
     return null;
@@ -116,7 +117,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   String? _validateNote(String? value) {
     if (value == null || value.isEmpty) return null;
     if (value.length > TransactionModel.maxNoteLength) {
-      return 'Note must not exceed 200 characters';
+      return AppStrings.noteMustNotExceed200Characters;
     }
 
     return null;
@@ -125,10 +126,10 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   String? _validateTitle(String? value) {
     final title = value?.trim() ?? '';
     if (title.isEmpty) {
-      return 'Title is required';
+      return AppStrings.titleRequired;
     }
     if (title.length > 100) {
-      return 'Title must not exceed 100 characters';
+      return AppStrings.titleMustNotExceed100Characters;
     }
     return null;
   }
@@ -148,7 +149,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     if (_selectedCategory.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Please select a category')));
+      ).showSnackBar(const SnackBar(content: Text(AppStrings.pleaseSelectCategory)));
       return;
     }
 
@@ -172,7 +173,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Update transaction successfully')),
+        const SnackBar(content: Text(AppStrings.transactionUpdatedSuccessfully)),
       );
       Navigator.pop(context, true);
       return;
@@ -181,7 +182,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty ? 'Cannot update transaction' : provider.error,
+          provider.error.isEmpty ? AppStrings.cannotUpdateTransaction : provider.error,
         ),
       ),
     );

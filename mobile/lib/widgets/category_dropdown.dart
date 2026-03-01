@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/strings.dart';
 import '../data/models/transaction_model.dart';
 
 class CategoryDropdown extends StatelessWidget {
@@ -36,7 +37,7 @@ class CategoryDropdown extends StatelessWidget {
       onChanged: onChanged,
       validator: (selected) {
         if (selected == null || selected.isEmpty) {
-          return 'Category is required';
+          return AppStrings.pleaseSelectCategory;
         }
         return null;
       },
