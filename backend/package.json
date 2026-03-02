@@ -26,10 +26,9 @@
     "helmet": "^7.1.0",
     "joi": "^17.13.3",
     "jose": "^4.15.9",
-    "k6": "^0.0.0",
     "mongoose": "^9.1.5",
+    "escape-string-regexp": "^2.0.0",
     "morgan": "^1.10.0",
-    "regex-escape": "^3.4.11",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^13.0.0"
@@ -43,6 +42,7 @@
     "eslint-plugin-prettier": "^5.5.5",
     "jest": "^30.2.0",
     "jsonwebtoken": "^9.0.3",
+    "k6": "^0.0.0",
     "nodemon": "^3.1.11",
     "prettier": "^3.8.1",
     "supertest": "^7.2.2"

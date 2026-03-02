@@ -7,11 +7,11 @@ const express = require('express');
 const router = express.Router();
 
 // Import validation schema
-const { loginSchema } = require('../../validators/auth.validator');
-const validate = require('../../middleware/validate.middleware');
+const { loginSchema } = require('../../validators/auth_validator');
+const validate = require('../../middleware/validate_middleware');
 
 // Import controller xử lý đăng nhập
-const login = require('../../controllers/auth/login.controller');
+const login = require('../../controllers/auth/login_controller');
 
 // Định nghĩa route POST /login với validation
 // Khi có request POST đến, validate data rồi gọi hàm login từ controller

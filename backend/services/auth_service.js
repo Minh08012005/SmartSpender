@@ -6,7 +6,7 @@
 const bcrypt = require('bcrypt');
 const { SignJWT } = require('jose');
 const { TextEncoder } = require('util');
-const User = require('../models/users.model');
+const User = require('../models/users_model');
 
 // Tạo secret key từ biến môi trường
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);

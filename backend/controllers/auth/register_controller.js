@@ -3,8 +3,8 @@
  * Chức năng: Xử lý request đăng ký, kiểm tra dữ liệu và tạo user mới.
  */
 
-const { registerUser } = require('../../services/auth.service');
-const { successResponse, errorResponse } = require('../../utils/response.util');
+const { registerUser } = require('../../services/auth_service');
+const { successResponse, errorResponse } = require('../../utils/response_util');
 
 /**
  * Controller xử lý đăng ký.

@@ -3,8 +3,8 @@
  * Chức năng: Xử lý request đăng nhập, xác thực thông tin và trả về JWT token.
  */
 
-const { loginUser } = require('../../services/auth.service');
-const { successResponse, errorResponse } = require('../../utils/response.util');
+const { loginUser } = require('../../services/auth_service');
+const { successResponse, errorResponse } = require('../../utils/response_util');
 
 /**
  * Controller xử lý đăng nhập.
