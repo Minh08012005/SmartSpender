@@ -4,6 +4,7 @@
 **Date:** 01/03/2026
 
 ## Mục tiêu
+
 - Tối ưu endpoint `POST /api/transactions` và `GET /api/transactions` theo các điểm review trước đó.
 - Sửa các vấn đề bảo mật, validation, và hiệu năng nhỏ.
 
@@ -35,11 +36,13 @@
    - `TASK_51_REVIEW.md` chứa review ban đầu và checklist.
 
 ## Lý do và tác động
+
 - Gộp các thao tác DB giúp giảm latency và giảm rủi ro khác biệt giữa các truy vấn (count, find, aggregate) do dữ liệu thay đổi giữa các lệnh.
 - Normalize và validate sớm giảm lỗi runtime do dữ liệu đầu vào không hợp lệ.
 - Thêm dependency chính thức giúp môi trường CI/production ổn định.
 
 ## Tests & bước kiểm tra đề nghị
+
 - Chạy bộ test hiện tại (`npm test`) — đảm bảo unit & integration vẫn pass.
 - Kiểm tra thủ công via Postman:
   - Tạo giao dịch mới (`POST /api/transactions`).
@@ -47,6 +50,7 @@
   - Test search: `?search=lunch` — thấy kết quả từ `title` và `note`.
 
 ## Kết luận — Có thể merge vào `dev`?
+
 - Tình trạng: Các issue chính được xử lý (escape regex, coercion, date parsing, amount guard, auth payload guard). Code đã được tối ưu cho query. Nếu CI tests pass, có thể merge vào `dev`.
 
 ---

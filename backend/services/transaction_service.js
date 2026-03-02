@@ -104,11 +104,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
   const pipeline = [{ $match: query }];
 
   const facet = {
-    docs: [
-      { $sort: sortOptions },
-      { $skip: skip },
-      { $limit: limitNum },
-    ],
+    docs: [{ $sort: sortOptions }, { $skip: skip }, { $limit: limitNum }],
     totalCount: [{ $count: "count" }],
     stats: [
       {
@@ -126,10 +122,17 @@ exports.getFilteredTransactions = async (userId, filters) => {
     ],
   };
 
-  const aggregated = await Transaction.aggregate([...pipeline, { $facet: facet }]);
+  const aggregated = await Transaction.aggregate([
+    ...pipeline,
+    { $facet: facet },
+  ]);
 
   const docs = (aggregated[0] && aggregated[0].docs) || [];
-  const totalCount = (aggregated[0] && aggregated[0].totalCount[0] && aggregated[0].totalCount[0].count) || 0;
+  const totalCount =
+    (aggregated[0] &&
+      aggregated[0].totalCount[0] &&
+      aggregated[0].totalCount[0].count) ||
+    0;
   const statsData = (aggregated[0] && aggregated[0].stats) || [];
 
   return {
