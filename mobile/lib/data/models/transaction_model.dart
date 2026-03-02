@@ -50,7 +50,7 @@ class TransactionModel {
       id: json['_id'] ?? json['id'] ?? '',
       amount: _parseAmount(json['amount']),
       category: _normalizeCategory(json['category'], parsedType),
-      title: json['title'] ?? 'No Title',
+      title: json['title'] ?? '',
       date: _parseDate(json['date']),
       note: _parseNote(json['note']),
       type: parsedType,
