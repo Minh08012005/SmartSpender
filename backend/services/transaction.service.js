@@ -115,14 +115,96 @@ exports.createTransaction = async (userId, payload) => {
 };
 
 /**
- * Update transaction (only owner)
+ * Update transaction (atomic, defensive, ownership-safe)
+ * @param {string} userId - ID của user đã xác thực
+ * @param {string} transactionId - ID transaction cần update
+ * @param {object} payload - Dữ liệu đã qua validator
  */
 exports.updateTransaction = async (userId, transactionId, payload) => {
-  return await Transaction.findOneAndUpdate(
+
+  // Validate ObjectId
+  if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+    throw new AppError("Invalid transaction id", 400);
+  }
+
+  // Defensive null/empty check
+  if (!payload || Object.keys(payload).length === 0) {
+    throw new AppError("No fields provided for update", 400);
+  }
+
+  const sanitized = {};
+
+  // Title (optional)
+  if (payload.title !== undefined) {
+    const trimmed = payload.title.trim();
+
+    if (!trimmed) {
+      throw new AppError("Title cannot be empty", 400);
+    }
+
+    sanitized.title = trimmed;
+  }
+
+  // Amount (coerce + validate)
+  if (payload.amount !== undefined) {
+    const amountNum = Number(payload.amount);
+
+    if (!Number.isFinite(amountNum) || amountNum < 0) {
+      throw new AppError("Invalid amount", 400);
+    }
+
+    sanitized.amount = amountNum;
+  }
+
+  // Date strict parse YYYY-MM-DD
+  if (payload.date !== undefined) {
+    const parts = payload.date.split("-").map(Number);
+
+    if (parts.length !== 3 || parts.some(n => !Number.isInteger(n))) {
+      throw new AppError("Invalid date format. Use YYYY-MM-DD", 400);
+    }
+
+    const [y, m, d] = parts;
+    const parsedDate = new Date(Date.UTC(y, m - 1, d));
+
+    // Strict validation (avoid JS auto-correct)
+    if (
+      parsedDate.getUTCFullYear() !== y ||
+      parsedDate.getUTCMonth() !== m - 1 ||
+      parsedDate.getUTCDate() !== d
+    ) {
+      throw new AppError("Invalid date value", 400);
+    }
+
+    sanitized.date = parsedDate;
+  }
+
+  //Category normalize + validate
+  if (payload.category !== undefined) {
+    const normalized = payload.category.toLowerCase();
+
+    if (!VALID_CATEGORIES.includes(normalized)) {
+      throw new AppError("Invalid category", 400);
+    }
+
+    sanitized.category = normalized;
+  }
+
+  //Atomic update + ownership check
+  const updated = await Transaction.findOneAndUpdate(
     { _id: transactionId, userId },
-    payload,
+    { $set: sanitized },
     { new: true }
   );
+
+  if (!updated) {
+    throw new AppError(
+      "Transaction not found or permission denied",
+      404
+    );
+  }
+
+  return updated;
 };
 
 /**
