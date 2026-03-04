@@ -6,6 +6,8 @@ const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const escapeStringRegexp = require("regex-escape");
+const { VALID_CATEGORIES } = require("../utils/constants"); // ✅ FIX 1: Import categories
+
 /**
  * Fetch filtered transactions with pagination and statistics
  * @param {string} userId - ID của người dùng
@@ -31,7 +33,18 @@ exports.getFilteredTransactions = async (userId, filters) => {
 
   // Xử lý Date Logic (Priority: from/to > month/year)
   if (from && to) {
-    query.date = { $gte: new Date(from), $lte: new Date(to) };
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+  // ✅ Validate date trước khi dùng
+    if (
+      isNaN(startDate.getTime()) ||
+      isNaN(endDate.getTime())
+    ) {
+    throw new AppError("Invalid date format", 400);
+    }
+
+    query.date = { $gte: startDate, $lte: endDate };
   } else if (month && year) {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0, 23, 59, 59); // Ngày cuối cùng của tháng
@@ -49,13 +62,16 @@ exports.getFilteredTransactions = async (userId, filters) => {
   }
 
   // Xử lý Category (CSV support)
-  if (category) {
-    const categoryArray = category.split(",").map((c) => c.trim());
+  if (category && typeof category === "string") {
+    const categoryArray = category
+      .split(",")
+      .map((c) => c.trim().toLowerCase());
+
     query.category = { $in: categoryArray };
   }
 
   // Xử lý Search (Partial match trên field 'note')
-  if (search) {
+  if (search && typeof search === "string") {
     const escapedSearch = escapeStringRegexp(search);
     query.note = { $regex: escapedSearch, $options: "i" };
   }
@@ -110,7 +126,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
 exports.createTransaction = async (userId, payload) => {
   return await Transaction.create({
     ...payload,
-    userId,
+    userId: new mongoose.Types.ObjectId(userId), // ✅ Cast đồng nhất
   });
 };
 
@@ -121,21 +137,33 @@ exports.createTransaction = async (userId, payload) => {
  * @param {object} payload - Dữ liệu đã qua validator
  */
 exports.updateTransaction = async (userId, transactionId, payload) => {
-
   // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(transactionId)) {
     throw new AppError("Invalid transaction id", 400);
   }
 
-  // Defensive null/empty check
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
   if (!payload || Object.keys(payload).length === 0) {
     throw new AppError("No fields provided for update", 400);
   }
 
+  const objectUserId = new mongoose.Types.ObjectId(userId);
+  const objectTransactionId = new mongoose.Types.ObjectId(transactionId);
+
   const sanitized = {};
+
 
   // Title (optional)
   if (payload.title !== undefined) {
+    
+    // ✅ FIX 2: Guard kiểu trước khi dùng .trim()
+    if (typeof payload.title !== "string") {
+      throw new AppError("Title must be a string", 400);
+    }
+
     const trimmed = payload.title.trim();
 
     if (!trimmed) {
@@ -156,24 +184,16 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
     sanitized.amount = amountNum;
   }
 
-  // Date strict parse YYYY-MM-DD
+  // ✅ FIX 5: ISO parse đồng bộ với Joi
   if (payload.date !== undefined) {
-    const parts = payload.date.split("-").map(Number);
-
-    if (parts.length !== 3 || parts.some(n => !Number.isInteger(n))) {
-      throw new AppError("Invalid date format. Use YYYY-MM-DD", 400);
+    if (typeof payload.date !== "string") {
+      throw new AppError("Date must be a string (ISO format)", 400);
     }
 
-    const [y, m, d] = parts;
-    const parsedDate = new Date(Date.UTC(y, m - 1, d));
+    const parsedDate = new Date(payload.date);
 
-    // Strict validation (avoid JS auto-correct)
-    if (
-      parsedDate.getUTCFullYear() !== y ||
-      parsedDate.getUTCMonth() !== m - 1 ||
-      parsedDate.getUTCDate() !== d
-    ) {
-      throw new AppError("Invalid date value", 400);
+    if (isNaN(parsedDate.getTime())) {
+      throw new AppError("Invalid date format", 400);
     }
 
     sanitized.date = parsedDate;
@@ -181,7 +201,11 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
 
   //Category normalize + validate
   if (payload.category !== undefined) {
-    const normalized = payload.category.toLowerCase();
+    if (typeof payload.category !== "string") {   // ✅ GUARD TYPE Ở ĐÂY
+      throw new AppError("Category must be a string", 400);
+    }
+
+    const normalized = payload.category.trim().toLowerCase(); // ✅ Safe
 
     if (!VALID_CATEGORIES.includes(normalized)) {
       throw new AppError("Invalid category", 400);
@@ -192,7 +216,7 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
 
   //Atomic update + ownership check
   const updated = await Transaction.findOneAndUpdate(
-    { _id: transactionId, userId },
+    { _id: objectTransactionId, userId: objectUserId },
     { $set: sanitized },
     { new: true }
   );
@@ -208,11 +232,32 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
 };
 
 /**
- * Delete transaction (only owner)
+ * Delete transaction
  */
 exports.deleteTransaction = async (userId, transactionId) => {
-  return await Transaction.findOneAndDelete({
-    _id: transactionId,
-    userId,
+  // ✅ FIX 4: Validate id
+  if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+    throw new AppError("Invalid transaction id", 400);
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
+  const objectUserId = new mongoose.Types.ObjectId(userId);
+  const objectTransactionId = new mongoose.Types.ObjectId(transactionId);
+
+  const deleted = await Transaction.findOneAndDelete({
+    _id: objectTransactionId,
+    userId: objectUserId,
   });
+
+  if (!deleted) {
+    throw new AppError(
+      "Transaction not found or permission denied",
+      404
+    );
+  }
+
+  return deleted;
 };
