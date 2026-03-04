@@ -5,12 +5,13 @@
 
 const express = require("express");
 const router = express.Router();
-const { getTransactions, createTransaction } = require("../controllers/transaction_controller");
+const { getTransactions, createTransaction, updateTransaction,} = require("../controllers/transaction_controller");
 const authenticate = require("../middleware/auth.middleware");
 const validate = require("../middleware/validate.middleware");
 const {
   getTransactionsSchema,
   createTransactionSchema,
+  updateTransactionSchema,
 } = require("../validators/transaction.validator");
 
 /**
@@ -227,6 +228,60 @@ router.post(
   authenticate,
   validate(createTransactionSchema, "body"),
   createTransaction
+);
+
+/**
+ * @swagger
+ * /api/transactions/{id}:
+ *   put:
+ *     summary: "Cập nhật giao dịch"
+ *     description: |
+ *       - Chỉ cho phép user cập nhật transaction của chính mình
+ *       - Update atomic bằng findOneAndUpdate
+ *       - Validate input và defensive checks tại service layer
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "Transaction ID"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               date:
+ *                 type: string
+ *                 example: "2026-03-01"
+ *               category:
+ *                 type: string
+ *                 enum: [income, expense]
+ *     responses:
+ *       200:
+ *         description: "Transaction updated successfully"
+ *       400:
+ *         description: "Validation error"
+ *       401:
+ *         description: "Unauthorized"
+ *       404:
+ *         description: "Transaction not found or permission denied"
+ */
+router.put(
+  "/:id",
+  authenticate,
+  validate(updateTransactionSchema, "body"),
+  updateTransaction
 );
 
 module.exports = router;
