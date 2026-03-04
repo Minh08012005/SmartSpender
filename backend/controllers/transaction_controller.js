@@ -42,26 +42,40 @@ exports.createTransaction = async (req, res, next) => {
 };
 
 /**
- * Update transaction
+ * @description Update transaction
+ * PUT /api/transactions/:id
+ * - Yêu cầu user đã authenticate
+ * - Validator đã xử lý input trước khi vào controller
+ * - Service sẽ:
+ *    + Validate ObjectId
+ *    + Defensive checks
+ *    + Ownership check
+ *    + Atomic update
  */
 exports.updateTransaction = async (req, res, next) => {
   try {
-    const updated = await transactionService.updateTransaction(
-      req.user._id,
-      req.params.id,
-      req.body
-    );
+    const userId = req.user._id;
+    const { id } = req.params;
 
-    if (!updated) {
-      return res.status(404).json(
-        successResponse(404, "Transaction not found")
+    // Call service layer
+    const updatedTransaction =
+      await transactionService.updateTransaction(
+        userId,
+        id,
+        req.body
       );
-    }
 
+    // Nếu tới đây tức là update thành công
     return res.status(200).json(
-      successResponse(200, "Transaction updated successfully", updated)
+      successResponse(
+        200,
+        "Transaction updated successfully",
+        updatedTransaction
+      )
     );
+
   } catch (error) {
+    // Delegate toàn bộ lỗi cho global error handler
     next(error);
   }
 };
