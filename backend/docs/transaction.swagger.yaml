@@ -18,13 +18,20 @@ paths:
       tags:
         - Transactions
       summary: Create new transaction
-      description: Add a new income or expense transaction
+      description: Add a new income or expense transaction. All fields will be normalized/sanitized.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/TransactionInput"
+            example:
+              title: "Lunch at restaurant"
+              amount: 150000
+              type: "expense"
+              category: "food"
+              date: "2025-02-11"
+              note: "With colleagues"
       responses:
         "201":
           description: Transaction created successfully
@@ -32,6 +39,21 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TransactionResponse"
+              example:
+                success: true
+                statusCode: 201
+                message: "Transaction created successfully"
+                data:
+                  _id: "65c88df8b2f8a1c21c23abcd"
+                  userId: "65c87aa21b23bcd9999abcd1"
+                  title: "Lunch at restaurant"
+                  amount: 150000
+                  type: "expense"
+                  category: "food"
+                  note: "With colleagues"
+                  date: "2025-02-11"
+                  createdAt: "2025-02-11T10:30:00.000Z"
+                  updatedAt: "2025-02-11T10:30:00.000Z"
         "400":
           description: Validation error
 
@@ -75,25 +97,94 @@ paths:
       tags:
         - Transactions
       summary: Update transaction
+      description: |
+        Partially update a transaction. Only provide fields you want to change.
+        - amount: accepts 0 or positive numbers
+        - date: ISO format (YYYY-MM-DD)
+        - category: must be valid category (lowercase)
+        - type: either "income" or "expense"
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
+            description: Transaction ID (24-character hex string)
+          example: 65c88df8b2f8a1c21c23abcd
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransactionInput"
+              $ref: "#/components/schemas/TransactionUpdateInput"
+            examples:
+              updateTitle:
+                summary: Update title only
+                value:
+                  title: "Updated Title"
+              updateAmount:
+                summary: Update amount only
+                value:
+                  amount: 75000
+              updateMultiple:
+                summary: Update multiple fields
+                value:
+                  title: "Dinner"
+                  amount: 150000
+                  category: "food"
+                  type: "expense"
+                  note: "Premium restaurant"
       responses:
         "200":
-          description: Updated successfully
+          description: Transaction updated successfully
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/TransactionResponse"
+              example:
+                success: true
+                statusCode: 200
+                message: "Transaction updated successfully"
+                data:
+                  _id: "65c88df8b2f8a1c21c23abcd"
+                  userId: "65c87aa21b23bcd9999abcd1"
+                  title: "Dinner"
+                  amount: 150000
+                  type: "expense"
+                  category: "food"
+                  note: "Premium restaurant"
+                  date: "2025-02-11"
+                  createdAt: "2025-01-15T10:30:00.000Z"
+                  updatedAt: "2025-02-11T14:20:00.000Z"
+        "400":
+          description: |
+            Validation error. Possible reasons:
+            - Invalid transaction ID format
+            - Empty payload (no fields provided)
+            - Invalid amount (negative)
+            - Invalid date format
+            - Invalid category
+            - Invalid type (not 'income' or 'expense')
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  statusCode:
+                    type: integer
+                    example: 400
+                  message:
+                    type: string
+                    example: "Validation failed"
+        "401":
+          description: Unauthorized - invalid or missing token
+        "404":
+          description: |
+            Transaction not found or permission denied.
+            User can only update their own transactions.
 
     delete:
       tags:
@@ -116,57 +207,101 @@ components:
       properties:
         _id:
           type: string
-          example: 65c88df8b2f8a1c21c23abcd
+          example: "65c88df8b2f8a1c21c23abcd"
         userId:
           type: string
-          example: 65c87aa21b23bcd9999abcd1
+          example: "65c87aa21b23bcd9999abcd1"
+        title:
+          type: string
+          example: "Lunch at restaurant"
         amount:
           type: number
-          example: 50000
+          example: 150000
         type:
           type: string
           enum: [income, expense]
+          example: "expense"
         category:
           type: string
-          example: Food
+          example: "food"
         note:
           type: string
-          example: Lunch
+          example: "With colleagues"
         date:
           type: string
           format: date
-          example: 2025-02-11
+          example: "2025-02-11"
         createdAt:
           type: string
           format: date-time
+          example: "2025-02-11T10:30:00.000Z"
         updatedAt:
           type: string
           format: date-time
+          example: "2025-02-11T10:30:00.000Z"
 
     TransactionInput:
       type: object
       required:
+        - title
         - amount
         - type
         - category
-        - date
       properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Lunch"
         amount:
           type: number
+          minimum: 0
           example: 50000
         type:
           type: string
           enum: [income, expense]
+          example: "expense"
         category:
           type: string
-          example: Transport
+          example: "food"
         note:
           type: string
-          example: Grab ride
+          example: "Grab ride"
         date:
           type: string
           format: date
-          example: 2025-02-11
+          example: "2025-02-11"
+
+    TransactionUpdateInput:
+      type: object
+      description: "Partial update - provide only fields you want to change"
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Updated Title"
+        amount:
+          type: number
+          minimum: 0
+          description: "Amount, can be 0"
+          example: 75000
+        type:
+          type: string
+          enum: [income, expense]
+          example: "expense"
+        category:
+          type: string
+          description: "Category must be lowercase and valid"
+          example: "food"
+        note:
+          type: string
+          example: "Updated note"
+        date:
+          type: string
+          format: date
+          description: "ISO format date (YYYY-MM-DD)"
+          example: "2025-02-11"
 
     TransactionResponse:
       type: object
