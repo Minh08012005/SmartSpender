@@ -111,3 +111,179 @@ describe("Transaction Service - getFilteredTransactions", () => {
     expect(result.totalCount).toBe(0);
   });
 });
+
+// Unit tests for updateTransaction
+describe("Transaction Service - updateTransaction", () => {
+  const mockTransaction = {
+    _id: new mongoose.Types.ObjectId(),
+    userId: new mongoose.Types.ObjectId(),
+    title: "Original Title",
+    amount: 100,
+    category: "food",
+    type: "expense",
+    date: new Date(),
+    note: "Original note",
+  };
+
+  beforeEach(() => {
+    Transaction.findOneAndUpdate = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should update transaction successfully with valid payload", async () => {
+    const payload = {
+      title: "Updated Title",
+      amount: 200,
+      category: "travel",
+      type: "income",
+      note: "Updated note",
+    };
+    const updatedMock = { ...mockTransaction, ...payload };
+    Transaction.findOneAndUpdate.mockResolvedValue(updatedMock);
+
+    const result = await transactionService.updateTransaction(
+      mockTransaction.userId.toString(),
+      mockTransaction._id.toString(),
+      payload
+    );
+
+    expect(Transaction.findOneAndUpdate).toHaveBeenCalledWith(
+      {
+        _id: mockTransaction._id,
+        userId: mockTransaction.userId,
+      },
+      {
+        $set: {
+          title: "Updated Title",
+          amount: 200,
+          category: "travel",
+          type: "income",
+          note: "Updated note",
+        },
+      },
+      { new: true }
+    );
+    expect(result).toEqual(updatedMock);
+  });
+
+  it("should throw error for invalid transaction id", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        "invalid-id",
+        { title: "Test" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for invalid user id", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        "invalid-user-id",
+        mockTransaction._id.toString(),
+        { title: "Test" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for empty payload", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        {}
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for invalid amount", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        { amount: -10 }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for invalid date", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        { date: "invalid-date" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for invalid category", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        { category: "invalid-category" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error for invalid type", async () => {
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        { type: "invalid-type" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should normalize category to lowercase", async () => {
+    const payload = { category: "FOOD" };
+    const updatedMock = { ...mockTransaction, category: "food" };
+    Transaction.findOneAndUpdate.mockResolvedValue(updatedMock);
+
+    await transactionService.updateTransaction(
+      mockTransaction.userId.toString(),
+      mockTransaction._id.toString(),
+      payload
+    );
+
+    expect(Transaction.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.any(Object),
+      { $set: { category: "food" } },
+      { new: true }
+    );
+  });
+
+  it("should trim title and note", async () => {
+    const payload = { title: "  Title  ", note: "  Note  " };
+    const updatedMock = { ...mockTransaction, title: "Title", note: "Note" };
+    Transaction.findOneAndUpdate.mockResolvedValue(updatedMock);
+
+    await transactionService.updateTransaction(
+      mockTransaction.userId.toString(),
+      mockTransaction._id.toString(),
+      payload
+    );
+
+    expect(Transaction.findOneAndUpdate).toHaveBeenCalledWith(
+      expect.any(Object),
+      { $set: { title: "Title", note: "Note" } },
+      { new: true }
+    );
+  });
+
+  it("should throw 404 if transaction not found or permission denied", async () => {
+    Transaction.findOneAndUpdate.mockResolvedValue(null);
+
+    await expect(
+      transactionService.updateTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString(),
+        { title: "Test" }
+      )
+    ).rejects.toThrow(AppError);
+  });
+});
