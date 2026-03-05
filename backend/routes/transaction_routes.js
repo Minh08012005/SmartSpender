@@ -12,6 +12,7 @@ const {
   getTransactionsSchema,
   createTransactionSchema,
   updateTransactionSchema,
+  objectIdParamSchema,
 } = require("../validators/transaction.validator");
 
 /**
@@ -223,6 +224,55 @@ router.get(
   getTransactions,
 );
 
+
+/**
+ * @swagger
+ * /api/transactions:
+ *   post:
+ *     summary: "Tạo giao dịch mới"
+ *     description: |
+ *       - Dữ liệu sẽ được normalize/sanitize (trim title, lowercase category,
+ *         coerce amount thành số, kiểm tra type)
+ *       - `amount` có thể là 0, sau khi validate schema sẽ đồng nhất với service
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - amount
+ *               - category
+ *               - type
+ *             properties:
+ *               title:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 minimum: 0
+ *               category:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [income, expense]
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               note:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: "Transaction created successfully"
+ *       400:
+ *         description: "Validation error"
+ *       401:
+ *         description: "Unauthorized"
+ */
 router.post(
   "/",
   authenticate,
@@ -238,7 +288,7 @@ router.post(
  *     description: |
  *       - Chỉ cho phép user cập nhật transaction của chính mình
  *       - Update atomic bằng findOneAndUpdate
- *       - Validate input và defensive checks tại service layer
+ *       - Validate input và defensive checks tại service layer (trim, normalize, coerce)
  *     tags:
  *       - Transactions
  *     security:
@@ -249,24 +299,34 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
- *         description: "Transaction ID"
+ *           description: "ObjectId của giao dịch (24 ký tự hex)"
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             description: "Một hoặc nhiều trường để cập nhật. Không gửi payload trống."
  *             properties:
  *               title:
  *                 type: string
  *               amount:
  *                 type: number
+ *                 minimum: 0
+ *                 description: "Số tiền, có thể là 0"
  *               date:
  *                 type: string
+ *                 format: date
  *                 example: "2026-03-01"
  *               category:
  *                 type: string
+ *                 description: "Tên danh mục hợp lệ (xem constants)"
+ *               type:
+ *                 type: string
  *                 enum: [income, expense]
+ *               note:
+ *                 type: string
+ *                 description: "Ghi chú tùy chọn"
  *     responses:
  *       200:
  *         description: "Transaction updated successfully"
@@ -280,6 +340,7 @@ router.post(
 router.put(
   "/:id",
   authenticate,
+  validate(objectIdParamSchema, "params"),
   validate(updateTransactionSchema, "body"),
   updateTransaction
 );
