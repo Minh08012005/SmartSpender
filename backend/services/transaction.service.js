@@ -6,7 +6,7 @@ const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const escapeStringRegexp = require("regex-escape");
-const { VALID_CATEGORIES } = require("../utils/constants"); // ✅ FIX 1: Import categories
+const { VALID_CATEGORIES } = require("../validators/constants"); // ✅ FIX 1: Import categories
 
 /**
  * Fetch filtered transactions with pagination and statistics
@@ -30,7 +30,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
 
   //Khởi tạo query object
   const query = { userId: new mongoose.Types.ObjectId(userId) };
-
+  
   // Xử lý Date Logic (Priority: from/to > month/year)
   if (from && to) {
     const startDate = new Date(from);
@@ -77,7 +77,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
   }
 
   // Thực thi Query với Pagination & Sorting
-  const skip = (page - 1) * limit;
+  // cast pagination parameters to numbers (they may come as strings from query)
+  const pageNum = Number(page) || 1;
+  const limitNum = Number(limit) || 20;
+  const skip = (pageNum - 1) * limitNum;
   const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
 
   const [transactions, totalCount, statsData] = await Promise.all([
@@ -107,8 +110,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
   return {
     transactions,
     totalCount,
-    page: Number(page),
-    limit: Number(limit),
+    page: pageNum,
+    limit: limitNum,
     stats:
       statsData.length > 0
         ? statsData[0]
@@ -124,9 +127,43 @@ exports.getFilteredTransactions = async (userId, filters) => {
  * Create new transaction
  */
 exports.createTransaction = async (userId, payload) => {
+  const objectUserId = new mongoose.Types.ObjectId(userId);
+
+  // Defensive sanitize
+  if (typeof payload.title !== "string") {
+    throw new AppError("Title must be a string", 400);
+  }
+
+  const title = payload.title.trim();
+
+  const amountNum = Number(payload.amount);
+  if (!Number.isFinite(amountNum) || amountNum < 0) {
+    throw new AppError("Invalid amount", 400);
+  }
+
+  const normalizedCategory = payload.category
+    ? payload.category.trim().toLowerCase()
+    : undefined;
+
+  if (normalizedCategory && !VALID_CATEGORIES.includes(normalizedCategory)) {
+    throw new AppError("Invalid category", 400);
+  }
+
+  const normalizedType = payload.type
+    ? payload.type.trim().toLowerCase()
+    : undefined;
+
+  if (normalizedType && !["income", "expense"].includes(normalizedType)) {
+    throw new AppError("Invalid type", 400);
+  }
+
   return await Transaction.create({
     ...payload,
-    userId: new mongoose.Types.ObjectId(userId), // ✅ Cast đồng nhất
+    title,
+    amount: amountNum,
+    category: normalizedCategory,
+    type: normalizedType,
+    userId: objectUserId,
   });
 };
 
@@ -184,14 +221,14 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
     sanitized.amount = amountNum;
   }
 
-  // ✅ FIX 5: ISO parse đồng bộ với Joi
+  // ✅ FIX 5: ISO parse đồng bộ với Joi, dùng Date.UTC để parse chính xác
   if (payload.date !== undefined) {
     if (typeof payload.date !== "string") {
       throw new AppError("Date must be a string (ISO format)", 400);
     }
 
+    // Parse date using Date.UTC to handle ISO strings correctly
     const parsedDate = new Date(payload.date);
-
     if (isNaN(parsedDate.getTime())) {
       throw new AppError("Invalid date format", 400);
     }
@@ -213,6 +250,30 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
 
     sanitized.category = normalized;
   }
+
+  // Type (income / expense)
+if (payload.type !== undefined) {
+  if (typeof payload.type !== "string") {
+    throw new AppError("Type must be a string", 400);
+  }
+
+  const normalizedType = payload.type.trim().toLowerCase();
+
+  if (!["income", "expense"].includes(normalizedType)) {
+    throw new AppError("Invalid type", 400);
+  }
+
+  sanitized.type = normalizedType;
+}
+
+// Note (optional)
+if (payload.note !== undefined) {
+  if (typeof payload.note !== "string") {
+    throw new AppError("Note must be a string", 400);
+  }
+
+  sanitized.note = payload.note.trim();
+}
 
   //Atomic update + ownership check
   const updated = await Transaction.findOneAndUpdate(
