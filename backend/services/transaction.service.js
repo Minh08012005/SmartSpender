@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const escapeStringRegexp = require("regex-escape");
 const { VALID_CATEGORIES } = require("../validators/constants"); // ✅ FIX 1: Import categories
+const { parseYYYYMMDD } = require("../utils/date.util");
 
 /**
  * Fetch filtered transactions with pagination and statistics
@@ -33,13 +34,22 @@ exports.getFilteredTransactions = async (userId, filters) => {
   
   // Xử lý Date Logic (Priority: from/to > month/year)
   if (from && to) {
-    const startDate = new Date(from);
-    const endDate = new Date(to);
+    let startDate, endDate;
+    if (typeof from === "string" && /^\d{4}-\d{2}-\d{2}$/.test(from)) {
+      startDate = parseYYYYMMDD(from);
+    } else {
+      startDate = new Date(from);
+    }
+    if (typeof to === "string" && /^\d{4}-\d{2}-\d{2}$/.test(to)) {
+      endDate = parseYYYYMMDD(to);
+    } else {
+      endDate = new Date(to);
+    }
 
   // ✅ Validate date trước khi dùng
     if (
-      isNaN(startDate.getTime()) ||
-      isNaN(endDate.getTime())
+      !startDate || isNaN(startDate.getTime()) ||
+      !endDate || isNaN(endDate.getTime())
     ) {
     throw new AppError("Invalid date format", 400);
     }
@@ -87,7 +97,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
     Transaction.find(query)
       .sort(sortOptions)
       .skip(skip)
-      .limit(Number(limit))
+      .limit(limitNum)
       .lean(),
     Transaction.countDocuments(query),
     Transaction.aggregate([
@@ -227,9 +237,13 @@ exports.updateTransaction = async (userId, transactionId, payload) => {
       throw new AppError("Date must be a string (ISO format)", 400);
     }
 
-    // Parse date using Date.UTC to handle ISO strings correctly
-    const parsedDate = new Date(payload.date);
-    if (isNaN(parsedDate.getTime())) {
+    let parsedDate;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(payload.date)) {
+      parsedDate = parseYYYYMMDD(payload.date);
+    } else {
+      parsedDate = new Date(payload.date);
+    }
+    if (!parsedDate || isNaN(parsedDate.getTime())) {
       throw new AppError("Invalid date format", 400);
     }
 
@@ -283,10 +297,8 @@ if (payload.note !== undefined) {
   );
 
   if (!updated) {
-    throw new AppError(
-      "Transaction not found or permission denied",
-      404
-    );
+    console.log(`DEBUG: Update failed for userId=${userId}, transactionId=${transactionId}`);
+    throw new AppError("Transaction not found or permission denied", 404);
   }
 
   return updated;
