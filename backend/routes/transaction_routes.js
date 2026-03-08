@@ -3,17 +3,22 @@
  * Define API endpoints related to transactions.
  */
 
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { getTransactions, createTransaction, updateTransaction,} = require("../controllers/transaction_controller");
-const authenticate = require("../middleware/auth.middleware");
-const validate = require("../middleware/validate.middleware");
+const {
+  getTransactions,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+} = require('../controllers/transaction_controller');
+const authenticate = require('../middleware/auth.middleware');
+const validate = require('../middleware/validate.middleware');
 const {
   getTransactionsSchema,
   createTransactionSchema,
   updateTransactionSchema,
   objectIdParamSchema,
-} = require("../validators/transaction.validator");
+} = require('../validators/transaction.validator');
 
 /**
  * @swagger
@@ -218,12 +223,11 @@ const {
  */
 
 router.get(
-  "/",
+  '/',
   authenticate,
-  validate(getTransactionsSchema, "query"),
-  getTransactions,
+  validate(getTransactionsSchema, 'query'),
+  getTransactions
 );
-
 
 /**
  * @swagger
@@ -275,9 +279,9 @@ router.get(
  *         description: "Unauthorized"
  */
 router.post(
-  "/",
+  '/',
   authenticate,
-  validate(createTransactionSchema, "body"),
+  validate(createTransactionSchema, 'body'),
   createTransaction
 );
 
@@ -340,11 +344,61 @@ router.post(
  *         description: "Transaction not found or permission denied"
  */
 router.put(
-  "/:id",
+  '/:id',
   authenticate,
-  validate(objectIdParamSchema, "params"),
-  validate(updateTransactionSchema, "body"),
+  validate(objectIdParamSchema, 'params'),
+  validate(updateTransactionSchema, 'body'),
   updateTransaction
+);
+
+/**
+ * @swagger
+ * /api/transactions/{id}:
+ *   delete:
+ *     summary: "Xóa giao dịch"
+ *     description: |
+ *       - Chỉ cho phép user xóa transaction của chính mình
+ *       - Xóa vĩnh viễn, không thể hoàn tác
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: "ObjectId của giao dịch (24 ký tự hex)"
+ *     responses:
+ *       200:
+ *         description: "Transaction deleted successfully"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Transaction deleted successfully"
+ *       400:
+ *         description: "ID không hợp lệ"
+ *       401:
+ *         description: "Unauthorized"
+ *       404:
+ *         description: "Transaction not found or permission denied"
+ */
+router.delete(
+  '/:id',
+  authenticate,
+  validate(objectIdParamSchema, 'params'),
+  deleteTransaction
 );
 
 module.exports = router;
