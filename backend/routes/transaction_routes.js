@@ -359,6 +359,7 @@ router.put(
  *     description: |
  *       - Chỉ cho phép user xóa transaction của chính mình
  *       - Xóa vĩnh viễn, không thể hoàn tác
+ *       - ObjectId phải đúng định dạng (24 ký tự hex)
  *     tags:
  *       - Transactions
  *     security:
@@ -369,7 +370,9 @@ router.put(
  *         required: true
  *         schema:
  *           type: string
- *           description: "ObjectId của giao dịch (24 ký tự hex)"
+ *           description: "ObjectId của giao dịch (24 ký tự hex, ví dụ: 65c88df8b2f8a1c21c23abcd)"
+ *           pattern: "^[0-9a-fA-F]{24}$"
+ *           example: "65c88df8b2f8a1c21c23abcd"
  *     responses:
  *       200:
  *         description: "Transaction deleted successfully"
@@ -387,12 +390,42 @@ router.put(
  *                 message:
  *                   type: string
  *                   example: "Transaction deleted successfully"
+ *                 data:
+ *                   type: object
+ *                   description: "Transaction đã được xóa"
  *       400:
- *         description: "ID không hợp lệ"
+ *         description: "ID không hợp lệ (không phải ObjectId hợp lệ)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 400
+ *               message: "Validation failed"
+ *               errors:
+ *                 - field: "id"
+ *                   message: "id must be a valid ObjectId"
  *       401:
- *         description: "Unauthorized"
+ *         description: "Không có token hoặc token không hợp lệ"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 401
+ *               message: "Unauthorized"
  *       404:
- *         description: "Transaction not found or permission denied"
+ *         description: "Transaction không tồn tại hoặc không thuộc về user hiện tại"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 404
+ *               message: "Transaction not found or permission denied"
  */
 router.delete(
   '/:id',
