@@ -7,7 +7,7 @@ const mongoose = require("mongoose");
 const AppError = require("../utils/app_error");
 const escapeStringRegexp = require("regex-escape");
 const { VALID_CATEGORIES } = require("../validators/constants"); // ✅ FIX 1: Import categories
-const { parseYYYYMMDD } = require("../utils/date.util");
+const { parseYYYYMMDD } = require("../utils/date_util");
 
 /**
  * Fetch filtered transactions with pagination and statistics
@@ -186,10 +186,12 @@ exports.createTransaction = async (userId, payload) => {
 exports.updateTransaction = async (userId, transactionId, payload) => {
   // Validate ObjectId
   if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+    console.debug(`[updateTransaction] Invalid transaction id format: ${transactionId}`);
     throw new AppError("Invalid transaction id", 400);
   }
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
+    console.debug(`[updateTransaction] Invalid user id format: ${userId}`);
     throw new AppError("Invalid user id", 400);
   }
 
@@ -297,7 +299,7 @@ if (payload.note !== undefined) {
   );
 
   if (!updated) {
-    console.log(`DEBUG: Update failed for userId=${userId}, transactionId=${transactionId}`);
+    console.debug(`[updateTransaction] Update permission denied or not found: userId=${userId}, transactionId=${transactionId}`);
     throw new AppError("Transaction not found or permission denied", 404);
   }
 
@@ -310,10 +312,12 @@ if (payload.note !== undefined) {
 exports.deleteTransaction = async (userId, transactionId) => {
   // ✅ FIX 4: Validate id
   if (!mongoose.Types.ObjectId.isValid(transactionId)) {
+    console.debug(`[deleteTransaction] Invalid transaction id format: ${transactionId}`);
     throw new AppError("Invalid transaction id", 400);
   }
 
   if (!mongoose.Types.ObjectId.isValid(userId)) {
+    console.debug(`[deleteTransaction] Invalid user id format: ${userId}`);
     throw new AppError("Invalid user id", 400);
   }
 
@@ -326,7 +330,7 @@ exports.deleteTransaction = async (userId, transactionId) => {
   });
 
   if (!deleted) {
-    console.log(`DEBUG: Delete failed for userId=${userId}, transactionId=${transactionId}`);
+    console.debug(`[deleteTransaction] Delete permission denied or not found: userId=${userId}, transactionId=${transactionId}`);
     throw new AppError(
       "Transaction not found or permission denied",
       404
