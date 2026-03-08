@@ -1,5 +1,5 @@
-const transactionService = require("../services/transaction_service");
-const { successResponse } = require("../utils/response_util");
+const transactionService = require("../services/transaction.service");
+const { successResponse } = require("../utils/response.util");
 
 /**
  * @description Get filtered transactions with pagination
@@ -24,27 +24,81 @@ exports.getTransactions = async (req, res, next) => {
 };
 
 /**
- * @description Create a new transaction for authenticated user
+ * Create transaction
  */
 exports.createTransaction = async (req, res, next) => {
   try {
+    const transaction = await transactionService.createTransaction(
+      req.user._id,
+      req.body
+    );
+
+    return res.status(201).json(
+      successResponse(201, "Transaction created successfully", transaction)
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @description Update transaction
+ * PUT /api/transactions/:id
+ * - Yêu cầu user đã authenticate
+ * - Validator đã xử lý input trước khi vào controller
+ * - Service sẽ:
+ *    + Validate ObjectId
+ *    + Defensive checks
+ *    + Ownership check
+ *    + Atomic update
+ */
+exports.updateTransaction = async (req, res, next) => {
+  try {
     const userId = req.user._id;
-    const { title, amount, type, category, date, note } = req.body;
+    const { id } = req.params;
 
-    const transaction = await transactionService.createTransaction(userId, {
-      title,
-      amount,
-      type,
-      category,
-      date,
-      note,
-    });
-
-    return res
-      .status(201)
-      .json(
-        successResponse(201, "Transaction created successfully", transaction),
+    // Call service layer
+    const updatedTransaction =
+      await transactionService.updateTransaction(
+        userId,
+        id,
+        req.body
       );
+
+    // Nếu tới đây tức là update thành công
+    return res.status(200).json(
+      successResponse(
+        200,
+        "Transaction updated successfully",
+        updatedTransaction
+      )
+    );
+
+  } catch (error) {
+    // Delegate toàn bộ lỗi cho global error handler
+    next(error);
+  }
+};
+
+/**
+ * Delete transaction
+ */
+exports.deleteTransaction = async (req, res, next) => {
+  try {
+    const deleted = await transactionService.deleteTransaction(
+      req.user._id,
+      req.params.id
+    );
+
+    if (!deleted) {
+      return res.status(404).json(
+        successResponse(404, "Transaction not found")
+      );
+    }
+
+    return res.status(200).json(
+      successResponse(200, "Transaction deleted successfully")
+    );
   } catch (error) {
     next(error);
   }

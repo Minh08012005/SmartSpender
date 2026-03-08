@@ -33,9 +33,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final RegExp _emailRegex = RegExp(
     r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
   );
-  final RegExp _passwordRegex = RegExp(
-    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
-  );
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -139,11 +137,8 @@ class _RegisterFormState extends State<RegisterForm> {
             if (trimmed.isEmpty) {
               return 'Vui lòng nhập mật khẩu';
             }
-            if (trimmed.length < 8 || !_passwordRegex.hasMatch(trimmed)) {
-               return 'Mật khẩu cần tối thiểu 8 ký tự, bao gồm chữ số, chữ in hoa và ký tự đặc biệt';
-            }
-            if (trimmed.length > 128) {
-              return 'Mật khẩu quá dài';
+            if (trimmed.length < 6) {
+              return 'Mật khẩu tối thiểu 6 ký tự';
             }
             return null;
           },

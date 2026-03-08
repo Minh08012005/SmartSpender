@@ -5,16 +5,15 @@
 
 const express = require("express");
 const router = express.Router();
-const {
-  getTransactions,
-  createTransaction,
-} = require("../controllers/transaction_controller");
-const authenticate = require("../middleware/auth_middleware");
-const validate = require("../middleware/validate_middleware");
+const { getTransactions, createTransaction, updateTransaction,} = require("../controllers/transaction_controller");
+const authenticate = require("../middleware/auth.middleware");
+const validate = require("../middleware/validate.middleware");
 const {
   getTransactionsSchema,
   createTransactionSchema,
-} = require("../validators/transaction_validator");
+  updateTransactionSchema,
+  objectIdParamSchema,
+} = require("../validators/transaction.validator");
 
 /**
  * @swagger
@@ -48,13 +47,13 @@ const {
  *         schema:
  *           type: string
  *           format: date
- *         description: "Từ ngày (YYYY-MM-DD) – bắt buộc nếu dùng mode khoảng"
+ *         description: "Từ ngày (ISO 8601: 2026-03-01T00:00:00Z) hoặc (YYYY-MM-DD: 2026-03-01) – bắt buộc nếu dùng mode khoảng"
  *       - in: query
  *         name: to
  *         schema:
  *           type: string
  *           format: date
- *         description: "Đến ngày (YYYY-MM-DD) – bắt buộc nếu dùng mode khoảng"
+ *         description: "Đến ngày (ISO 8601: 2026-03-01T23:59:59Z) hoặc (YYYY-MM-DD: 2026-03-01) – bắt buộc nếu dùng mode khoảng"
  *       - in: query
  *         name: type
  *         schema:
@@ -225,11 +224,127 @@ router.get(
   getTransactions,
 );
 
+
+/**
+ * @swagger
+ * /api/transactions:
+ *   post:
+ *     summary: "Tạo giao dịch mới"
+ *     description: |
+ *       - Dữ liệu sẽ được normalize/sanitize (trim title, lowercase category,
+ *         coerce amount thành số, kiểm tra type)
+ *       - `amount` có thể là 0, sau khi validate schema sẽ đồng nhất với service
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - amount
+ *               - category
+ *               - type
+ *             properties:
+ *               title:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 minimum: 0
+ *               category:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *                 enum: [income, expense]
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01). Mặc định là ngày hiện tại."
+ *               note:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: "Transaction created successfully"
+ *       400:
+ *         description: "Validation error"
+ *       401:
+ *         description: "Unauthorized"
+ */
 router.post(
   "/",
   authenticate,
   validate(createTransactionSchema, "body"),
-  createTransaction,
+  createTransaction
+);
+
+/**
+ * @swagger
+ * /api/transactions/{id}:
+ *   put:
+ *     summary: "Cập nhật giao dịch"
+ *     description: |
+ *       - Chỉ cho phép user cập nhật transaction của chính mình
+ *       - Update atomic bằng findOneAndUpdate
+ *       - Validate input và defensive checks tại service layer (trim, normalize, coerce)
+ *     tags:
+ *       - Transactions
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           description: "ObjectId của giao dịch (24 ký tự hex)"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             description: "Một hoặc nhiều trường để cập nhật. Không gửi payload trống."
+ *             properties:
+ *               title:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *                 minimum: 0
+ *                 description: "Số tiền, có thể là 0"
+ *               date:
+ *                 type: string
+ *                 format: date
+ *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01)"
+ *                 example: "2026-03-01"
+ *               category:
+ *                 type: string
+ *                 description: "Tên danh mục hợp lệ (xem constants)"
+ *               type:
+ *                 type: string
+ *                 enum: [income, expense]
+ *               note:
+ *                 type: string
+ *                 description: "Ghi chú tùy chọn"
+ *     responses:
+ *       200:
+ *         description: "Transaction updated successfully"
+ *       400:
+ *         description: "Validation error"
+ *       401:
+ *         description: "Unauthorized"
+ *       404:
+ *         description: "Transaction not found or permission denied"
+ */
+router.put(
+  "/:id",
+  authenticate,
+  validate(objectIdParamSchema, "params"),
+  validate(updateTransactionSchema, "body"),
+  updateTransaction
 );
 
 module.exports = router;

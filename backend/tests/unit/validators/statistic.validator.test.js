@@ -6,7 +6,7 @@
  *   - Sử dụng Joi để validate và kiểm tra kết quả trả về
  */
 
-const { getSummarySchema } = require("../../../validators/statistic_validator");
+const { getSummarySchema } = require("../../../validators/statistic.validator");
 
 // Test cases cho validator thống kê thu chi
 describe("Statistic Validator", () => {

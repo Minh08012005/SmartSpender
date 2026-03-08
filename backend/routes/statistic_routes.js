@@ -4,10 +4,10 @@
 
 const express = require("express");
 const router = express.Router();
-const statisticController = require("../controllers/statistic_controller");
-const authenticate = require("../middleware/auth_middleware");
-const validate = require("../middleware/validate_middleware");
-const { getSummarySchema } = require("../validators/statistic_validator");
+const statisticController = require("../controllers/statistic.controller");
+const authenticate = require("../middleware/auth.middleware");
+const validate = require("../middleware/validate.middleware");
+const { getSummarySchema } = require("../validators/statistic.validator");
 
 /**
  * @swagger
@@ -56,11 +56,6 @@ const { getSummarySchema } = require("../validators/statistic_validator");
  *       401:
  *         description: Unauthorized
  */
-router.get(
-	"/summary",
-	authenticate,
-	validate(getSummarySchema, "query"),
-	statisticController.getSummary,
-);
+router.get("/summary", authenticate,validate(getSummarySchema, "query"), statisticController.getSummary);
 
 module.exports = router;

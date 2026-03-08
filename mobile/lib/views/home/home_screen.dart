@@ -1,58 +1,143 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../data/providers/transaction_provider.dart';
-import '../../screens/add_transaction_screen.dart';
+import 'package:intl/intl.dart';
+import '../../data/dummy_transactions.dart';
 import 'widgets/transaction_item.dart';
-import 'widgets/balance_card.dart';
-import 'states/home_loading.dart';
-import 'states/home_error.dart';
-import 'states/home_empty.dart';
+import '../../data/models/transaction_model.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-
-    // TODO: Switch to fetchTransactions() when Backend Task #33 CRUD is completed
-    Future.microtask(_loadTransactions);
-  }
-
-  /// Load transactions (used for initial load and retry)
-  void _loadTransactions() {
-    // Switch to real API fetch
-    context.read<TransactionProvider>().fetchTransactions();
-  }
-
-  /// Refresh transactions (used for pull-to-refresh)
-  Future<void> _refreshTransactions() async {
-    // Refresh from real API
-    await context.read<TransactionProvider>().fetchTransactions();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final provider = context.watch<TransactionProvider>();
+    // ===== FORMATTER TIỀN VIỆT =====
+    final formatter = NumberFormat('#,###', 'vi_VN');
+
+    // ===== TÍNH TOÁN TIỀN =====
+    final totalIncome = dummyTransactions
+        .where((t) => t.type == TransactionType.income)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+
+    final totalExpense = dummyTransactions
+        .where((t) => t.type == TransactionType.expense)
+        .fold<double>(0, (sum, t) => sum + t.amount);
+
+    final totalBalance = totalIncome - totalExpense;
 
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),
       body: SafeArea(
         child: Column(
           children: [
-            const BalanceCard(),
+            // ================= HEADER + BALANCE =================
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+              decoration: const BoxDecoration(
+                color: Color(0xff2A7C76),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(28),
+                  bottomRight: Radius.circular(28),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ===== HEADER =====
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            'Good afternoon,',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Enjelin Morgeana',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.notifications_none,
+                          color: Color(0xff2A7C76),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // ===== BALANCE CARD =====
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Color(0xff3E8E89), Color(0xff2A7C76)],
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Total Balance',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${formatter.format(totalBalance)} ₫',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            _BalanceInfo(
+                              icon: Icons.arrow_downward,
+                              title: 'Income',
+                              amount: '${formatter.format(totalIncome)} ₫',
+                            ),
+                            _BalanceInfo(
+                              icon: Icons.arrow_upward,
+                              title: 'Expenses',
+                              amount: '${formatter.format(totalExpense)} ₫',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             const SizedBox(height: 20),
 
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
+            // ================= TITLE =================
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
+                children: const [
                   Text(
                     'Transactions History',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
@@ -64,56 +149,62 @@ class _HomeScreenState extends State<HomeScreen> {
 
             const SizedBox(height: 8),
 
-            Expanded(child: _buildBody(provider)),
+            // ================= LIST =================
+            Expanded(
+              child: ListView.builder(
+                itemCount: dummyTransactions.length,
+                itemBuilder: (context, index) {
+                  return TransactionItem(transaction: dummyTransactions[index]);
+                },
+              ),
+            ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xff2A7C76),
-        foregroundColor: Colors.white,
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
+}
 
-  Widget _buildBody(TransactionProvider provider) {
-    // 1️⃣ Loading
-    if (provider.isLoading) {
-      return const HomeLoading();
-    }
+// ================= BALANCE INFO =================
+class _BalanceInfo extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String amount;
 
-    // 2️⃣ Error
-    if (provider.hasError) {
-      return HomeError(message: provider.error, onRetry: _loadTransactions);
-    }
+  const _BalanceInfo({
+    required this.icon,
+    required this.title,
+    required this.amount,
+  });
 
-    // 3️⃣ Empty
-    if (provider.transactions.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _refreshTransactions,
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: const [SizedBox(height: 100), HomeEmpty()],
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.25),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: Colors.white, size: 18),
         ),
-      );
-    }
-
-    // 4️⃣ Data
-    return RefreshIndicator(
-      onRefresh: _refreshTransactions,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: provider.transactions.length,
-        itemBuilder: (context, index) {
-          return TransactionItem(transaction: provider.transactions[index]);
-        },
-      ),
+        const SizedBox(width: 8),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: const TextStyle(color: Colors.white70)),
+            const SizedBox(height: 2),
+            Text(
+              amount,
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

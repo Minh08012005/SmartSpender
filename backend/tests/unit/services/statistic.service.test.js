@@ -16,7 +16,7 @@ const {
   getStatistics,
   getCategoryBreakdown,
   getMonthlyStatistics,
-} = require('../../../services/statistic_service');
+} = require('../../../services/statistic.service');
 const mongoose = require('mongoose');
 
 // Bộ test này tập trung vào việc kiểm tra các hàm thống kê trong service, đặc biệt là getMonthlyStatistics. Chúng ta sẽ mock Transaction.aggregate để trả về dữ liệu giả và kiểm tra xem hàm có tính toán đúng tổng thu, chi và số dư hay không. Ngoài ra, chúng ta cũng sẽ kiểm tra logic phân loại theo tháng, năm, hoặc khoảng thời gian và xử lý trường hợp không có giao dịch nào.
