@@ -16,14 +16,6 @@ const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
  */
 const authenticate = async (req, res, next) => {
   try {
-    if (!process.env.JWT_SECRET) {
-      return res.status(500).json({
-        success: false,
-        statusCode: 500,
-        message: 'Server authentication configuration error'
-      });
-    }
-
     const authHeader = req.headers.authorization; // Lấy Authorization header
 
     // Kiểm tra nếu header không tồn tại hoặc không bắt đầu bằng
@@ -39,15 +31,6 @@ const authenticate = async (req, res, next) => {
 
     // Xác thực JWT token
     const { payload } = await jwtVerify(token, secretKey);
-
-    // Đảm bảo token chứa userId hợp lệ
-    if (!payload.userId) {
-      return res.status(401).json({
-        success: false,
-        statusCode: 401,
-        message: 'Invalid token payload'
-      });
-    }
 
     // Đính kèm user ID vào request object
     req.user = {_id: payload.userId || payload._id };

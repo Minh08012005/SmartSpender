@@ -14,12 +14,16 @@ const swaggerJsdoc = require('swagger-jsdoc'); // Tạo tài liệu Swagger từ
 const swaggerUi = require('swagger-ui-express'); // Giao diện người dùng Swagger
 
 // Import middleware
-const { generalLimiter } = require('./middleware/rate_limit_middleware');
-const errorHandler = require('./middleware/error_handler_middleware');
+const { generalLimiter } = require('./middleware/rateLimit.middleware');
+const validate = require('./middleware/validate.middleware');
+const errorHandler = require('./middleware/errorHandler.middleware');
+
+// Import validators
+const { registerSchema, loginSchema } = require('./validators/auth.validator');
 
 // Import routes
-const registerRoute = require('./routes/auth/register_route'); // Routes cho registration
-const loginRoute = require('./routes/auth/login_route'); // Routes cho login
+const registerRoute = require('./routes/auth/register.route'); // Routes cho registration
+const loginRoute = require('./routes/auth/login.route'); // Routes cho login
 const transactionRoutes = require("./routes/transaction_routes"); // Routes cho transactions
 const statisticRoutes = require("./routes/statistic_routes"); // Routes cho thống kê
 
@@ -51,14 +55,14 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Tài liệu API cho ứng dụng quản lý chi tiêu',
     },
-    servers: [{ url: 'http://localhost:3000/api' }],
+    servers: [{ url: 'http://localhost:3000' }],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
       }
     }
   },
-  apis: ['./routes/*.js', './routes/auth/*.js', './docs/*.yaml'], // Đường dẫn đến các file định nghĩa API
+  apis: ['./routes/*.js', './routes/auth/*.js'], // Đường dẫn đến các file định nghĩa API
 };
 
 // Thiết lập Swagger UI

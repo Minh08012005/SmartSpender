@@ -13,21 +13,22 @@ require("dotenv").config();
 
 // Import Models
 const Transaction = require("../models/transaction_schema");
-const User = require("../models/users_model"); // đúng tên file User model của bạn
+const User = require("../models/users.model"); // đúng tên file User model của bạn
 
 // ============================================================
 // CATEGORY LISTS - Tách riêng theo loại giao dịch
 // ============================================================
 // Lý do: Trong thực tế, "Salary" chỉ là income, "Food" chỉ là expense
 // Nếu dùng chung 1 list → có thể tạo data vô lý như "Salary expense"
-const incomeCategories = ["salary", "other"];
+const incomeCategories = ["Salary", "Bonus", "Investment", "Gift", "Other"];
 const expenseCategories = [
-  "food",
-  "travel",
-  "shopping",
-  "entertainment",
-  "utility",
-  "other",
+  "Food",
+  "Transport",
+  "Shopping",
+  "Entertainment",
+  "Health",
+  "Education",
+  "Other",
 ];
 
 /**
@@ -133,7 +134,6 @@ async function seedTransactions() {
         amount: getRandomAmount(),
         type: type,
         category: getRandomCategory(type), // ← Truyền type vào để lấy category phù hợp
-        title: `${type === "income" ? "Thu nhập" : "Chi tiêu"} #${i + 1}`,
         date: getRandomDate(),
         note: `Mock transaction #${i + 1}`,
       });

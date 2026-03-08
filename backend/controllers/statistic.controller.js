@@ -2,8 +2,8 @@
  * @description Controller for handling statistic-related requests.
  */
 
-const statisticService = require("../services/statistic_service");
-const { successResponse } = require("../utils/response_util");
+const statisticService = require("../services/statistic.service");
+const { successResponse } = require("../utils/response.util");
 
 // Get monthly statistics for the authenticated user
 exports.getSummary = async (req, res, next) => {
