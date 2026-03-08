@@ -47,13 +47,13 @@ const {
  *         schema:
  *           type: string
  *           format: date
- *         description: "Từ ngày (YYYY-MM-DD) – bắt buộc nếu dùng mode khoảng"
+ *         description: "Từ ngày (ISO 8601: 2026-03-01T00:00:00Z) hoặc (YYYY-MM-DD: 2026-03-01) – bắt buộc nếu dùng mode khoảng"
  *       - in: query
  *         name: to
  *         schema:
  *           type: string
  *           format: date
- *         description: "Đến ngày (YYYY-MM-DD) – bắt buộc nếu dùng mode khoảng"
+ *         description: "Đến ngày (ISO 8601: 2026-03-01T23:59:59Z) hoặc (YYYY-MM-DD: 2026-03-01) – bắt buộc nếu dùng mode khoảng"
  *       - in: query
  *         name: type
  *         schema:
@@ -263,6 +263,7 @@ router.get(
  *               date:
  *                 type: string
  *                 format: date
+ *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01). Mặc định là ngày hiện tại."
  *               note:
  *                 type: string
  *     responses:
@@ -317,6 +318,7 @@ router.post(
  *               date:
  *                 type: string
  *                 format: date
+ *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01)"
  *                 example: "2026-03-01"
  *               category:
  *                 type: string
