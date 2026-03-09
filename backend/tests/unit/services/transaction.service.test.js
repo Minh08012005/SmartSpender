@@ -287,3 +287,105 @@ describe("Transaction Service - updateTransaction", () => {
     ).rejects.toThrow(AppError);
   });
 });
+
+/**
+ * DELETE Transaction Tests
+ */
+describe("Transaction Service - deleteTransaction", () => {
+  const mockTransaction = {
+    _id: new mongoose.Types.ObjectId(),
+    userId: new mongoose.Types.ObjectId(),
+    title: "Test Transaction",
+    amount: 100000,
+    category: "food",
+    type: "expense",
+    date: new Date("2026-03-08"),
+    note: "Test note",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should delete transaction successfully if it exists and belongs to user", async () => {
+    Transaction.findOneAndDelete = jest.fn().mockResolvedValue(mockTransaction);
+
+    const result = await transactionService.deleteTransaction(
+      mockTransaction.userId.toString(),
+      mockTransaction._id.toString()
+    );
+
+    expect(result).toEqual(mockTransaction);
+    expect(Transaction.findOneAndDelete).toHaveBeenCalledWith({
+      _id: new mongoose.Types.ObjectId(mockTransaction._id.toString()),
+      userId: new mongoose.Types.ObjectId(mockTransaction.userId.toString()),
+    });
+  });
+
+  it("should throw 400 if transactionId is invalid ObjectId", async () => {
+    await expect(
+      transactionService.deleteTransaction(
+        mockTransaction.userId.toString(),
+        "invalid-id"
+      )
+    ).rejects.toThrow(/Invalid transaction id/);
+  });
+
+  it("should throw 400 if userId is invalid ObjectId", async () => {
+    await expect(
+      transactionService.deleteTransaction(
+        "invalid-user-id",
+        mockTransaction._id.toString()
+      )
+    ).rejects.toThrow(/Invalid user id/);
+  });
+
+  it("should throw 404 if transaction not found or permission denied", async () => {
+    Transaction.findOneAndDelete = jest.fn().mockResolvedValue(null);
+
+    await expect(
+      transactionService.deleteTransaction(
+        mockTransaction.userId.toString(),
+        mockTransaction._id.toString()
+      )
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should not delete transaction if it belongs to different user", async () => {
+    const differentUserId = new mongoose.Types.ObjectId();
+    Transaction.findOneAndDelete = jest.fn().mockResolvedValue(null);
+
+    await expect(
+      transactionService.deleteTransaction(
+        differentUserId.toString(),
+        mockTransaction._id.toString()
+      )
+    ).rejects.toThrow(AppError);
+
+    expect(Transaction.findOneAndDelete).toHaveBeenCalledWith({
+      _id: new mongoose.Types.ObjectId(mockTransaction._id.toString()),
+      userId: new mongoose.Types.ObjectId(differentUserId.toString()),
+    });
+  });
+});
+
+/**
+ * CREATE Transaction Tests
+ */
+describe("Transaction Service - createTransaction", () => {
+  const mockUserId = new mongoose.Types.ObjectId();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  // Note: Full createTransaction tests require integration with actual database
+  // Unit tests should focus on validateable logic in the service
+  // Comprehensive tests are covered in integration tests (transaction.routes.test.js, transaction.put.test.js)
+  
+  it("createTransaction exists and is callable", () => {
+    expect(typeof transactionService.createTransaction).toBe("function");
+  });
+});
