@@ -136,6 +136,14 @@ exports.getFilteredTransactions = async (userId, filters) => {
  * Create new transaction
  */
 exports.createTransaction = async (userId, payload) => {
+   /**
+   * Validate userId format
+   * Prevent BSONError thrown by mongoose
+   */
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError("Invalid user id", 400);
+  }
+
   const objectUserId = new mongoose.Types.ObjectId(userId);
 
   // Defensive sanitize
