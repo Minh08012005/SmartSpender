@@ -107,24 +107,16 @@ class TransactionProvider extends ChangeNotifier {
 
         // Xử lý response dựa vào format API
         if (data is Map<String, dynamic> && data['success'] == true) {
-          final payload = data['data'];
+          final responseData = data['data'] as Map<String, dynamic>;
 
-          // transactions may be directly a List or nested under payload['transactions']
-          List<dynamic>? transactionsData;
+          final transactionsData =
+              responseData['transactions'] as List<dynamic>?;
 
-          if (payload is List) {
-            transactionsData = payload as List<dynamic>?;
-          } else if (payload is Map<String, dynamic>) {
-            transactionsData =
-                (payload['transactions'] as List<dynamic>?) ??
-                (payload['data'] as List<dynamic>?);
+          final stats = responseData['stats'] as Map<String, dynamic>?;
 
-            // extract stats if present
-            final stats = payload['stats'] as Map<String, dynamic>?;
-            if (stats != null) {
-              _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
-              _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
-            }
+          if (stats != null) {
+            _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+            _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
           }
 
           if (transactionsData != null) {
