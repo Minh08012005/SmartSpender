@@ -10,7 +10,8 @@
  *   - Hỗ trợ phân trang và sắp xếp kết quả trả về.
  */
 const Joi = require("joi");
-const { VALID_CATEGORIES } = require("./constants");
+const { VALID_CATEGORIES } = require('./constants');
+
 
 const getTransactionsSchema = Joi.object({
   // Date Range Mode
@@ -30,9 +31,9 @@ const getTransactionsSchema = Joi.object({
     const categories = value.split(",").map((c) => c.trim());
     for (let cat of categories) {
       if (!VALID_CATEGORIES.includes(cat)) {
-        return helpers.error("any.invalid", { value: cat });
-      }
+       return helpers.message("category not allowed");
     }
+  }
     return value;
   }, "Category validation"),
   search: Joi.string().max(100).allow(""),
@@ -40,105 +41,61 @@ const getTransactionsSchema = Joi.object({
   // Pagination & Sorting
   page: Joi.number().integer().min(1).default(1),
   limit: Joi.number().integer().min(1).max(100).default(20),
-  sortBy: Joi.string()
-    .valid("date", "amount", "category", "createdAt")
-    .default("date"),
+  sortBy: Joi.string().valid("date", "amount", "category", "createdAt").default("date"),
   order: Joi.string().valid("asc", "desc").default("desc"),
 })
-  .and("from", "to") // Nếu gửi from thì bắt buộc có to
-  .and("month", "year") // Nếu gửi month thì bắt buộc có year
-  // Quy tắc: Phải có (from+to) HOẶC (month+year).
-  // Không được gửi cả 2 mode cùng lúc
-  .oxor("from", "month")
-  // Thông báo lỗi tùy chỉnh cho các trường hợp validation thất bại
-  .messages({
-    "object.and":
-      "Both 'from' and 'to' or both 'month' and 'year' must be provided together.",
-    "object.oxor":
-      "Please provide either 'from' and 'to' dates or 'month' and 'year', not both.",
-    "any.invalid": "Category '{{#value}}' is not allowed",
-  });
+
+  // ❗ Không được dùng đồng thời 2 mode
+  .xor("from", "month")
+
+  // Nếu có from → phải có to
+  .with("from", "to")
+
+  // Nếu có month → phải có year
+  .with("month", "year");
 
 /**
- * Validator for creating a new transaction (POST /transactions)
- * Mục tiêu:
- *   - Validate input data khi tạo giao dịch mới
- *   - Đảm bảo tất cả các trường bắt buộc được cung cấp
- *   - Kiểm tra định dạng và giá trị của từng trường
- *   - Cung cấp thông báo lỗi chi tiết cho client
+ * Validate body cho API tạo giao dịch
  */
 const createTransactionSchema = Joi.object({
-  title: Joi.string().min(1).max(100).required().messages({
-    "string.empty": "Title is required",
-    "string.max": "Title must not exceed 100 characters",
-    "any.required": "Title is required",
-  }),
-  amount: Joi.number().min(0).max(1000000000).required().messages({
-    "number.base": "Amount must be a valid number",
-    "number.min": "Amount must be at least 0",
-    "any.required": "Amount is required",
-  }),
-  type: Joi.string().valid("income", "expense").required().messages({
-    "any.only": "Type must be either 'income' or 'expense'",
-    "any.required": "Type is required",
-  }),
-  category: Joi.string()
-    .valid(...VALID_CATEGORIES)
-    .required()
-    .messages({
-      "any.only": "Category must be one of: {{#valids}}",
-      "any.required": "Category is required",
-    }),
-  date: Joi.date().iso().required().messages({
-    "date.base": "Date must be a valid date",
-    "date.format": "Date must be in YYYY-MM-DD format",
-    "any.required": "Date is required",
-  }),
-  note: Joi.string().max(200).allow("").optional().messages({
-    "string.max": "Note must not exceed 200 characters",
-  }),
+  title: Joi.string().trim().min(2).max(100).required(),
+  // amount cho phép 0 để đồng bộ với service (service đã kiểm tra >=0)
+  amount: Joi.number().min(0).required(),
+  type: Joi.string().valid("income", "expense").required(),
+  category: Joi.string().valid(...VALID_CATEGORIES).required(),
+  date: Joi.date().optional(),
+  note: Joi.string().allow("").optional(),
 });
 
 /**
- * Validator for updating a transaction (PUT /transactions/{id})
- * Mục tiêu:
- *   - Validate input data khi cập nhật giao dịch
- *   - Hỗ trợ cập nhật từng trường một hoặc nhiều trường cùng lúc
- *   - Sử dụng cùng các quy tắc validate như createTransactionSchema
+ * Validate body cho API cập nhật giao dịch
  */
 const updateTransactionSchema = Joi.object({
-  title: Joi.string().min(1).max(100).optional().messages({
-    "string.empty": "Title cannot be empty",
-    "string.max": "Title must not exceed 100 characters",
-  }),
-  amount: Joi.number().min(0).max(1000000000).optional().messages({
-    "number.base": "Amount must be a valid number",
-    "number.min": "Amount must be at least 0",
-  }),
-  type: Joi.string().valid("income", "expense").optional().messages({
-    "any.only": "Type must be either 'income' or 'expense'",
-  }),
-  category: Joi.string()
-    .valid(...VALID_CATEGORIES)
-    .optional()
+  title: Joi.string().trim().min(2).max(100).optional(),
+  // allow zero so update type can set amount to 0 if desired
+  amount: Joi.number().min(0).optional(),
+  type: Joi.string().valid("income", "expense").optional(),
+  category: Joi.string().valid(...VALID_CATEGORIES).optional(),
+  date: Joi.date().optional(),
+  note: Joi.string().allow("").optional(),
+});
+
+// generic schema for endpoints accepting a single Mongo object id param
+const objectIdParamSchema = Joi.object({
+  id: Joi.string()
+    .length(24)
+    .hex()
+    .required()
     .messages({
-      "any.only": "Category must be one of: {{#valids}}",
+      "string.length": "id must be a 24‑character hex string",
+      "string.hex": "id must be a valid hex string",
     }),
-  date: Joi.date().iso().optional().messages({
-    "date.base": "Date must be a valid date",
-    "date.format": "Date must be in YYYY-MM-DD format",
-  }),
-  note: Joi.string().max(200).allow("").optional().messages({
-    "string.max": "Note must not exceed 200 characters",
-  }),
-})
-  .min(1) // Phải có ít nhất 1 trường để cập nhật
-  .messages({
-    "object.min": "At least one field must be provided for update",
-  });
+});
 
 module.exports = {
   getTransactionsSchema,
   createTransactionSchema,
   updateTransactionSchema,
+  objectIdParamSchema,
 };
+

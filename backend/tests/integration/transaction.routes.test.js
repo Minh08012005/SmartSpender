@@ -128,3 +128,52 @@ describe("Transaction API Integration Tests", () => {
     spy.mockRestore();
   });
 });
+
+/**
+ * Integration Test
+ * GET /api/transactions
+ * Mock service layer
+ */
+describe("GET /api/transactions", () => {
+  let token;
+  let secret;
+  const mockUserId = new mongoose.Types.ObjectId().toString();
+
+  beforeAll(async () => {
+    transactionService.getFilteredTransactions.mockResolvedValue({
+      transactions: [],
+      totalCount: 0,
+      page: 1,
+      limit: 5,
+    });
+
+    secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+    token = await new SignJWT({ userId: mockUserId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(secret);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return 401 if no token", async () => {
+    const res = await request(app).get("/api/transactions");
+    expect(res.statusCode).toBe(401);
+  });
+
+  it("should return paginated result", async () => {
+    const res = await request(app)
+      .get("/api/transactions")
+      .set("Authorization", `Bearer ${token}`)
+      .query({ page: 1, limit: 5, month: 2, year: 2026 });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty("transactions");
+    expect(res.body.data.meta).toBeUndefined();
+  });
+});

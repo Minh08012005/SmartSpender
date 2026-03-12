@@ -74,13 +74,14 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'SmartSpender',
-        theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.teal),
+        navigatorKey: ApiService.navigatorKey,
+        theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
 
         // ===== AUTO-LOGIN LOGIC =====
         home: FutureBuilder<bool>(
           future: _authCheckFuture,
           builder: (context, snapshot) {
-            // While checking auth state, show a loading screen
+            // Đang kiểm tra token
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Scaffold(
                 body: Center(
@@ -96,11 +97,13 @@ class _MyAppState extends State<MyApp> {
               );
             }
 
-            // If token exists -> HomeScreen, otherwise LoginScreen
+            // Đã có kết quả
             if (snapshot.hasData && snapshot.data == true) {
+              // Có token → HomeScreen
               return const HomeScreen();
             } else {
-              return const LoginScreen();
+              // Không có token → LoginScreen
+              return LoginScreen();
             }
           },
         ),

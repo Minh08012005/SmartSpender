@@ -5,443 +5,166 @@ info:
   description: API Documentation for SmartSpender Backend
 
 servers:
-  - url: http://localhost:3000/api
-    description: Local development server
-  - url: https://staging-api.smartspender.com/api
-    description: Staging server
-  - url: https://api.smartspender.com/api
-    description: Production server
+  - url: http://localhost:5000/api
+    description: Local server
 
 tags:
   - name: Transactions
-    description: Transaction CRUD & Filter APIs
-
-components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT token from login/register endpoint
-
-  schemas:
-    TransactionBase:
-      type: object
-      required:
-        - title
-        - amount
-        - type
-        - category
-        - date
-      properties:
-        title:
-          type: string
-          minLength: 1
-          maxLength: 100
-          description: Transaction title (e.g., "Lunch", "Monthly salary")
-        amount:
-          type: number
-          minimum: 0
-          maximum: 1000000000
-          description: Amount of the transaction (in local currency)
-        type:
-          type: string
-          enum:
-            - income
-            - expense
-          description: Type of the transaction
-        category:
-          type: string
-          enum:
-            - food
-            - travel
-            - shopping
-            - salary
-            - entertainment
-            - utility
-            - other
-          description: Category of the transaction (must be lowercase)
-        date:
-          type: string
-          format: date
-          description: Date of the transaction (YYYY-MM-DD)
-        note:
-          type: string
-          maxLength: 200
-          description: Additional notes for the transaction (optional)
-
-    TransactionInput:
-      allOf:
-        - $ref: "#/components/schemas/TransactionBase"
-
-    TransactionResponse:
-      allOf:
-        - $ref: "#/components/schemas/TransactionBase"
-        - type: object
-          properties:
-            _id:
-              type: string
-              description: Unique identifier for the transaction (MongoDB ObjectId)
-            userId:
-              type: string
-              description: User ID who owns this transaction
-            createdAt:
-              type: string
-              format: date-time
-              description: Timestamp when transaction was created
-            updatedAt:
-              type: string
-              format: date-time
-              description: Timestamp when transaction was last updated
-
-    Stats:
-      type: object
-      properties:
-        totalAmount:
-          type: number
-          example: 5000000
-        totalIncome:
-          type: number
-          example: 5500000
-        totalExpense:
-          type: number
-          example: 500000
-
-    TransactionListResponse:
-      type: object
-      properties:
-        transactions:
-          type: array
-          items:
-            $ref: "#/components/schemas/TransactionResponse"
-        totalCount:
-          type: integer
-          example: 45
-        page:
-          type: integer
-          example: 1
-        limit:
-          type: integer
-          example: 20
-        totalPages:
-          type: integer
-          example: 3
-        stats:
-          $ref: "#/components/schemas/Stats"
-
-    ErrorResponse:
-      type: object
-      properties:
-        success:
-          type: boolean
-          example: false
-        statusCode:
-          type: integer
-          example: 400
-        message:
-          type: string
-          example: "Validation failed"
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field:
-                type: string
-                example: "amount"
-              message:
-                type: string
-                example: "Amount is required"
+    description: Transaction CRUD APIs
 
 paths:
   /transactions:
-    get:
-      tags:
-        - Transactions
-      summary: Get filtered transactions with pagination
-      description: |
-        Retrieve transactions of logged-in user with optional filters.
-        Requires either (month + year) OR (from + to) for date filtering.
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: query
-          name: month
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 12
-          description: Month (1-12) - use with year
-        - in: query
-          name: year
-          schema:
-            type: integer
-            minimum: 2000
-          description: Year - use with month
-        - in: query
-          name: from
-          schema:
-            type: string
-            format: date
-          description: Start date (YYYY-MM-DD) - use with to
-        - in: query
-          name: to
-          schema:
-            type: string
-            format: date
-          description: End date (YYYY-MM-DD) - use with from
-        - in: query
-          name: type
-          schema:
-            type: string
-            enum: [income, expense]
-          description: Filter by transaction type
-        - in: query
-          name: category
-          schema:
-            type: string
-          description: Filter by category (comma-separated for multiple, e.g., food,travel)
-        - in: query
-          name: search
-          schema:
-            type: string
-            maxLength: 100
-          description: Search by note or title (case-insensitive)
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-          description: Page number for pagination
-        - in: query
-          name: limit
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
-            default: 20
-          description: Items per page
-        - in: query
-          name: sortBy
-          schema:
-            type: string
-            enum: [date, amount, category, createdAt]
-            default: date
-          description: Sort field
-        - in: query
-          name: order
-          schema:
-            type: string
-            enum: [asc, desc]
-            default: desc
-          description: Sort order (ascending/descending)
-      responses:
-        "200":
-          description: Transactions fetched successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  message:
-                    type: string
-                    example: "Transactions fetched successfully"
-                  data:
-                    $ref: "#/components/schemas/TransactionListResponse"
-        "400":
-          $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/ErrorResponse"
-
     post:
       tags:
         - Transactions
       summary: Create new transaction
-      description: Add a new income or expense transaction for logged-in user
-      security:
-        - bearerAuth: []
+      description: Add a new income or expense transaction. All fields will be normalized/sanitized.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               $ref: "#/components/schemas/TransactionInput"
-            examples:
-              example-income:
-                value:
-                  title: "Monthly salary"
-                  amount: 10000000
-                  type: "income"
-                  category: "salary"
-                  date: "2026-02-21"
-                  note: "Feb salary"
-              example-expense:
-                value:
-                  title: "Lunch"
-                  amount: 45000
-                  type: "expense"
-                  category: "food"
-                  date: "2026-02-23"
-                  note: "Restaurant"
+            example:
+              title: "Lunch at restaurant"
+              amount: 150000
+              type: "expense"
+              category: "food"
+              date: "2025-02-11"
+              note: "With colleagues"
       responses:
         "201":
           description: Transaction created successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 201
-                  message:
-                    type: string
-                    example: "Transaction created successfully"
-                  data:
-                    $ref: "#/components/schemas/TransactionResponse"
+                $ref: "#/components/schemas/TransactionResponse"
+              example:
+                success: true
+                statusCode: 201
+                message: "Transaction created successfully"
+                data:
+                  _id: "65c88df8b2f8a1c21c23abcd"
+                  userId: "65c87aa21b23bcd9999abcd1"
+                  title: "Lunch at restaurant"
+                  amount: 150000
+                  type: "expense"
+                  category: "food"
+                  note: "With colleagues"
+                  date: "2025-02-11"
+                  createdAt: "2025-02-11T10:30:00.000Z"
+                  updatedAt: "2025-02-11T10:30:00.000Z"
         "400":
-          $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/ErrorResponse"
+          description: Validation error
+
+    get:
+      tags:
+        - Transactions
+      summary: Get all transactions
+      description: Retrieve transaction list of logged in user
+      responses:
+        "200":
+          description: Transaction list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
 
   /transactions/{id}:
     get:
       tags:
         - Transactions
       summary: Get transaction detail
-      description: Retrieve details of a specific transaction
-      security:
-        - bearerAuth: []
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            format: uuid
-          example: "507f1f77bcf86cd799439011"
-          description: Transaction ID (MongoDB ObjectId)
       responses:
         "200":
-          description: Transaction detail retrieved
+          description: Transaction detail
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  message:
-                    type: string
-                  data:
-                    $ref: "#/components/schemas/TransactionResponse"
-        "401":
-          $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          $ref: "#/components/schemas/ErrorResponse"
+                $ref: "#/components/schemas/Transaction"
         "404":
-          $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/ErrorResponse"
+          description: Not found
 
     put:
       tags:
         - Transactions
       summary: Update transaction
-      description: Update an existing transaction
-      security:
-        - bearerAuth: []
+      description: |
+        Partially update a transaction. Only provide fields you want to change.
+        - amount: accepts 0 or positive numbers
+        - date: ISO format (YYYY-MM-DD)
+        - category: must be valid category (lowercase)
+        - type: either "income" or "expense"
       parameters:
         - in: path
           name: id
           required: true
           schema:
             type: string
-            format: uuid
-          example: "507f1f77bcf86cd799439011"
-          description: Transaction ID (MongoDB ObjectId)
+            description: Transaction ID (24-character hex string)
+          example: 65c88df8b2f8a1c21c23abcd
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/TransactionInput"
+              $ref: "#/components/schemas/TransactionUpdateInput"
             examples:
-              example-1:
+              updateTitle:
+                summary: Update title only
                 value:
-                  title: "Updated lunch"
-                  amount: 55000
-                  type: "expense"
+                  title: "Updated Title"
+              updateAmount:
+                summary: Update amount only
+                value:
+                  amount: 75000
+              updateMultiple:
+                summary: Update multiple fields
+                value:
+                  title: "Dinner"
+                  amount: 150000
                   category: "food"
-                  date: "2026-02-23"
-                  note: "Coffee shop"
+                  type: "expense"
+                  note: "Premium restaurant"
       responses:
         "200":
           description: Transaction updated successfully
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  statusCode:
-                    type: integer
-                    example: 200
-                  message:
-                    type: string
-                    example: "Transaction updated successfully"
-                  data:
-                    $ref: "#/components/schemas/TransactionResponse"
+                $ref: "#/components/schemas/TransactionResponse"
+              example:
+                success: true
+                statusCode: 200
+                message: "Transaction updated successfully"
+                data:
+                  _id: "65c88df8b2f8a1c21c23abcd"
+                  userId: "65c87aa21b23bcd9999abcd1"
+                  title: "Dinner"
+                  amount: 150000
+                  type: "expense"
+                  category: "food"
+                  note: "Premium restaurant"
+                  date: "2025-02-11"
+                  createdAt: "2025-01-15T10:30:00.000Z"
+                  updatedAt: "2025-02-11T14:20:00.000Z"
         "400":
-          $ref: "#/components/schemas/ErrorResponse"
-        "401":
-          $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          $ref: "#/components/schemas/ErrorResponse"
-        "404":
-          $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/ErrorResponse"
-
-    delete:
-      tags:
-        - Transactions
-      summary: Delete transaction
-      description: Delete a transaction permanently
-      security:
-        - bearerAuth: []
-      parameters:
-        - in: path
-          name: id
-          required: true
-          schema:
-            type: string
-            format: uuid
-          example: "507f1f77bcf86cd799439011"
-          description: Transaction ID (MongoDB ObjectId)
-      responses:
-        "200":
-          description: Transaction deleted successfully
+          description: |
+            Validation error. Possible reasons:
+            - Invalid transaction ID format
+            - Empty payload (no fields provided)
+            - Invalid amount (negative)
+            - Invalid date format
+            - Invalid category
+            - Invalid type (not 'income' or 'expense')
           content:
             application/json:
               schema:
@@ -449,18 +172,142 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
+                    example: false
                   statusCode:
                     type: integer
-                    example: 200
+                    example: 400
                   message:
                     type: string
-                    example: "Transaction deleted successfully"
+                    example: "Validation failed"
         "401":
-          $ref: "#/components/schemas/ErrorResponse"
-        "403":
-          $ref: "#/components/schemas/ErrorResponse"
+          description: Unauthorized - invalid or missing token
         "404":
-          $ref: "#/components/schemas/ErrorResponse"
-        "500":
-          $ref: "#/components/schemas/ErrorResponse"
+          description: |
+            Transaction not found or permission denied.
+            User can only update their own transactions.
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted successfully
+
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: "65c88df8b2f8a1c21c23abcd"
+        userId:
+          type: string
+          example: "65c87aa21b23bcd9999abcd1"
+        title:
+          type: string
+          example: "Lunch at restaurant"
+        amount:
+          type: number
+          example: 150000
+        type:
+          type: string
+          enum: [income, expense]
+          example: "expense"
+        category:
+          type: string
+          example: "food"
+        note:
+          type: string
+          example: "With colleagues"
+        date:
+          type: string
+          format: date
+          example: "2025-02-11"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-02-11T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-02-11T10:30:00.000Z"
+
+    TransactionInput:
+      type: object
+      required:
+        - title
+        - amount
+        - type
+        - category
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Lunch"
+        amount:
+          type: number
+          minimum: 0
+          example: 50000
+        type:
+          type: string
+          enum: [income, expense]
+          example: "expense"
+        category:
+          type: string
+          example: "food"
+        note:
+          type: string
+          example: "Grab ride"
+        date:
+          type: string
+          format: date
+          example: "2025-02-11"
+
+    TransactionUpdateInput:
+      type: object
+      description: "Partial update - provide only fields you want to change"
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+          example: "Updated Title"
+        amount:
+          type: number
+          minimum: 0
+          description: "Amount, can be 0"
+          example: 75000
+        type:
+          type: string
+          enum: [income, expense]
+          example: "expense"
+        category:
+          type: string
+          description: "Category must be lowercase and valid"
+          example: "food"
+        note:
+          type: string
+          example: "Updated note"
+        date:
+          type: string
+          format: date
+          description: "ISO format date (YYYY-MM-DD)"
+          example: "2025-02-11"
+
+    TransactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Transaction"
