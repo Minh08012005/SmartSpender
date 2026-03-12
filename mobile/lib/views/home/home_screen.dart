@@ -21,7 +21,27 @@ class HomeScreen extends StatelessWidget {
         .where((t) => t.type == TransactionType.expense)
         .fold<double>(0, (sum, t) => sum + t.amount);
 
-    final totalBalance = totalIncome - totalExpense;
+  /// Load transactions (used for initial load and retry)
+  void _loadTransactions() {
+    // Switch to real API fetch
+    context.read<TransactionProvider>().fetchTransactions(
+      month: DateTime.now().month,
+      year: DateTime.now().year,
+    );
+  }
+
+  /// Refresh transactions (used for pull-to-refresh)
+  Future<void> _refreshTransactions() async {
+    // Refresh from real API
+    await context.read<TransactionProvider>().fetchTransactions(
+      month: DateTime.now().month,
+      year: DateTime.now().year,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<TransactionProvider>();
 
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),

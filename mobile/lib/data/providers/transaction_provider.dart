@@ -76,7 +76,17 @@ class TransactionProvider extends ChangeNotifier {
 
         // Xử lý response dựa vào format API
         if (data is Map<String, dynamic> && data['success'] == true) {
-          final transactionsData = data['data'] as List?;
+          final responseData = data['data'] as Map<String, dynamic>;
+
+          final transactionsData =
+              responseData['transactions'] as List<dynamic>?;
+
+          final stats = responseData['stats'] as Map<String, dynamic>?;
+
+          if (stats != null) {
+            _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+            _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+          }
 
           if (transactionsData != null) {
             _transactions = transactionsData
