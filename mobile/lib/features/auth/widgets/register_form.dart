@@ -98,10 +98,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập họ và tên';
+              return 'Please enter your full name';
             }
             if (trimmed.length < 2) {
-              return 'Họ và tên quá ngắn';
+              return 'Full name is too short';
             }
             return null;
           },
@@ -117,10 +117,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập email';
+              return 'Please enter your email';
             }
             if (!_emailRegex.hasMatch(trimmed)) {
-              return 'Email không đúng định dạng';
+              return 'Invalid email format';
             }
             return null;
           },
@@ -135,10 +135,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập mật khẩu';
+              return 'Please enter your password';
             }
             if (trimmed.length < 6) {
-              return 'Mật khẩu tối thiểu 6 ký tự';
+              return 'Password must be at least 6 characters';
             }
             return null;
           },
@@ -153,10 +153,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng xác nhận mật khẩu';
+              return 'Please confirm your password';
             }
             if (trimmed != _passwordController.text.trim()) {
-              return 'Mật khẩu không khớp';
+              return 'Passwords do not match';
             }
             return null;
           },
