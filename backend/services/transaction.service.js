@@ -6,6 +6,20 @@ const Transaction = require("../models/transaction_schema");
 const mongoose = require("mongoose");
 const AppError = require("../utils/appError");
 const escapeStringRegexp = require("regex-escape");
+
+/**
+ * Create a transaction for user
+ * @param {string} userId
+ * @param {object} body
+ */
+exports.createTransaction = async (userId, body) => {
+  const created = await Transaction.create({
+    ...body,
+    userId: new mongoose.Types.ObjectId(userId),
+  });
+
+  return created.toObject ? created.toObject() : created;
+};
 /**
  * Fetch filtered transactions with pagination and statistics
  * @param {string} userId - ID của người dùng
@@ -93,14 +107,24 @@ exports.getFilteredTransactions = async (userId, filters) => {
     totalCount,
     page: Number(page),
     limit: Number(limit),
-    stats:
-      statsData.length > 0
-        ? statsData[0]
-        : {
-            totalAmount: 0,
-            totalIncome: 0,
-            totalExpense: 0,
-          },
+    stats: (() => {
+      if (statsData.length === 0) {
+        return {
+          totalIncome: 0,
+          totalExpense: 0,
+          balance: 0,
+        };
+      }
+
+      const totalIncome = Number(statsData[0].totalIncome || 0);
+      const totalExpense = Number(statsData[0].totalExpense || 0);
+
+      return {
+        totalIncome,
+        totalExpense,
+        balance: totalIncome - totalExpense,
+      };
+    })(),
   };
 };
 
@@ -126,4 +150,22 @@ exports.updateTransaction = async (userId, id, body) => {
   }
 
   return updated;
+};
+
+/**
+ * Delete a transaction by id, scoped to the owning user
+ * @param {string} userId
+ * @param {string} id
+ */
+exports.deleteTransaction = async (userId, id) => {
+  const deleted = await Transaction.findOneAndDelete({
+    _id: new mongoose.Types.ObjectId(id),
+    userId: new mongoose.Types.ObjectId(userId),
+  }).lean();
+
+  if (!deleted) {
+    throw new AppError("Transaction not found", 404);
+  }
+
+  return deleted;
 };

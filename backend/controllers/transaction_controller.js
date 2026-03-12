@@ -10,7 +10,13 @@ const { successResponse } = require('../utils/response.util');
 exports.getTransactions = async (req, res, next) => {
   try {
     const userId = req.user._id;
-    const filter = req.query;
+    const filter = {
+      ...req.query,
+      ...(req.query.month !== undefined && { month: Number(req.query.month) }),
+      ...(req.query.year !== undefined && { year: Number(req.query.year) }),
+      ...(req.query.page !== undefined && { page: Number(req.query.page) }),
+      ...(req.query.limit !== undefined && { limit: Number(req.query.limit) }),
+    };
 
     // Call #transaction.service to get filtered transactions
     const result = await transactionService.getFilteredTransactions(

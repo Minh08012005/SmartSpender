@@ -14,6 +14,7 @@ jest.mock("../../../models/transaction_schema", () => ({
   find: jest.fn(),
   countDocuments: jest.fn(),
   aggregate: jest.fn(),
+  findOneAndDelete: jest.fn(),
 }));
 
 const Transaction = require("../../../models/transaction_schema");
@@ -109,5 +110,44 @@ describe("Transaction Service - getFilteredTransactions", () => {
 
     expect(result.transactions).toEqual([]);
     expect(result.totalCount).toBe(0);
+    expect(result.stats).toBeDefined();
+    expect(result.stats).toEqual({
+      totalIncome: 0,
+      totalExpense: 0,
+      balance: 0,
+    });
+    expect(result.stats).not.toHaveProperty("_id");
+    expect(result.stats).not.toHaveProperty("totalAmount");
+    expect(typeof result.stats.totalIncome).toBe("number");
+    expect(typeof result.stats.totalExpense).toBe("number");
+    expect(typeof result.stats.balance).toBe("number");
+  });
+
+  it("should return normalized stats contract when aggregation has data", async () => {
+    Transaction.aggregate.mockResolvedValueOnce([
+      {
+        _id: null,
+        totalAmount: 300,
+        totalIncome: 500,
+        totalExpense: 200,
+      },
+    ]);
+
+    const result = await transactionService.getFilteredTransactions(userId, {
+      month: 2,
+      year: 2026,
+    });
+
+    expect(result.stats).toBeDefined();
+    expect(result.stats).toEqual({
+      totalIncome: 500,
+      totalExpense: 200,
+      balance: 300,
+    });
+    expect(result.stats).not.toHaveProperty("_id");
+    expect(result.stats).not.toHaveProperty("totalAmount");
+    expect(typeof result.stats.totalIncome).toBe("number");
+    expect(typeof result.stats.totalExpense).toBe("number");
+    expect(typeof result.stats.balance).toBe("number");
   });
 });

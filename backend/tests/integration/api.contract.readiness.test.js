@@ -229,7 +229,7 @@ describe('API contract readiness - GET /api/transactions & GET /api/statistics/s
       expect(res.status).toBe(200);
       expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
         mockUserId,
-        expect.objectContaining({ page: '2', limit: '5' })
+        expect.objectContaining({ page: 2, limit: 5 })
       );
     });
 
