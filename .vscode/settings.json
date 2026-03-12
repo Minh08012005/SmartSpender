@@ -1,3 +1,23 @@
 {
-  "cmake.ignoreCMakeListsMissing": true
+  "cmake.ignoreCMakeListsMissing": true,
+  "files.exclude": {
+    "**/node_modules": true,
+    "backend/postman/report.html": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "backend/postman/report.html": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/backend/postman/report.html": true
+  },
+  "files.associations": {
+    "**/backend/postman/report.html": "plaintext",
+    "**/node_modules/**/tsconfig.json": "plaintext"
+  },
+  "html.validate.enable": false,
+  "json.validate.enable": false,
+  "typescript.validate.enable": false,
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false
 }

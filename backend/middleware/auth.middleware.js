@@ -37,10 +37,11 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
+    const isExpired = error.code === 'ERR_JWT_EXPIRED';
     return res.status(401).json({
       success: false,
       statusCode: 401,
-      message: 'Invalid or expired token'
+      message: isExpired ? 'Token expired' : 'Invalid token',
     });
   }
 };

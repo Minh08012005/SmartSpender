@@ -5,12 +5,14 @@ info:
   description: API Documentation for SmartSpender Backend
 
 servers:
-  - url: http://localhost:5000/api
-    description: Local server
+  - url: http://localhost:3000/api
+    description: Local development server
 
 tags:
   - name: Transactions
     description: Transaction CRUD APIs
+  - name: Statistics
+    description: Statistics APIs
 
 paths:
   /transactions:
@@ -19,6 +21,8 @@ paths:
         - Transactions
       summary: Create new transaction
       description: Add a new income or expense transaction. All fields will be normalized/sanitized.
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -38,7 +42,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/TransactionResponse"
+                $ref: "#/components/schemas/TransactionCreatedResponse"
               example:
                 success: true
                 statusCode: 201
@@ -56,21 +60,142 @@ paths:
                   updatedAt: "2025-02-11T10:30:00.000Z"
         "400":
           description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
 
     get:
       tags:
         - Transactions
-      summary: Get all transactions
-      description: Retrieve transaction list of logged in user
+      summary: Get filtered transactions
+      description: |
+        Retrieve paginated transaction list. **Must** provide exactly one of:
+        - `month` + `year` (filter by calendar month)
+        - `from` + `to` (filter by date range)
+
+        Providing both pairs at the same time returns `400 Validation failed`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: "Month (1–12). Required when using month/year mode."
+        - in: query
+          name: year
+          schema:
+            type: integer
+            minimum: 2000
+          description: "Year (e.g. 2026). Required when using month/year mode."
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+          description: "Start date (YYYY-MM-DD). Required when using date-range mode."
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+          description: "End date (YYYY-MM-DD). Required when using date-range mode."
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [income, expense]
+          description: "Filter by transaction type."
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: "Filter by category. Comma-separated for multiple (e.g. food,travel)."
+        - in: query
+          name: search
+          schema:
+            type: string
+          description: "Partial-match search on the note field (case-insensitive)."
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: "Page number."
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: "Records per page."
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [date, amount, category, createdAt]
+            default: date
+          description: "Field to sort by."
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+          description: "Sort direction."
       responses:
         "200":
-          description: Transaction list
+          description: Transactions fetched successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Transaction"
+                $ref: "#/components/schemas/TransactionListResponse"
+              example:
+                success: true
+                statusCode: 200
+                message: "Transactions fetched successfully"
+                data:
+                  transactions:
+                    - _id: "65c88df8b2f8a1c21c23abcd"
+                      userId: "65c87aa21b23bcd9999abcd1"
+                      title: "Salary"
+                      amount: 15000000
+                      type: "income"
+                      category: "salary"
+                      note: "March salary"
+                      date: "2026-03-01T00:00:00.000Z"
+                      createdAt: "2026-03-01T08:00:00.000Z"
+                      updatedAt: "2026-03-01T08:00:00.000Z"
+                  totalCount: 1
+                  page: 1
+                  limit: 20
+                  stats:
+                    totalIncome: 15000000
+                    totalExpense: 0
+                    balance: 15000000
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
 
   /transactions/{id}:
     get:
@@ -190,6 +315,8 @@ paths:
       tags:
         - Transactions
       summary: Delete transaction
+      security:
+        - bearerAuth: []
       parameters:
         - in: path
           name: id
@@ -199,8 +326,76 @@ paths:
       responses:
         "200":
           description: Deleted successfully
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
+        "404":
+          description: Transaction not found
+
+  /statistics/summary:
+    get:
+      tags:
+        - Statistics
+      summary: Get monthly statistics summary
+      description: |
+        Returns total income, total expense, and balance for the given month/year.
+        Both `month` and `year` are required.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: "Month (1–12)"
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+          description: "Year (e.g. 2026)"
+      responses:
+        "200":
+          description: Monthly statistics fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SummaryStatsResponse"
+              example:
+                success: true
+                statusCode: 200
+                message: "Get monthly statistics successfully"
+                data:
+                  totalIncome: 15000000
+                  totalExpense: 5000000
+                  balance: 10000000
+        "400":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedResponse"
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
     Transaction:
       type: object
@@ -223,14 +418,15 @@ components:
           example: "expense"
         category:
           type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
           example: "food"
         note:
           type: string
           example: "With colleagues"
         date:
           type: string
-          format: date
-          example: "2025-02-11"
+          format: date-time
+          example: "2025-02-11T00:00:00.000Z"
         createdAt:
           type: string
           format: date-time
@@ -263,6 +459,7 @@ components:
           example: "expense"
         category:
           type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
           example: "food"
         note:
           type: string
@@ -270,11 +467,12 @@ components:
         date:
           type: string
           format: date
+          description: "ISO 8601 date (YYYY-MM-DD). Defaults to today if omitted."
           example: "2025-02-11"
 
     TransactionUpdateInput:
       type: object
-      description: "Partial update - provide only fields you want to change"
+      description: "Partial update – provide only fields you want to change"
       properties:
         title:
           type: string
@@ -284,7 +482,7 @@ components:
         amount:
           type: number
           minimum: 0
-          description: "Amount, can be 0"
+          description: "Amount (0 or positive)"
           example: 75000
         type:
           type: string
@@ -292,7 +490,8 @@ components:
           example: "expense"
         category:
           type: string
-          description: "Category must be lowercase and valid"
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
+          description: "Must be lowercase and a valid category"
           example: "food"
         note:
           type: string
@@ -303,11 +502,141 @@ components:
           description: "ISO format date (YYYY-MM-DD)"
           example: "2025-02-11"
 
-    TransactionResponse:
+    TransactionStats:
       type: object
+      description: "Aggregate stats for the filtered result set. Never contains _id or totalAmount."
+      required: [totalIncome, totalExpense, balance]
+      properties:
+        totalIncome:
+          type: number
+          example: 15000000
+        totalExpense:
+          type: number
+          example: 5000000
+        balance:
+          type: number
+          description: "totalIncome - totalExpense"
+          example: 10000000
+
+    TransactionListData:
+      type: object
+      required: [transactions, totalCount, page, limit, stats]
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        totalCount:
+          type: integer
+          description: "Total matching records (before pagination)"
+          example: 42
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        stats:
+          $ref: "#/components/schemas/TransactionStats"
+
+    TransactionListResponse:
+      type: object
+      required: [success, statusCode, message, data]
       properties:
         success:
           type: boolean
           example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Transactions fetched successfully"
+        data:
+          $ref: "#/components/schemas/TransactionListData"
+
+    TransactionCreatedResponse:
+      type: object
+      required: [success, statusCode, message, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 201
+        message:
+          type: string
+          example: "Transaction created successfully"
         data:
           $ref: "#/components/schemas/Transaction"
+
+    SummaryStatsData:
+      type: object
+      required: [totalIncome, totalExpense, balance]
+      properties:
+        totalIncome:
+          type: number
+          example: 15000000
+        totalExpense:
+          type: number
+          example: 5000000
+        balance:
+          type: number
+          description: "totalIncome - totalExpense"
+          example: 10000000
+
+    SummaryStatsResponse:
+      type: object
+      required: [success, statusCode, message, data]
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: "Get monthly statistics successfully"
+        data:
+          $ref: "#/components/schemas/SummaryStatsData"
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Validation failed"
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+
+    UnauthorizedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 401
+        message:
+          type: string
+          description: |
+            - `"Access token required"` – no Authorization header
+            - `"Invalid token"` – malformed or wrong-signature token
+            - `"Token expired"` – valid JWT but past its expiry
+          example: "Access token required"
