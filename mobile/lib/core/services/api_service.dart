@@ -185,19 +185,19 @@ class _ErrorInterceptor extends Interceptor {
   String _getErrorMessage(DioException err) {
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Kết nối quá lâu, vui lòng thử lại';
+        return 'Connection timed out, please try again';
       case DioExceptionType.sendTimeout:
-        return 'Gửi dữ liệu quá lâu';
+        return 'Request send timed out';
       case DioExceptionType.receiveTimeout:
-        return 'Nhận dữ liệu quá lâu';
+        return 'Response receive timed out';
       case DioExceptionType.badResponse:
-        return err.response?.data['message'] ?? 'Lỗi từ server';
+        return err.response?.data['message'] ?? 'Server error';
       case DioExceptionType.cancel:
-        return 'Request bị hủy';
+        return 'Request was cancelled';
       case DioExceptionType.unknown:
-        return 'Không thể kết nối tới server';
+        return 'Unable to connect to server';
       default:
-        return 'Có lỗi xảy ra';
+        return 'An unexpected error occurred';
     }
   }
 
