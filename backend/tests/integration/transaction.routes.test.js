@@ -90,7 +90,7 @@ describe("Transaction API Integration Tests", () => {
 
     expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
       mockUserId,
-      { page: "2", limit: "10", month: "3", year: "2025" }, // query string giữ nguyên dạng string
+      { page: 2, limit: 10, month: 3, year: 2025 },
     );
   });
 

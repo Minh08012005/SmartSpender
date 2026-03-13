@@ -11,7 +11,7 @@ const { getSummarySchema } = require("../validators/statistic.validator");
 
 /**
  * @swagger
- * /api/statistics/summary:
+ * /statistics/summary:
  *   get:
  *     summary: "Lấy tổng thu, chi và số dư theo tháng"
  *     tags:
