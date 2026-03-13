@@ -222,22 +222,24 @@ class TransactionProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> updateTransaction(TransactionModel transaction) async {
+  Future<bool> updateTransaction(String id, TransactionModel transaction) async {
     _setLoading(true);
     _clearError();
-    final index = _transactions.indexWhere((t) => t.id == transaction.id);
+    final index = _transactions.indexWhere((t) => t.id == id);
     final previousTransaction = index != -1 ? _transactions[index] : null;
     final didOptimisticUpdate = index != -1;
+    final requestTransaction =
+        transaction.id == id ? transaction : transaction.copyWith(id: id);
 
     if (didOptimisticUpdate) {
-      _transactions[index] = transaction;
+      _transactions[index] = requestTransaction;
       notifyListeners();
     }
 
     try {
       final response = await _apiService.put(
-        ApiConstants.transactionById(transaction.id),
-        data: transaction.toJson(),
+        ApiConstants.transactionById(id),
+        data: requestTransaction.toJson(),
       );
 
       if (response.statusCode == 200) {

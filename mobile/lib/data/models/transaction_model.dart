@@ -8,6 +8,7 @@ enum TransactionType { income, expense }
 /// Hỗ trợ parse từ JSON API và format hiển thị
 class TransactionModel {
   final String id;
+  final String title;
   final double amount;
   final String category;
   final DateTime date;
@@ -16,6 +17,7 @@ class TransactionModel {
 
   TransactionModel({
     required this.id,
+    required this.title,
     required this.amount,
     required this.category,
     required this.date,
@@ -29,6 +31,7 @@ class TransactionModel {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['_id'] ?? json['id'] ?? '',
+      title: json['title'] ?? '',
       amount: _parseAmount(json['amount']),
       category: json['category'] ?? 'Uncategorized',
       date: _parseDate(json['date']),
@@ -40,9 +43,9 @@ class TransactionModel {
   /// Convert sang JSON để gửi API
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
+      'title': title,
       'amount': amount,
-      'category': category,
+      'category': category.toLowerCase(),
       'date': date.toIso8601String(),
       'note': note,
       'type': type.name,
@@ -93,6 +96,7 @@ class TransactionModel {
   /// Copy với một số trường thay đổi
   TransactionModel copyWith({
     String? id,
+    String? title,
     double? amount,
     String? category,
     DateTime? date,
@@ -101,6 +105,7 @@ class TransactionModel {
   }) {
     return TransactionModel(
       id: id ?? this.id,
+      title: title ?? this.title,
       amount: amount ?? this.amount,
       category: category ?? this.category,
       date: date ?? this.date,
@@ -111,7 +116,7 @@ class TransactionModel {
 
   @override
   String toString() {
-    return 'Transaction(id: $id, amount: $amount, category: $category, '
-        'date: $formattedDate, type: ${type.name})';
+    return 'Transaction(id: $id, title: $title, amount: $amount, '
+        'category: $category, date: $formattedDate, type: ${type.name})';
   }
 }
