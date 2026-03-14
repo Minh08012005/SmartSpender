@@ -22,7 +22,7 @@ const {
 
 /**
  * @swagger
- * /api/transactions:
+ * /transactions:
  *   get:
  *     summary: "Lấy danh sách giao dịch với các bộ lọc tùy chọn"
  *     description: |
@@ -231,7 +231,7 @@ router.get(
 
 /**
  * @swagger
- * /api/transactions:
+ * /transactions:
  *   post:
  *     summary: "Tạo giao dịch mới"
  *     description: |
@@ -287,7 +287,7 @@ router.post(
 
 /**
  * @swagger
- * /api/transactions/{id}:
+ * /transactions/{id}:
  *   put:
  *     summary: "Cập nhật giao dịch"
  *     description: |
@@ -353,7 +353,7 @@ router.put(
 
 /**
  * @swagger
- * /api/transactions/{id}:
+ * /transactions/{id}:
  *   delete:
  *     summary: "Xóa giao dịch"
  *     description: |

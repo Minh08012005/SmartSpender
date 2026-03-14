@@ -1,0 +1,88 @@
+[
+  {
+    "_comment": "Seed data for GET /api/transactions and GET /api/statistics/summary tests.",
+    "_comment2": "Tạo các giao dịch này bằng POST /api/transactions sau khi đăng nhập.",
+    "_comment3": "total income=15150000, total expense=650000, balance=14500000 for month=3 year=2026"
+  },
+  {
+    "title": "March Salary",
+    "amount": 15000000,
+    "type": "income",
+    "category": "salary",
+    "date": "2026-03-01",
+    "note": "monthly salary march"
+  },
+  {
+    "title": "Freelance",
+    "amount": 150000,
+    "type": "income",
+    "category": "other",
+    "date": "2026-03-05",
+    "note": "small freelance job"
+  },
+  {
+    "title": "Lunch at office",
+    "amount": 50000,
+    "type": "expense",
+    "category": "food",
+    "date": "2026-03-10",
+    "note": "lunch with team"
+  },
+  {
+    "title": "Dinner out",
+    "amount": 120000,
+    "type": "expense",
+    "category": "food",
+    "date": "2026-03-12",
+    "note": "dinner at restaurant"
+  },
+  {
+    "title": "Bus ticket",
+    "amount": 30000,
+    "type": "expense",
+    "category": "travel",
+    "date": "2026-03-15",
+    "note": "commute"
+  },
+  {
+    "title": "Netflix",
+    "amount": 150000,
+    "type": "expense",
+    "category": "entertainment",
+    "date": "2026-03-20",
+    "note": "streaming subscription"
+  },
+  {
+    "title": "Electricity bill",
+    "amount": 200000,
+    "type": "expense",
+    "category": "utility",
+    "date": "2026-03-25",
+    "note": "march electricity"
+  },
+  {
+    "title": "Coffee shop",
+    "amount": 100000,
+    "type": "expense",
+    "category": "food",
+    "date": "2026-03-28",
+    "note": "weekend coffee"
+  },
+  {
+    "_comment_feb": "---- February data for cross-month verification ----",
+    "title": "February Salary",
+    "amount": 14000000,
+    "type": "income",
+    "category": "salary",
+    "date": "2026-02-01",
+    "note": "monthly salary february"
+  },
+  {
+    "title": "Groceries",
+    "amount": 300000,
+    "type": "expense",
+    "category": "shopping",
+    "date": "2026-02-14",
+    "note": "grocery run"
+  }
+]
