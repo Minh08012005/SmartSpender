@@ -2,10 +2,10 @@
  * Service xử lý logic liên quan đến giao dịch
  */
 
-const Transaction = require("../models/transaction_schema");
-const mongoose = require("mongoose");
-const AppError = require("../utils/appError");
-const escapeStringRegexp = require("regex-escape");
+const Transaction = require('../models/transaction_schema');
+const mongoose = require('mongoose');
+const AppError = require('../utils/appError');
+const escapeStringRegexp = require('regex-escape');
 
 /**
  * Create a transaction for user
@@ -36,8 +36,8 @@ exports.getFilteredTransactions = async (userId, filters) => {
     search,
     page = 1,
     limit = 20,
-    sortBy = "date",
-    order = "desc",
+    sortBy = 'date',
+    order = 'desc',
   } = filters;
 
   //Khởi tạo query object
@@ -53,7 +53,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
   } else {
     throw new AppError(
       "Please provide either 'from' and 'to' dates or 'month' and 'year' for filtering.",
-      400,
+      400
     );
   }
 
@@ -64,19 +64,19 @@ exports.getFilteredTransactions = async (userId, filters) => {
 
   // Xử lý Category (CSV support)
   if (category) {
-    const categoryArray = category.split(",").map((c) => c.trim());
+    const categoryArray = category.split(',').map((c) => c.trim());
     query.category = { $in: categoryArray };
   }
 
   // Xử lý Search (Partial match trên field 'note')
   if (search) {
     const escapedSearch = escapeStringRegexp(search);
-    query.note = { $regex: escapedSearch, $options: "i" };
+    query.note = { $regex: escapedSearch, $options: 'i' };
   }
 
   // Thực thi Query với Pagination & Sorting
   const skip = (page - 1) * limit;
-  const sortOptions = { [sortBy]: order === "desc" ? -1 : 1 };
+  const sortOptions = { [sortBy]: order === 'desc' ? -1 : 1 };
 
   const [transactions, totalCount, statsData] = await Promise.all([
     Transaction.find(query)
@@ -90,12 +90,11 @@ exports.getFilteredTransactions = async (userId, filters) => {
       {
         $group: {
           _id: null,
-          totalAmount: { $sum: "$amount" },
           totalIncome: {
-            $sum: { $cond: [{ $eq: ["$type", "income"] }, "$amount", 0] },
+            $sum: { $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] },
           },
           totalExpense: {
-            $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0] },
+            $sum: { $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] },
           },
         },
       },
@@ -140,7 +139,10 @@ exports.updateTransaction = async (userId, id, body) => {
   }
 
   const updated = await Transaction.findOneAndUpdate(
-    { _id: new mongoose.Types.ObjectId(id), userId: new mongoose.Types.ObjectId(userId) },
+    {
+      _id: new mongoose.Types.ObjectId(id),
+      userId: new mongoose.Types.ObjectId(userId),
+    },
     { $set: body },
     { new: true, runValidators: true }
   ).lean();
@@ -164,7 +166,7 @@ exports.deleteTransaction = async (userId, id) => {
   }).lean();
 
   if (!deleted) {
-    throw new AppError("Transaction not found", 404);
+    throw new AppError('Transaction not found', 404);
   }
 
   return deleted;

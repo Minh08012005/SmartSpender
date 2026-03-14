@@ -7,16 +7,25 @@
 
 ## Tổng quan
 
-| # | Test Case ID | Endpoint | Kỳ vọng | Thực tế | Trạng thái |
-| --- | --- | --- | --- | --- | --- |
-| 1 | TC-V01 | GET /api/transactions?month=3 | 400 | 400 | ✅ PASS |
-| 2 | TC-V02 | GET /api/transactions?month=13&year=2026 | 400 | 400 | ✅ PASS |
-| 3 | TC-V03 | GET /api/transactions?month=3&year=2026&from=..&to=.. | 400 | 400 | ✅ PASS |
-| 4 | TC-A01 | GET /api/transactions (no token) | 401 | 401 | ✅ PASS |
-| 5 | TC-A02 | GET /api/transactions (invalid token) | 401 | 401 | ✅ PASS |
-| 6 | TC-S03 | GET /api/statistics/summary?month=3 | 400 | 400 | ✅ PASS |
+Trạng thái hiện tại: **chưa ghi nhận failing case thực tế** trong đợt chạy gần nhất.
+Các case bên dưới là **pass evidence** cho nhóm validation/auth.
 
-> Nếu phát hiện case thất bại mới khi chạy Postman/Newman, thêm vào bảng trên và điền template bên dưới.
+| #   | Test Case ID | Endpoint                                              | Kỳ vọng | Thực tế | Trạng thái |
+| --- | ------------ | ----------------------------------------------------- | ------- | ------- | ---------- |
+| 1   | TC-V01       | GET /api/transactions?month=3                         | 400     | 400     | ✅ PASS    |
+| 2   | TC-V02       | GET /api/transactions?month=13&year=2026              | 400     | 400     | ✅ PASS    |
+| 3   | TC-V03       | GET /api/transactions?month=3&year=2026&from=..&to=.. | 400     | 400     | ✅ PASS    |
+| 4   | TC-A01       | GET /api/transactions (no token)                      | 401     | 401     | ✅ PASS    |
+| 5   | TC-A02       | GET /api/transactions (invalid token)                 | 401     | 401     | ✅ PASS    |
+| 6   | TC-S03       | GET /api/statistics/summary?month=3                   | 400     | 400     | ✅ PASS    |
+
+> Nếu phát hiện case thất bại mới khi chạy Postman/Newman, thêm vào mục **Fail Evidence** bên dưới và điền template.
+
+---
+
+## Fail Evidence
+
+Chưa phát hiện failing case trong lần cập nhật hiện tại.
 
 ---
 
