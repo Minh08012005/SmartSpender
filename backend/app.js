@@ -15,26 +15,24 @@ const swaggerUi = require('swagger-ui-express'); // Giao diện người dùng S
 
 // Import middleware
 const { generalLimiter } = require('./middleware/rateLimit.middleware');
-const validate = require('./middleware/validate.middleware');
 const errorHandler = require('./middleware/errorHandler.middleware');
-
-// Import validators
-const { registerSchema, loginSchema } = require('./validators/auth.validator');
 
 // Import routes
 const registerRoute = require('./routes/auth/register.route'); // Routes cho registration
 const loginRoute = require('./routes/auth/login.route'); // Routes cho login
-const transactionRoutes = require("./routes/transaction_routes"); // Routes cho transactions
-const statisticRoutes = require("./routes/statistic_routes"); // Routes cho thống kê
+const transactionRoutes = require('./routes/transaction_routes'); // Routes cho transactions
+const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
 
 // Khởi tạo ứng dụng Express
 const app = express();
 
 // Bảo mật middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // Tắt CSP cho API
-  crossOriginEmbedderPolicy: false,
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Tắt CSP cho API
+    crossOriginEmbedderPolicy: false,
+  })
+);
 
 // Logging middleware
 app.use(morgan('combined')); // Ghi log tất cả requests
@@ -55,14 +53,16 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Tài liệu API cho ứng dụng quản lý chi tiêu',
     },
-    servers: [{ url: 'http://localhost:3000' }],
+    servers: [{ url: 'http://localhost:3000/api' }],
     components: {
       securitySchemes: {
-        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }
-      }
-    }
+        bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      },
+    },
   },
-  apis: ['./routes/*.js', './routes/auth/*.js'], // Đường dẫn đến các file định nghĩa API
+  // Use YAML as single source of truth for transaction/statistic APIs.
+  // Keep auth route annotations for login/register docs.
+  apis: ['./routes/auth/*.js', './docs/*.yaml'], // Đường dẫn đến các file định nghĩa API
 };
 
 // Thiết lập Swagger UI
@@ -72,8 +72,8 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 // Định tuyến routes
 app.use('/api/auth', registerRoute);
 app.use('/api/auth', loginRoute);
-app.use("/api/transactions", transactionRoutes);
-app.use("/api/statistics", statisticRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/statistics', statisticRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

@@ -1,7 +1,9 @@
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
+import '../../screens/login.dart';
 
 /// Centralized API Service
 ///
@@ -14,6 +16,10 @@ class ApiService {
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
+
+  /// Global navigator key — dùng để navigate từ ngoài widget tree (vd: interceptor)
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
 
   late final Dio _dio;
 
@@ -179,31 +185,34 @@ class _ErrorInterceptor extends Interceptor {
   String _getErrorMessage(DioException err) {
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Kết nối quá lâu, vui lòng thử lại';
+        return 'Connection timed out, please try again';
       case DioExceptionType.sendTimeout:
-        return 'Gửi dữ liệu quá lâu';
+        return 'Request send timed out';
       case DioExceptionType.receiveTimeout:
-        return 'Nhận dữ liệu quá lâu';
+        return 'Response receive timed out';
       case DioExceptionType.badResponse:
-        return err.response?.data['message'] ?? 'Lỗi từ server';
+        return err.response?.data['message'] ?? 'Server error';
       case DioExceptionType.cancel:
-        return 'Request bị hủy';
+        return 'Request was cancelled';
       case DioExceptionType.unknown:
-        return 'Không thể kết nối tới server';
+        return 'Unable to connect to server';
       default:
-        return 'Có lỗi xảy ra';
+        return 'An unexpected error occurred';
     }
   }
 
-  /// Xử lý khi token hết hạn
+  /// Xử lý khi token hết hạn — xóa token và điều hướng về LoginScreen
   Future<void> _handleTokenExpired() async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Xóa token cũ
     await prefs.remove(ApiConstants.accessTokenKey);
     await prefs.remove(ApiConstants.refreshTokenKey);
 
-    // TODO: Navigate to login screen
-    // Sẽ implement ở Sprint 2
+    developer.log('🔓 Token expired — redirecting to Login', name: 'API');
+
+    // Điều hướng về Login, xóa toàn bộ navigation stack
+    ApiService.navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
   }
 }

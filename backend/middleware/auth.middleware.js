@@ -60,11 +60,12 @@ const authenticate = async (req, res, next) => {
 
     next();
   } catch (error) {
-    if (isExpiredTokenError(error)) {
-      return sendUnauthorized(res, 'Token expired', 'TOKEN_EXPIRED');
-    }
-
-    return sendUnauthorized(res, 'Invalid token', 'TOKEN_INVALID');
+    const isExpired = error.code === 'ERR_JWT_EXPIRED';
+    return res.status(401).json({
+      success: false,
+      statusCode: 401,
+      message: isExpired ? 'Token expired' : 'Invalid token',
+    });
   }
 };
 

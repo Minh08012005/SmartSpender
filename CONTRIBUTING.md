@@ -35,8 +35,6 @@ docs: cập nhật tài liệu
 
 ## 🎯 SPRINT 2: Core Features & Integration
 
-**⏰ Thời gian:** 10/02 - 20/02/2026 _(23 tháng Chạp - Mùng 3 Tết)_
-
 ### 🎯 Mục Tiêu Chính
 
 - ✅ **Integration (Kết nối):** Dummy Data → Real API

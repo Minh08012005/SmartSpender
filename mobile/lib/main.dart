@@ -74,6 +74,7 @@ class _MyAppState extends State<MyApp> {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'SmartSpender',
+        navigatorKey: ApiService.navigatorKey,
         theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
 
         // ===== AUTO-LOGIN LOGIC =====
