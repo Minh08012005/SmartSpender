@@ -237,6 +237,8 @@ router.get(
  *     description: |
  *       - Dữ liệu sẽ được normalize/sanitize (trim title, lowercase category,
  *         coerce amount thành số, kiểm tra type)
+ *       - `category` và `type` chấp nhận input hoa/thường từ client, sau đó
+ *         sẽ được normalize về lowercase trước khi lưu DB
  *       - `amount` có thể là 0, sau khi validate schema sẽ đồng nhất với service
  *     tags:
  *       - Transactions
@@ -261,12 +263,13 @@ router.get(
  *                 minimum: 0
  *               category:
  *                 type: string
+ *                 enum: [food, travel, shopping, salary, entertainment, utility, other]
  *               type:
  *                 type: string
  *                 enum: [income, expense]
  *               date:
  *                 type: string
- *                 format: date
+ *                 format: date-time
  *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01). Mặc định là ngày hiện tại."
  *               note:
  *                 type: string
@@ -391,8 +394,8 @@ router.put(
  *                   type: string
  *                   example: "Transaction deleted successfully"
  *                 data:
- *                   type: object
- *                   description: "Transaction đã được xóa"
+ *                   nullable: true
+ *                   example: null
  *       400:
  *         description: "ID không hợp lệ (không phải ObjectId hợp lệ)"
  *         content:
@@ -415,7 +418,8 @@ router.put(
  *             example:
  *               success: false
  *               statusCode: 401
- *               message: "Unauthorized"
+ *               message: "Access token required"
+ *               errorCode: "TOKEN_MISSING"
  *       404:
  *         description: "Transaction không tồn tại hoặc không thuộc về user hiện tại"
  *         content:
