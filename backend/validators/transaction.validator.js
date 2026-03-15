@@ -61,9 +61,12 @@ const createTransactionSchema = Joi.object({
   title: Joi.string().trim().min(2).max(100).required(),
   // amount cho phép 0 để đồng bộ với service (service đã kiểm tra >=0)
   amount: Joi.number().min(0).required(),
-  type: Joi.string().valid("income", "expense").required(),
-  category: Joi.string().valid(...VALID_CATEGORIES).required(),
-  date: Joi.date().optional(),
+  // Normalize lowercase để API chấp nhận input hoa/thường từ client.
+  type: Joi.string().trim().lowercase().valid("income", "expense").required(),
+  // Normalize lowercase để khớp enum category trong DB.
+  category: Joi.string().trim().lowercase().valid(...VALID_CATEGORIES).required(),
+  // Cho phép cả YYYY-MM-DD và full ISO datetime.
+  date: Joi.date().iso().optional(),
   note: Joi.string().allow("").optional(),
 });
 

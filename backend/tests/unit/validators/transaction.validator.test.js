@@ -256,6 +256,21 @@ describe("Transaction Validator - CREATE Transaction", () => {
 
     expect(error).toBeUndefined();
   });
+
+  it("should normalize uppercase category and type", () => {
+    const data = {
+      title: "Salary",
+      amount: 5000000,
+      category: "SALARY",
+      type: "INCOME",
+    };
+
+    const { error, value } = createTransactionSchema.validate(data);
+
+    expect(error).toBeUndefined();
+    expect(value.category).toBe("salary");
+    expect(value.type).toBe("income");
+  });
 });
 
 /**
