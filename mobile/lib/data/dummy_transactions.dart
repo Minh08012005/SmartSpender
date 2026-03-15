@@ -23,7 +23,7 @@ final List<TransactionModel> dummyTransactions = [
     id: 't3',
     title: 'Side project',
     amount: 200000,
-    category: 'Freelance',
+    category: 'Other Income',
     date: DateTime(2026, 1, 30),
     note: 'Side project',
     type: TransactionType.income,
