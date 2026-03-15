@@ -6,27 +6,8 @@
 const { jwtVerify } = require('jose');
 const { TextEncoder } = require('util');
 
-const getSecretKey = () => {
-  const secret = process.env.JWT_SECRET;
-  if (!secret || !secret.trim()) {
-    throw new Error('JWT_SECRET is not configured');
-  }
-
-  return new TextEncoder().encode(secret);
-};
-
-const sendUnauthorized = (res, message, errorCode) => {
-  return res.status(401).json({
-    success: false,
-    statusCode: 401,
-    message,
-    errorCode,
-  });
-};
-
-const isExpiredTokenError = (error) => {
-  return error?.code === 'ERR_JWT_EXPIRED' || error?.name === 'JWTExpired';
-};
+// Tạo secret key từ biến môi trường
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
 
 /**
  * Middleware xác thực requests sử dụng JWT.
@@ -39,32 +20,27 @@ const authenticate = async (req, res, next) => {
 
     // Kiểm tra nếu header không tồn tại hoặc không bắt đầu bằng
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return sendUnauthorized(res, 'Access token required', 'TOKEN_MISSING');
+      return res.status(401).json({
+        success: false,
+        statusCode: 401,
+        message: 'Access token required'
+      });
     }
 
-    const token = authHeader.substring(7).trim(); // Loại bỏ 'Bearer ' prefix
-    if (!token) {
-      return sendUnauthorized(res, 'Access token required', 'TOKEN_MISSING');
-    }
+    const token = authHeader.substring(7); // Loại bỏ 'Bearer ' prefix
 
     // Xác thực JWT token
-    const { payload } = await jwtVerify(token, getSecretKey());
-
-    const userId = payload.userId || payload._id;
-    if (!userId) {
-      return sendUnauthorized(res, 'Invalid token', 'TOKEN_INVALID');
-    }
+    const { payload } = await jwtVerify(token, secretKey);
 
     // Đính kèm user ID vào request object
-    req.user = { _id: userId };
+    req.user = {_id: payload.userId || payload._id };
 
     next();
   } catch (error) {
-    const isExpired = error.code === 'ERR_JWT_EXPIRED';
     return res.status(401).json({
       success: false,
       statusCode: 401,
-      message: isExpired ? 'Token expired' : 'Invalid token',
+      message: 'Invalid or expired token'
     });
   }
 };
