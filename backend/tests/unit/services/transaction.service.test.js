@@ -14,6 +14,7 @@ jest.mock("../../../models/transaction_schema", () => ({
   find: jest.fn(),
   countDocuments: jest.fn(),
   aggregate: jest.fn(),
+  create: jest.fn(),
   findOneAndDelete: jest.fn(),
 }));
 
@@ -149,5 +150,86 @@ describe("Transaction Service - getFilteredTransactions", () => {
     expect(typeof result.stats.totalIncome).toBe("number");
     expect(typeof result.stats.totalExpense).toBe("number");
     expect(typeof result.stats.balance).toBe("number");
+  });
+});
+/**
+ * CREATE TRANSACTION TESTS
+ */
+
+describe("Transaction Service - createTransaction", () => {
+  const userId = new mongoose.Types.ObjectId().toString();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should create transaction successfully", async () => {
+    const payload = {
+      title: "Lunch",
+      amount: 100000,
+      category: "food",
+      type: "expense",
+      date: new Date(),
+      note: "Team lunch",
+    };
+
+    const created = {
+      ...payload,
+      _id: new mongoose.Types.ObjectId(),
+      userId: new mongoose.Types.ObjectId(userId),
+      toObject: jest.fn().mockReturnValue({ ...payload, _id: "mock-id" }),
+    };
+
+    Transaction.create.mockResolvedValue(created);
+
+    const result = await transactionService.createTransaction(userId, payload);
+
+    expect(Transaction.create).toHaveBeenCalled();
+    expect(result).toEqual({ ...payload, _id: "mock-id" });
+  });
+
+  it("should throw error if userId invalid", async () => {
+    await expect(
+      transactionService.createTransaction("invalid", {
+        title: "Test",
+        amount: 100,
+        category: "food",
+        type: "expense",
+      })
+    ).rejects.toThrow(AppError);
+  });
+
+  it("should throw error if category is not a string", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Test",
+        amount: 100,
+        category: 123,
+        type: "expense",
+      })
+    ).rejects.toThrow("Category must be a string");
+  });
+
+  it("should throw error if type is not a string", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Test",
+        amount: 100,
+        category: "food",
+        type: 1,
+      })
+    ).rejects.toThrow("Type must be a string");
+  });
+
+  it("should throw error if date has invalid format", async () => {
+    await expect(
+      transactionService.createTransaction(userId, {
+        title: "Test",
+        amount: 100,
+        category: "food",
+        type: "expense",
+        date: "not-a-date",
+      })
+    ).rejects.toThrow("Invalid date format");
   });
 });

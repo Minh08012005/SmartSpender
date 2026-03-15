@@ -6,6 +6,7 @@ const Transaction = require('../models/transaction_schema');
 const mongoose = require('mongoose');
 const AppError = require('../utils/appError');
 const escapeStringRegexp = require('regex-escape');
+const { VALID_CATEGORIES } = require('../validators/constants');
 
 /**
  * Create a transaction for user
@@ -13,8 +14,57 @@ const escapeStringRegexp = require('regex-escape');
  * @param {object} body
  */
 exports.createTransaction = async (userId, body) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError('Invalid user id', 400);
+  }
+
+  // Defensive guard: keep service contract safe even if validator is bypassed.
+  if (!body || typeof body !== 'object') {
+    throw new AppError('Invalid payload', 400);
+  }
+
+  if (typeof body.title !== 'string' || !body.title.trim()) {
+    throw new AppError('Title must be a string', 400);
+  }
+
+  const amountNum = Number(body.amount);
+  if (!Number.isFinite(amountNum) || amountNum < 0) {
+    throw new AppError('Invalid amount', 400);
+  }
+
+  if (typeof body.category !== 'string') {
+    throw new AppError('Category must be a string', 400);
+  }
+
+  const normalizedCategory = body.category.trim().toLowerCase();
+  if (!VALID_CATEGORIES.includes(normalizedCategory)) {
+    throw new AppError('Invalid category', 400);
+  }
+
+  if (typeof body.type !== 'string') {
+    throw new AppError('Type must be a string', 400);
+  }
+
+  const normalizedType = body.type.trim().toLowerCase();
+  if (!['income', 'expense'].includes(normalizedType)) {
+    throw new AppError('Invalid type', 400);
+  }
+
+  let normalizedDate;
+  if (body.date !== undefined) {
+    normalizedDate = body.date instanceof Date ? body.date : new Date(body.date);
+    if (!normalizedDate || Number.isNaN(normalizedDate.getTime())) {
+      throw new AppError('Invalid date format', 400);
+    }
+  }
+
   const created = await Transaction.create({
     ...body,
+    title: body.title.trim(),
+    amount: amountNum,
+    category: normalizedCategory,
+    type: normalizedType,
+    ...(normalizedDate && { date: normalizedDate }),
     userId: new mongoose.Types.ObjectId(userId),
   });
 
@@ -137,7 +187,6 @@ exports.updateTransaction = async (userId, id, body) => {
   if (!body || Object.keys(body).length === 0) {
     throw new AppError('Request body must not be empty', 400);
   }
-
   const updated = await Transaction.findOneAndUpdate(
     {
       _id: new mongoose.Types.ObjectId(id),
