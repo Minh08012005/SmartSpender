@@ -37,6 +37,7 @@ class TransactionModel {
   }) : category = _normalizeCategory(category, type),
        assert(amount > 0, 'Amount must be > 0'),
        assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
+       assert(title.trim().isNotEmpty, 'Title cannot be empty'),
        assert(note.length <= maxNoteLength, 'Note too long'),
        assert(
          isCategoryValid(type, _normalizeCategory(category, type)),
@@ -59,7 +60,6 @@ class TransactionModel {
 
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'amount': amount,
       'category': _normalizeCategory(category, type),
       'title': title,

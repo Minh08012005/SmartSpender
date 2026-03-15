@@ -26,13 +26,13 @@ final List<TransactionModel> dummyTransactions = [
     type: TransactionType.expense,
   ),
   TransactionModel(
-    id: 't3',
-    amount: 200000,
-    category: 'bonus',
-    title: 'Side project bonus',
-    date: DateTime(2026, 1, 30),
-    note: 'Side project',
-    type: TransactionType.income,
-  ),
+  id: 't3',
+  amount: 200000,
+  category: 'other income',
+  title: 'Side project bonus',
+  date: DateTime(2026, 1, 30),
+  note: 'Side project',
+  type: TransactionType.income,
+ ),
 ];
 */

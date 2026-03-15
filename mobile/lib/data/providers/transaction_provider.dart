@@ -135,9 +135,13 @@ class TransactionProvider extends ChangeNotifier {
         throw Exception('Failed to load transactions');
       }
     } on DioException catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
       _setError(e.error?.toString() ?? 'Cannot fetch transactions');
       debugPrint('❌ Fetch transactions failed: ${e.message}');
     } catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
       _setError('Có lỗi xảy ra: $e');
       debugPrint('❌ Unexpected error: $e');
     } finally {
@@ -165,6 +169,8 @@ class TransactionProvider extends ChangeNotifier {
         }
         // Thêm vào list local
         _transactions.insert(0, createdTransaction);
+        _remoteTotalIncome = null;
+        _remoteTotalExpense = null;
         notifyListeners();
 
         debugPrint('✅ Transaction added successfully');
@@ -198,6 +204,8 @@ class TransactionProvider extends ChangeNotifier {
       if (response.statusCode == 200 || response.statusCode == 204) {
         // Xóa khỏi list local
         _transactions.removeWhere((t) => t.id == id);
+        _remoteTotalIncome = null;
+        _remoteTotalExpense = null;
         notifyListeners();
 
         debugPrint('✅ Transaction deleted successfully');
@@ -246,6 +254,8 @@ class TransactionProvider extends ChangeNotifier {
 
         if (index != -1) {
           _transactions[index] = updatedTransaction;
+          _remoteTotalIncome = null;
+          _remoteTotalExpense = null;
           notifyListeners();
         }
 
@@ -317,6 +327,8 @@ class TransactionProvider extends ChangeNotifier {
   /// Reset toàn bộ state
   void reset() {
     _transactions = [];
+    _remoteTotalIncome = null;
+    _remoteTotalExpense = null;
     _isLoading = false;
     _error = '';
     notifyListeners();

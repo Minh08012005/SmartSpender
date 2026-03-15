@@ -90,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBody(TransactionProvider provider) {
     // 1️⃣ Loading
-    if (provider.isLoading) {
+    if (provider.isLoading && provider.transactions.isEmpty) {
       return const HomeLoading();
     }
 
