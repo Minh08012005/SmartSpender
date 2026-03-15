@@ -11,7 +11,7 @@ const { parseYYYYMMDD } = require('../utils/date_util');
 const logger = require('../utils/logger');
 
 /**
- * Fetch filtered transactions with pagination and statistics
+ * Fetch filtered transactions with pagination
  * @param {string} userId - ID của người dùng
  * @param {object} filters - Các tham số lọc từ query string
  */
@@ -96,24 +96,9 @@ exports.getFilteredTransactions = async (userId, filters) => {
   const skip = (pageNum - 1) * limitNum;
   const sortOptions = { [sortBy]: order === 'desc' ? -1 : 1 };
 
-  const [transactions, totalCount, statsData] = await Promise.all([
+  const [transactions, totalCount] = await Promise.all([
     Transaction.find(query).sort(sortOptions).skip(skip).limit(limitNum).lean(),
     Transaction.countDocuments(query),
-    Transaction.aggregate([
-      { $match: query },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: '$amount' },
-          totalIncome: {
-            $sum: { $cond: [{ $eq: ['$type', 'income'] }, '$amount', 0] },
-          },
-          totalExpense: {
-            $sum: { $cond: [{ $eq: ['$type', 'expense'] }, '$amount', 0] },
-          },
-        },
-      },
-    ]),
   ]);
 
   return {
@@ -121,14 +106,6 @@ exports.getFilteredTransactions = async (userId, filters) => {
     totalCount,
     page: pageNum,
     limit: limitNum,
-    stats:
-      statsData.length > 0
-        ? statsData[0]
-        : {
-            totalAmount: 0,
-            totalIncome: 0,
-            totalExpense: 0,
-          },
   };
 };
 
