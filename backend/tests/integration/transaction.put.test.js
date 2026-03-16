@@ -7,7 +7,8 @@
 
 const request = require("supertest");
 const mongoose = require("mongoose");
-const jwt = require("jsonwebtoken");
+const { SignJWT } = require("jose");
+const { TextEncoder } = require("util");
 
 process.env.JWT_SECRET = "testsecret";
 
@@ -24,6 +25,21 @@ const app = require("../../app");
 const User = require("../../models/users.model");
 const Transaction = require("../../models/transaction_schema");
 
+const makeToken = async (userId, expiresAt) => {
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+  const tokenBuilder = new SignJWT({ userId: userId.toString() })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt();
+
+  if (expiresAt !== undefined) {
+    tokenBuilder.setExpirationTime(expiresAt);
+  } else {
+    tokenBuilder.setExpirationTime("1h");
+  }
+
+  return tokenBuilder.sign(secret);
+};
+
 describe("PUT /api/transactions/:id", () => {
   let user;
   let token;
@@ -36,11 +52,7 @@ describe("PUT /api/transactions/:id", () => {
       password: "123456",
     });
 
-    token = jwt.sign(
-      { _id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
+    token = await makeToken(user._id);
 
     transaction = await Transaction.create({
       userId: user._id,
@@ -55,6 +67,43 @@ describe("PUT /api/transactions/:id", () => {
   afterEach(async () => {
     await Transaction.deleteMany();
     await User.deleteMany();
+  });
+
+  it("should return 401 with TOKEN_MISSING if no token provided", async () => {
+    const res = await request(app)
+      .put(`/api/transactions/${transaction._id}`)
+      .send({ title: "Updated" });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.errorCode).toBe("TOKEN_MISSING");
+    expect(res.body.message).toBe("Access token required");
+  });
+
+  it("should return 401 with TOKEN_INVALID if token is malformed", async () => {
+    const res = await request(app)
+      .put(`/api/transactions/${transaction._id}`)
+      .set("Authorization", "Bearer not.a.real.token")
+      .send({ title: "Updated" });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.errorCode).toBe("TOKEN_INVALID");
+    expect(res.body.message).toBe("Invalid token");
+  });
+
+  it("should return 401 with TOKEN_EXPIRED if token is expired", async () => {
+    const expiredToken = await makeToken(
+      user._id,
+      Math.floor(Date.now() / 1000) - 10
+    );
+
+    const res = await request(app)
+      .put(`/api/transactions/${transaction._id}`)
+      .set("Authorization", `Bearer ${expiredToken}`)
+      .send({ title: "Updated" });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.body.errorCode).toBe("TOKEN_EXPIRED");
+    expect(res.body.message).toBe("Token expired");
   });
 
 
@@ -154,10 +203,7 @@ describe("PUT /api/transactions/:id", () => {
       password: "123456",
     });
 
-    const otherToken = jwt.sign(
-      { _id: otherUser._id },
-      process.env.JWT_SECRET
-    );
+    const otherToken = await makeToken(otherUser._id);
 
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
