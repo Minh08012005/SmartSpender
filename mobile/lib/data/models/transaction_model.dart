@@ -64,7 +64,6 @@ class TransactionModel {
   /// Convert sang JSON để gửi API
   Map<String, dynamic> toJson() {
     return {
-      'id': id,
       'amount': amount,
       'category': _normalizeCategory(category, type),
       'title': title,

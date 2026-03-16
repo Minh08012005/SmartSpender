@@ -220,7 +220,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     DropdownButtonFormField<TransactionType>(
                       initialValue: _selectedType,
                       decoration: const InputDecoration(
-                        labelText: 'Tranction Type',
+                        labelText: 'Transaction Type',
                         border: OutlineInputBorder(),
                       ),
                       items: const [
