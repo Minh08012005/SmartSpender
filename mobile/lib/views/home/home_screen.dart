@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../screens/add_transaction_screen.dart';
+import '../../screens/edit_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -35,6 +37,35 @@ class _HomeScreenState extends State<HomeScreen> {
       month: DateTime.now().month,
       year: DateTime.now().year,
     );
+  }
+
+  /// Open Add Transaction Screen
+  Future<void> _openAddTransactionScreen() async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
+    );
+
+    if (result == true && mounted) {
+      // Refresh after successful add
+      await _refreshTransactions();
+    }
+  }
+
+  /// Open Edit Transaction Screen
+  Future<void> _openEditTransactionScreen(index) async {
+    final provider = context.read<TransactionProvider>();
+    final transaction = provider.transactions[index];
+
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => EditTransactionScreen(transaction: transaction),
+      ),
+    );
+
+    if (result == true && mounted) {
+      // Refresh after successful edit
+      await _refreshTransactions();
+    }
   }
 
   @override
@@ -78,6 +109,11 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(child: _buildBody(provider)),
           ],
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _openAddTransactionScreen(),
+        backgroundColor: const Color(0xff2A7C76),
+        child: const Icon(Icons.add, color: Colors.white),
       ),
     );
   }
@@ -246,7 +282,10 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: provider.transactions.length,
         itemBuilder: (context, index) {
-          return TransactionItem(transaction: provider.transactions[index]);
+          return TransactionItem(
+            transaction: provider.transactions[index],
+            onTap: () => _openEditTransactionScreen(index),
+          );
         },
       ),
     );
