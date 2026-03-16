@@ -94,7 +94,35 @@ exports.getFilteredTransactions = async (userId, filters) => {
     order = 'desc',
   } = filters;
 
-  const parseDateOrThrow = (value, fieldName) => {
+  const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+  const parseDateOrThrow = (value, fieldName, { endOfDayIfDateOnly = false } = {}) => {
+    if (typeof value === 'string') {
+      const normalizedValue = value.trim();
+
+      // Nếu client gửi YYYY-MM-DD cho `to`, nâng lên cuối ngày để không bỏ sót dữ liệu ngày cuối.
+      if (DATE_ONLY_REGEX.test(normalizedValue)) {
+        const [yearPart, monthPart, dayPart] = normalizedValue.split('-').map(Number);
+        const parsedDate = new Date(
+          Date.UTC(
+            yearPart,
+            monthPart - 1,
+            dayPart,
+            endOfDayIfDateOnly ? 23 : 0,
+            endOfDayIfDateOnly ? 59 : 0,
+            endOfDayIfDateOnly ? 59 : 0,
+            endOfDayIfDateOnly ? 999 : 0
+          )
+        );
+
+        if (Number.isNaN(parsedDate.getTime())) {
+          throw new AppError(`Invalid ${fieldName} date format`, 400);
+        }
+
+        return parsedDate;
+      }
+    }
+
     const parsed = value instanceof Date ? value : new Date(value);
     if (Number.isNaN(parsed.getTime())) {
       throw new AppError(`Invalid ${fieldName} date format`, 400);
@@ -114,7 +142,7 @@ exports.getFilteredTransactions = async (userId, filters) => {
     }
 
     const fromDate = parseDateOrThrow(from, 'from');
-    const toDate = parseDateOrThrow(to, 'to');
+    const toDate = parseDateOrThrow(to, 'to', { endOfDayIfDateOnly: true });
     if (toDate < fromDate) {
       throw new AppError('to date must be after from date', 400);
     }

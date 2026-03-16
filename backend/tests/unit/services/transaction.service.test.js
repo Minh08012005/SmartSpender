@@ -124,6 +124,17 @@ describe("Transaction Service - getFilteredTransactions", () => {
     expect(queryArg.date.$lte).toBeInstanceOf(Date);
   });
 
+  it("should include the full `to` day when using YYYY-MM-DD", async () => {
+    await transactionService.getFilteredTransactions(userId, {
+      from: "2026-03-01",
+      to: "2026-03-31",
+    });
+
+    const queryArg = Transaction.find.mock.calls[0][0];
+    expect(queryArg.date.$gte.toISOString()).toBe("2026-03-01T00:00:00.000Z");
+    expect(queryArg.date.$lte.toISOString()).toBe("2026-03-31T23:59:59.999Z");
+  });
+
   it("should build aggregation pipeline with case-insensitive type sums", async () => {
     await transactionService.getFilteredTransactions(userId, {
       month: 2,
