@@ -26,15 +26,23 @@ const getTransactionsSchema = Joi.object({
   year: Joi.number().integer().min(2000),
 
   // Filters
-  type: Joi.string().valid("income", "expense"),
-  category: Joi.string().custom((value, helpers) => {
-    const categories = value.split(",").map((c) => c.trim());
-    for (let cat of categories) {
-      if (!VALID_CATEGORIES.includes(cat)) {
-       return helpers.message("category not allowed");
+  // Normalize ngay tại boundary để route không reject input khác hoa/thường.
+  type: Joi.string().trim().lowercase().valid("income", "expense"),
+  category: Joi.string().trim().custom((value, helpers) => {
+    const normalizedCategories = value.split(",").map((c) => c.trim().toLowerCase());
+
+    if (normalizedCategories.some((cat) => !cat)) {
+      return helpers.message("category not allowed");
     }
-  }
-    return value;
+
+    for (const cat of normalizedCategories) {
+      if (!VALID_CATEGORIES.includes(cat)) {
+        return helpers.message("category not allowed");
+      }
+    }
+
+    // Trả về CSV đã normalize để service nhận dữ liệu đồng nhất.
+    return normalizedCategories.join(",");
   }, "Category validation"),
   search: Joi.string().max(100).allow(""),
 

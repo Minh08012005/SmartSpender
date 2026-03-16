@@ -108,6 +108,21 @@ describe("Transaction Validator - GET /transactions", () => {
     expect(error).toBeDefined();
   });
 
+  it("should normalize uppercase type and category CSV in query", () => {
+    const data = {
+      type: "INCOME",
+      category: "Food, TRAVEL",
+      month: 2,
+      year: 2026,
+    };
+
+    const { error, value } = getTransactionsSchema.validate(data);
+
+    expect(error).toBeUndefined();
+    expect(value.type).toBe("income");
+    expect(value.category).toBe("food,travel");
+  });
+
   /**
    * SORT TESTS
    */
