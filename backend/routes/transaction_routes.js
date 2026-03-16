@@ -294,9 +294,11 @@ router.post(
  *   put:
  *     summary: "Cập nhật giao dịch"
  *     description: |
- *       - Chỉ cho phép user cập nhật transaction của chính mình
- *       - Update atomic bằng findOneAndUpdate
- *       - Validate input và defensive checks tại service layer (trim, normalize, coerce)
+ *       - Chỉ cho phép user cập nhật transaction của chính mình (ownership check qua userId)
+ *       - Update atomic bằng findOneAndUpdate với runValidators: true
+ *       - `category` và `type` chấp nhận input hoa/thường, sau đó normalize về lowercase
+ *       - `date` phải theo cấu trúc ISO 8601: `2026-03-01T00:00:00Z` hoặc `2026-03-01`
+ *       - Payload không được rỗng – phải có ít nhất một field
  *     tags:
  *       - Transactions
  *     security:
@@ -305,9 +307,11 @@ router.post(
  *       - in: path
  *         name: id
  *         required: true
+ *         description: "ObjectId của giao dịch (24 ký tự hex)"
  *         schema:
  *           type: string
- *           description: "ObjectId của giao dịch (24 ký tự hex)"
+ *           pattern: "^[0-9a-fA-F]{24}$"
+ *           example: "65c88df8b2f8a1c21c23abcd"
  *     requestBody:
  *       required: true
  *       content:
@@ -318,33 +322,108 @@ router.post(
  *             properties:
  *               title:
  *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
  *               amount:
  *                 type: number
  *                 minimum: 0
  *                 description: "Số tiền, có thể là 0"
  *               date:
  *                 type: string
- *                 format: date
- *                 description: "ISO 8601 (2026-03-01T00:00:00Z) hoặc YYYY-MM-DD (2026-03-01)"
+ *                 format: date-time
+ *                 description: "ISO 8601: 2026-03-01T00:00:00Z hoặc YYYY-MM-DD: 2026-03-01"
  *                 example: "2026-03-01"
  *               category:
  *                 type: string
- *                 description: "Tên danh mục hợp lệ (xem constants)"
+ *                 enum: [food, travel, shopping, salary, entertainment, utility, other]
+ *                 description: "Normalize về lowercase nếu client gửi hoa"
  *               type:
  *                 type: string
  *                 enum: [income, expense]
+ *                 description: "Normalize về lowercase nếu client gửi hoa"
  *               note:
  *                 type: string
  *                 description: "Ghi chú tùy chọn"
  *     responses:
  *       200:
  *         description: "Transaction updated successfully"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 statusCode:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Transaction updated successfully"
+ *                 data:
+ *                   type: object
+ *                   description: "Dữ liệu giao dịch sau khi cập nhật"
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userId:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     amount:
+ *                       type: number
+ *                     type:
+ *                       type: string
+ *                       enum: [income, expense]
+ *                     category:
+ *                       type: string
+ *                       enum: [food, travel, shopping, salary, entertainment, utility, other]
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                     note:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
  *       400:
- *         description: "Validation error"
+ *         description: "Validation error (empty body, invalid field value, malformed id)"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 400
+ *               message: "Validation failed"
+ *               errors:
+ *                 - field: "amount"
+ *                   message: "must be >= 0"
  *       401:
- *         description: "Unauthorized"
+ *         description: "Không có token hoặc token không hợp lệ"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 401
+ *               message: "Access token required"
+ *               errorCode: "TOKEN_MISSING"
  *       404:
- *         description: "Transaction not found or permission denied"
+ *         description: "Transaction không tồn tại hoặc không thuộc về user hiện tại"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *             example:
+ *               success: false
+ *               statusCode: 404
+ *               message: "Transaction not found"
  */
 router.put(
   '/:id',
@@ -394,8 +473,34 @@ router.put(
  *                   type: string
  *                   example: "Transaction deleted successfully"
  *                 data:
- *                   nullable: true
- *                   example: null
+ *                   type: object
+ *                   description: "Dữ liệu của giao dịch vừa bị xóa"
+ *                   properties:
+ *                     _id:
+ *                       type: string
+ *                     userId:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     amount:
+ *                       type: number
+ *                     type:
+ *                       type: string
+ *                       enum: [income, expense]
+ *                     category:
+ *                       type: string
+ *                       enum: [food, travel, shopping, salary, entertainment, utility, other]
+ *                     date:
+ *                       type: string
+ *                       format: date-time
+ *                     note:
+ *                       type: string
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *                     updatedAt:
+ *                       type: string
+ *                       format: date-time
  *       400:
  *         description: "ID không hợp lệ (không phải ObjectId hợp lệ)"
  *         content:
@@ -408,7 +513,7 @@ router.put(
  *               message: "Validation failed"
  *               errors:
  *                 - field: "id"
- *                   message: "id must be a valid ObjectId"
+ *                   message: "id must be a 24‑character hex string"
  *       401:
  *         description: "Không có token hoặc token không hợp lệ"
  *         content:
@@ -429,7 +534,7 @@ router.put(
  *             example:
  *               success: false
  *               statusCode: 404
- *               message: "Transaction not found or permission denied"
+ *               message: "Transaction not found"
  */
 router.delete(
   '/:id',
