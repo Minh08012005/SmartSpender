@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
+import '../../core/strings.dart';
 import '../models/transaction_model.dart';
 import '../dummy_transactions.dart';
 
@@ -110,17 +111,24 @@ class TransactionProvider extends ChangeNotifier {
 
         // Xử lý response dựa vào format API
         if (data is Map<String, dynamic> && data['success'] == true) {
-          // Expected contract: data.transactions (list) + data.stats (summary).
-          final responseData = data['data'] as Map<String, dynamic>;
+          final payload = data['data'];
 
-          final transactionsData =
-              responseData['transactions'] as List<dynamic>?;
+          // transactions may be directly a List or nested under payload['transactions']
+          List<dynamic>? transactionsData;
 
-          final stats = responseData['stats'] as Map<String, dynamic>?;
+          if (payload is List) {
+            transactionsData = payload as List<dynamic>?;
+          } else if (payload is Map<String, dynamic>) {
+            transactionsData =
+                (payload['transactions'] as List<dynamic>?) ??
+                (payload['data'] as List<dynamic>?);
 
-          if (stats != null) {
-            _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
-            _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+            // extract stats if present
+            final stats = payload['stats'] as Map<String, dynamic>?;
+            if (stats != null) {
+              _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+              _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+            }
           }
 
           if (transactionsData != null) {
@@ -136,13 +144,15 @@ class TransactionProvider extends ChangeNotifier {
           throw Exception('Invalid response format');
         }
       } else {
-        throw Exception('Failed to load transactions');
+        throw Exception(AppStrings.failedToLoadTransactions);
       }
     } on DioException catch (e) {
-      _setError(e.error?.toString() ?? 'Cannot fetch transactions');
+      _setError(
+        _extractApiErrorMessage(e, AppStrings.cannotFetchTransactions),
+      );
       debugPrint('❌ Fetch transactions failed: ${e.message}');
     } catch (e) {
-      _setError('An unexpected error occurred: $e');
+      _setError('${AppStrings.unexpectedErrorOccurred}: $e');
       debugPrint('❌ Unexpected error: $e');
     } finally {
       _setLoading(false);
@@ -153,6 +163,13 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> addTransaction(TransactionModel transaction) async {
     _setLoading(true);
     _clearError();
+
+    final title = transaction.title.trim();
+    if (title.isEmpty) {
+      _setError(AppStrings.titleRequired);
+      _setLoading(false);
+      return false;
+    }
 
     try {
       final response = await _apiService.post(
@@ -175,13 +192,13 @@ class TransactionProvider extends ChangeNotifier {
         return true;
       }
 
-      throw Exception('Failed to add transaction');
+      throw Exception(AppStrings.failedToAddTransaction);
     } on DioException catch (e) {
-      _setError(e.error?.toString() ?? 'Cannot add transaction');
+      _setError(_extractApiErrorMessage(e, AppStrings.cannotAddTransaction));
       debugPrint('❌ Add transaction failed: ${e.message}');
       return false;
     } catch (e) {
-      _setError('An error occurred: $e');
+      _setError('${AppStrings.errorOccurred}: $e');
       debugPrint('❌ Unexpected error: $e');
       return false;
     } finally {
@@ -208,13 +225,15 @@ class TransactionProvider extends ChangeNotifier {
         return true;
       }
 
-      throw Exception('Failed to delete transaction');
+      throw Exception(AppStrings.failedToDeleteTransaction);
     } on DioException catch (e) {
-      _setError(e.error?.toString() ?? 'Cannot delete transaction');
+      _setError(
+        _extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction),
+      );
       debugPrint('❌ Delete transaction failed: ${e.message}');
       return false;
     } catch (e) {
-      _setError('An error occurred: $e');
+      _setError('${AppStrings.errorOccurred}: $e');
       debugPrint('❌ Unexpected error: $e');
       return false;
     } finally {
@@ -225,6 +244,14 @@ class TransactionProvider extends ChangeNotifier {
   Future<bool> updateTransaction(TransactionModel transaction) async {
     _setLoading(true);
     _clearError();
+
+    final title = transaction.title.trim();
+    if (title.isEmpty) {
+      _setError(AppStrings.titleRequired);
+      _setLoading(false);
+      return false;
+    }
+
     final index = _transactions.indexWhere((t) => t.id == transaction.id);
     final previousTransaction = index != -1 ? _transactions[index] : null;
     final didOptimisticUpdate = index != -1;
@@ -257,13 +284,13 @@ class TransactionProvider extends ChangeNotifier {
         return true;
       }
 
-      throw Exception('Failed to update transaction');
+      throw Exception(AppStrings.failedToUpdateTransaction);
     } on DioException catch (e) {
       if (didOptimisticUpdate && previousTransaction != null) {
         _transactions[index] = previousTransaction;
         notifyListeners();
       }
-      _setError(e.error?.toString() ?? 'Cannot update transaction');
+      _setError(_extractApiErrorMessage(e, AppStrings.cannotUpdateTransaction));
       debugPrint('Update transaction failed: ${e.message}');
       return false;
     } catch (e) {
@@ -271,7 +298,7 @@ class TransactionProvider extends ChangeNotifier {
         _transactions[index] = previousTransaction;
         notifyListeners();
       }
-      _setError('An error occurred: $e');
+      _setError('${AppStrings.errorOccurred}: $e');
       debugPrint('Unexpected error: $e');
       return false;
     } finally {
@@ -294,14 +321,39 @@ class TransactionProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
-    await Future.delayed(const Duration(seconds: 2)); // giả lập loading
+    await Future.delayed(const Duration(seconds: 2)); 
 
     _transactions = dummyTransactions;
-    //_transactions = []; // 👈 ÉP RỖNG test empty
-    //_setError("Failed to load transactions"); // 👈 ÉP LỖI test error
     _setLoading(false);
   }
 
+  String _extractApiErrorMessage(DioException e, String fallback) {
+    final data = e.response?.data;
+
+    if (data is Map<String, dynamic>) {
+      final message = data['message']?.toString().trim();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+
+      final error = data['error']?.toString().trim();
+      if (error != null && error.isNotEmpty) {
+        return error;
+      }
+    } else if (data is String) {
+      final message = data.trim();
+      if (message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    final error = e.error?.toString().trim();
+    if (error != null && error.isNotEmpty && error != 'null') {
+      return error;
+    }
+
+    return fallback;
+  }
   // ============== STATE MANAGEMENT ==============
 
   void _setLoading(bool value) {
