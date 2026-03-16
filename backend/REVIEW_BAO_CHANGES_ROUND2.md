@@ -1,82 +1,111 @@
-# Review follow-up cho thay đổi gần đây của Bảo
+# REVIEW ROUND 2 - Leader Summary cho nhánh của Bảo
 
-**Nhánh:** `test/CRUD_transaction`  
+**Nhánh:** test/CRUD_transaction  
 **Ngày review:** 16/03/2026  
-**Mục tiêu:** Đánh giá các commit mới sau lần feedback trước để chốt mức sẵn sàng merge vào `dev` cho task test CRUD backend, ưu tiên tính ổn định khi mobile tích hợp với backend.
+**Mục tiêu:** chốt mức sẵn sàng merge vào dev cho backend CRUD trước khi mobile/backend tích hợp chung.
 
-## Phạm vi đã kiểm tra
+## 1) Tóm tắt quyết định
 
-- `3d49228 feat(validator): normalize and harden update transaction schema`
-- `daf0a80 fix(service): normalize filters and harden date/query validation`
-- `7e7ec01 feat(error): support optional errorCode in AppError responses`
-- `244524d test(service): cover filter normalization and date guard cases`
-- `6fe6760 test(integration): align transaction auth contract and delete flow`
-- `e811a9f docs(api): align PUT/DELETE swagger contract examples`
+**Trạng thái hiện tại: CHƯA NÊN MERGE**
 
-## Kết quả tổng quan
+Lý do:
 
-Các thay đổi mới đi đúng hướng ở PUT/DELETE:
+1. Nhiều bug trong luồng PUT/DELETE đã được xử lý tốt và có test chứng minh.
+2. Nhưng GET /api/transactions vẫn còn 2 rủi ro High ảnh hưởng trực tiếp đến contract tích hợp với mobile.
 
-- Contract 401 với `TOKEN_MISSING`, `TOKEN_INVALID`, `TOKEN_EXPIRED` đã rõ hơn và bám sát integration test.
-- Update/Delete đã có guard tốt hơn cho ObjectId và payload rỗng.
-- `AppError` đã hỗ trợ `errorCode`, hữu ích cho mobile xử lý lỗi theo mã máy đọc được.
-- Test cho PUT/DELETE và service layer hiện đang pass ở phạm vi tôi chạy.
+## 2) Những gì Bảo đã xử lý được (theo BUG có đánh số)
 
-Tuy nhiên, hiện tại tôi **chưa đánh giá nhánh này là đủ an toàn để merge vào `dev`** vì vẫn còn 2 vấn đề ảnh hưởng trực tiếp tới luồng tích hợp GET `/api/transactions`.
+### BUG-1 - Normalize lowercase cho update payload
 
-## Findings
+- **Mô tả bug:** type/category gửi hoa-thường không đồng nhất ở payload update.
+- **Bảo đã xử lý:** Có normalize lowercase ở validator update.
+- **Bằng chứng test:** tests/unit/validators/transaction.validator.test.js (case BUG-1).
+- **Kết luận:** ✅ ĐÃ FIX cho luồng PUT body.
 
-### 1. High: Normalize filter mới chỉ đúng ở service, nhưng API GET vẫn chặn từ validator
+### BUG-2 - Date format phải strict ISO ở update
 
-Ở service, `type` và `category` đã được normalize về lowercase trước khi build query tại [backend/services/transaction.service.js#L153](backend/services/transaction.service.js#L153) và [backend/services/transaction.service.js#L167-L170](backend/services/transaction.service.js#L167-L170). Nhưng route GET vẫn đi qua `validate(getTransactionsSchema, 'query')` trước khi vào service tại [backend/routes/transaction_routes.js#L225-L228](backend/routes/transaction_routes.js#L225-L228), trong khi query schema vẫn yêu cầu giá trị lowercase cứng ở [backend/validators/transaction.validator.js#L29](backend/validators/transaction.validator.js#L29) và category custom validator ở [backend/validators/transaction.validator.js#L30-L38](backend/validators/transaction.validator.js#L30-L38) chưa normalize về lowercase.
+- **Mô tả bug:** chấp nhận date format lỏng, dễ lệch contract.
+- **Bảo đã xử lý:** update validator dùng strict ISO, từ chối MM/DD/YYYY.
+- **Bằng chứng test:** tests/unit/validators/transaction.validator.test.js (case BUG-2).
+- **Kết luận:** ✅ ĐÃ FIX cho luồng PUT body.
 
-Hệ quả là request như `type=INCOME` hoặc `category=Food, TRAVEL` vẫn bị reject `400 Validation failed` ngay ở validator, nên phần fix “normalize filters” trong service chưa thực sự có hiệu lực ở API boundary. Đây là điểm dễ vỡ khi mobile/client tái sử dụng data nhập từ form POST/PUT hoặc gửi query không đồng nhất hoa thường.
+### BUG-3 - Empty payload update phải fail fast ở validator
 
-Tôi đã kiểm chứng nhanh bằng cách validate trực tiếp schema hiện tại:
+- **Mô tả bug:** body rỗng có thể lọt xuống service mới fail.
+- **Bảo đã xử lý:** validator update bắt empty object sớm với message rõ ràng.
+- **Bằng chứng test:** tests/unit/validators/transaction.validator.test.js (case BUG-3).
+- **Kết luận:** ✅ ĐÃ FIX.
 
-```text
-TYPE "type" must be one of [income, expense]
-CATEGORY category not allowed
-```
+### BUG-10 - DELETE phải trả về document đã xóa (không phải null)
 
-Đề xuất:
+- **Mô tả bug:** contract DELETE trước đây chưa rõ phần data trả về.
+- **Bảo đã xử lý:** service/controller trả deleted document; test contract đã check cụ thể.
+- **Bằng chứng test:** tests/integration/transaction.delete.test.js (comment BUG-10 fix).
+- **Kết luận:** ✅ ĐÃ FIX.
 
-- Thêm `.trim().lowercase()` cho `type` trong `getTransactionsSchema`.
-- Với `category`, tách CSV, `trim().toLowerCase()` từng phần tử ngay trong validator để thống nhất với service.
-- Bổ sung integration test cho GET `/api/transactions` với `type=INCOME` và `category=Food,TRAVEL` để bắt regression ở tầng route thay vì chỉ test service.
+## 3) Các phần Bảo cải thiện thêm (không gắn số bug nhưng đúng hướng)
 
-### 2. High: `to=YYYY-MM-DD` đang loại mất gần như toàn bộ giao dịch của ngày cuối cùng
+1. Bổ sung errorCode tùy chọn trong AppError để client/mobile xử lý lỗi machine-readable.
+2. Củng cố guard ObjectId ở service update/delete để tránh rơi về 500 khi id lỗi.
+3. Căn chỉnh test auth contract PUT/DELETE cho TOKEN_MISSING, TOKEN_INVALID, TOKEN_EXPIRED.
+4. Có sửa lỗi ở error handler (return sớm ở nhánh CastError) để không bị rơi xuống 500.
 
-Swagger hiện mô tả rõ `from` và `to` đều chấp nhận cả `YYYY-MM-DD` lẫn ISO datetime tại [backend/routes/transaction_routes.js#L55](backend/routes/transaction_routes.js#L55) và [backend/routes/transaction_routes.js#L61](backend/routes/transaction_routes.js#L61). Nhưng ở service, `to` đang được parse bằng `new Date(value)` tại [backend/services/transaction.service.js#L97-L103](backend/services/transaction.service.js#L97-L103) rồi gán trực tiếp vào `$lte` tại [backend/services/transaction.service.js#L122](backend/services/transaction.service.js#L122).
+## 4) Điểm còn thiếu/chưa tối ưu (cần xử lý trước merge)
 
-Với input bare date như `2026-03-31`, JavaScript parse thành `2026-03-31T00:00:00.000Z`. Nghĩa là filter `from=2026-03-01&to=2026-03-31` sẽ chỉ lấy transaction tới đúng đầu ngày 31/03, còn các bản ghi lúc `2026-03-31T10:00:00Z`, `2026-03-31T18:00:00Z` sẽ bị loại sai.
+### RISK-01 (High): Filter normalize chưa đồng bộ ở API boundary của GET
 
-Điểm này ảnh hưởng trực tiếp tới màn hình lịch sử giao dịch và thống kê khi mobile dùng khoảng ngày theo UI date picker, vì người dùng thường chọn `YYYY-MM-DD` chứ không tự nhập thời điểm cuối ngày.
+- **Hiện trạng:** service có normalize `type/category`, nhưng query validator GET vẫn chặn input hoa-thường ngay từ đầu.
+- **Ảnh hưởng tích hợp:** mobile gửi `type=INCOME` hoặc `category=Food,TRAVEL` sẽ dính 400 dù service đã support normalize.
+- **Mức độ:** High (ảnh hưởng trực tiếp màn hình list/filter).
 
-Đề xuất:
+### RISK-02 (High): `to=YYYY-MM-DD` có thể bỏ sót giao dịch ngày cuối
 
-- Nếu client gửi `to` theo dạng `YYYY-MM-DD`, service cần nâng lên cuối ngày `23:59:59.999` trước khi query.
-- Hoặc nếu muốn giữ semantics hiện tại, phải sửa Swagger và contract để chỉ chấp nhận datetime đầy đủ cho `to`. Với tình huống tích hợp mobile hiện tại, phương án đầu sẽ an toàn hơn.
-- Thêm test route/service xác nhận transaction trong ngày `to` vẫn được trả về khi query dùng `YYYY-MM-DD`.
+- **Hiện trạng:** service parse `to` bằng new Date rồi dùng `$lte` trực tiếp.
+- **Ảnh hưởng tích hợp:** query `from=2026-03-01&to=2026-03-31` có nguy cơ chỉ lấy tới đầu ngày 31, bỏ sót giao dịch còn lại trong ngày.
+- **Mức độ:** High (ảnh hưởng đúng/sai dữ liệu lịch sử và thống kê).
 
-## Kiểm chứng đã chạy
+## 5) Hướng xử lý tiếp cho Bảo
 
-Đã chạy các test mục tiêu sau và đều pass:
+### Nhóm A - Đồng bộ contract GET filter
 
-```bash
-cd backend
-npm test -- --runInBand tests/unit/validators/transaction.validator.test.js tests/unit/services/transaction.service.test.js tests/integration/transaction.put.test.js tests/integration/transaction.delete.test.js
-```
+**File nên sửa:**
 
-Lưu ý: việc các test này pass không phủ nhận 2 issue ở trên, vì hiện chưa có test integration nào cover đúng hai scenario đó.
+1. backend/validators/transaction.validator.js
+2. backend/tests/integration/transaction.routes.test.js (hoặc file integration GET tương đương)
 
-## Kết luận
+**Hướng xử lý:**
 
-**Kết luận hiện tại: chưa nên merge vào `dev`.**
+1. Ở getTransactionsSchema, chuẩn hóa lowercase cho query type trước khi validate valid set.
+2. Với category dạng CSV, normalize từng phần tử (trim + lowercase) ngay tại validator rồi mới check allow-list.
+3. Giữ behavior nhất quán giữa GET filter và POST/PUT payload để mobile không cần xử lý khác nhau.
+4. Thêm integration test cho case chữ hoa/thường ở query (type/category) để khóa regression ở tầng route.
 
-PUT/DELETE đã tiến gần mức sẵn sàng tích hợp, nhưng GET `/api/transactions` vẫn còn 2 lỗ hổng contract quan trọng:
+### Nhóm B - Chốt semantics date range
 
-- Client gửi filter hoa/thường không đồng nhất vẫn bị chặn ở validator.
-- Date range với `to=YYYY-MM-DD` có thể trả thiếu dữ liệu ngày cuối.
+**File nên sửa:**
 
-Hai điểm này đều tác động trực tiếp tới mobile integration và có thể tạo ra bug khó phát hiện vì test hiện tại vẫn xanh. Tôi khuyến nghị fix xong rồi chạy lại test integration cho GET trước khi chốt merge.
+1. backend/services/transaction.service.js
+2. backend/routes/transaction_routes.js (swagger docs)
+3. backend/tests/unit/services/transaction.service.test.js
+4. backend/tests/integration/transaction.routes.test.js (hoặc file GET tương đương)
+
+**Hướng xử lý:**
+
+1. Quy định rõ semantics cho `to` khi client gửi `YYYY-MM-DD`.
+2. Nếu muốn đúng nhu cầu mobile date-picker: xử lý `to` theo end-of-day trước khi đưa vào `$lte`.
+3. Đồng bộ lại swagger examples/mô tả để đúng behavior runtime (tránh docs một kiểu, code một kiểu).
+4. Bổ sung test chứng minh giao dịch trong chính ngày `to` vẫn được trả về.
+
+## 6) Gợi ý checklist xác nhận trước khi leader duyệt merge
+
+1. GET filter với hoa/thường (`INCOME`, `Food,TRAVEL`) trả đúng kết quả, không còn 400 sai.
+2. Date range có `to=YYYY-MM-DD` không làm mất dữ liệu ngày cuối.
+3. Test integration cho GET bổ sung đầy đủ và pass ổn định.
+4. Swagger GET khớp đúng hành vi runtime.
+5. Re-run regression cho CRUD chính: create/update/delete/get list.
+
+## 7) Kết luận
+
+1. Bảo đã xử lý tốt phần lớn bug ở PUT/DELETE (đặc biệt BUG-1/2/3/10).
+2. Hai điểm High còn lại tập trung ở GET contract và date semantics.
+3. Sau khi xử lý xong 2 nhóm RISK ở trên và test pass đầy đủ, nhánh này có thể xem xét merge vào dev.
