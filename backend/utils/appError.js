@@ -6,10 +6,12 @@
  *   Giúp việc bắt lỗi và trả về phản hồi lỗi cho client trở nên dễ dàng hơn
  */
 class AppError extends Error {
-  constructor(message, statusCode) {
+  constructor(message, statusCode, errorCode = null) {
     super(message); 
 
     this.statusCode = statusCode; // Ví dụ: 400, 404, 500
+    // Tùy chọn: phục vụ API contract cần machine-readable error code.
+    this.errorCode = errorCode;
     this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error'; // Phân loại lỗi: 'fail' cho lỗi do người dùng, 'error' cho lỗi hệ thống
     this.isOperational = true; // Lỗi do người dùng (sai input, 404, 401...)
 
