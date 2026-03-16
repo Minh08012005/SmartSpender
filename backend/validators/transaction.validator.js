@@ -75,13 +75,28 @@ const createTransactionSchema = Joi.object({
  */
 const updateTransactionSchema = Joi.object({
   title: Joi.string().trim().min(2).max(100).optional(),
-  // allow zero so update type can set amount to 0 if desired
+  // allow zero so update can set amount to 0 if desired
   amount: Joi.number().min(0).optional(),
-  type: Joi.string().valid("income", "expense").optional(),
-  category: Joi.string().valid(...VALID_CATEGORIES).optional(),
-  date: Joi.date().optional(),
+  // Normalize lowercase để đồng nhất contract với POST.
+  // Client có thể gửi "EXPENSE" – sẽ được normalize thành "expense".
+  type: Joi.string().trim().lowercase().valid("income", "expense").optional(),
+  // Normalize lowercase để khớp enum trong DB và đồng nhất với POST.
+  category: Joi.string().trim().lowercase().valid(...VALID_CATEGORIES).optional(),
+  // Strict ISO 8601 để đồng nhất với POST – từ chối "March 16, 2026" hay "03/16/2026".
+  date: Joi.date().iso().optional(),
   note: Joi.string().allow("").optional(),
-});
+})
+  // Ít nhất một field phải được cung cấp – reject empty body sớm tại validator layer,
+  // không để lọt xuống service mới bắt (fail fast principle).
+  .custom((value, helpers) => {
+    if (Object.keys(value).length === 0) {
+      return helpers.error('object.empty');
+    }
+    return value;
+  })
+  .messages({
+    'object.empty': 'At least one field must be provided for update',
+  });
 
 // generic schema for endpoints accepting a single Mongo object id param
 const objectIdParamSchema = Joi.object({

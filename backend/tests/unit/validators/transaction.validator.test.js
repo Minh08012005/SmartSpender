@@ -340,13 +340,38 @@ describe("Transaction Validator - UPDATE Transaction", () => {
     expect(error).toBeDefined();
   });
 
-  it("should allow empty payload (service layer will handle)", () => {
-    const data = {};
-
+  // BUG-1 fix: type và category phải được normalize lowercase,
+  // giống POST contract – client có thể gửi hoa/thường tùy ý
+  it("should normalize uppercase type and category to lowercase", () => {
+    const data = { type: "EXPENSE", category: "SALARY" };
     const { error, value } = updateTransactionSchema.validate(data);
-
     expect(error).toBeUndefined();
-    expect(value).toEqual({});
+    expect(value.type).toBe("expense");
+    expect(value.category).toBe("salary");
+  });
+
+  // BUG-2 fix: date phải strict ISO, từ chối các format không chuẩn
+  it("should reject non-ISO date format like MM/DD/YYYY", () => {
+    const { error } = updateTransactionSchema.validate({ date: "03/16/2026" });
+    // Joi.date().iso() từ chối format này
+    expect(error).toBeDefined();
+  });
+
+  it("should accept valid ISO date string YYYY-MM-DD", () => {
+    const { error } = updateTransactionSchema.validate({ date: "2026-03-16" });
+    expect(error).toBeUndefined();
+  });
+
+  it("should accept valid ISO datetime string", () => {
+    const { error } = updateTransactionSchema.validate({ date: "2026-03-16T00:00:00Z" });
+    expect(error).toBeUndefined();
+  });
+
+  it("should reject empty payload at validator level (fail fast)", () => {
+    // Sau khi fix BUG-3: validator phải bắt empty body, không để lọt xuống service
+    const { error } = updateTransactionSchema.validate({});
+    expect(error).toBeDefined();
+    expect(error.message).toContain("At least one field");
   });
 });
 
