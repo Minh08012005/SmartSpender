@@ -33,9 +33,7 @@ class _RegisterFormState extends State<RegisterForm> {
   final RegExp _emailRegex = RegExp(
     r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
   );
-  final RegExp _passwordRegex = RegExp(
-    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$',
-  );
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -100,10 +98,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập họ và tên';
+              return 'Please enter your full name';
             }
             if (trimmed.length < 2) {
-              return 'Họ và tên quá ngắn';
+              return 'Full name is too short';
             }
             return null;
           },
@@ -119,10 +117,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập email';
+              return 'Please enter your email';
             }
             if (!_emailRegex.hasMatch(trimmed)) {
-              return 'Email không đúng định dạng';
+              return 'Invalid email format';
             }
             return null;
           },
@@ -137,13 +135,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập mật khẩu';
+              return 'Please enter your password';
             }
-            if (trimmed.length < 8 || !_passwordRegex.hasMatch(trimmed)) {
-               return 'Mật khẩu cần tối thiểu 8 ký tự, bao gồm chữ số, chữ in hoa và ký tự đặc biệt';
-            }
-            if (trimmed.length > 128) {
-              return 'Mật khẩu quá dài';
+            if (trimmed.length < 6) {
+              return 'Password must be at least 6 characters';
             }
             return null;
           },
@@ -158,10 +153,10 @@ class _RegisterFormState extends State<RegisterForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng xác nhận mật khẩu';
+              return 'Please confirm your password';
             }
             if (trimmed != _passwordController.text.trim()) {
-              return 'Mật khẩu không khớp';
+              return 'Passwords do not match';
             }
             return null;
           },

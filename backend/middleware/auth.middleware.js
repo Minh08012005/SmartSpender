@@ -33,14 +33,15 @@ const authenticate = async (req, res, next) => {
     const { payload } = await jwtVerify(token, secretKey);
 
     // Đính kèm user ID vào request object
-    req.user = {_id: payload.userId };
+    req.user = {_id: payload.userId || payload._id };
 
     next();
   } catch (error) {
+    const isExpired = error.code === 'ERR_JWT_EXPIRED';
     return res.status(401).json({
       success: false,
       statusCode: 401,
-      message: 'Invalid or expired token'
+      message: isExpired ? 'Token expired' : 'Invalid token',
     });
   }
 };

@@ -98,10 +98,10 @@ class _LoginFormState extends State<LoginForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập email';
+              return 'Please enter your email';
             }
             if (!_emailRegex.hasMatch(trimmed)) {
-              return 'Email không đúng định dạng';
+              return 'Invalid email format';
             }
             return null;
           },
@@ -114,7 +114,7 @@ class _LoginFormState extends State<LoginForm> {
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Vui lòng nhập mật khẩu';
+              return 'Please enter your password';
             }
             return null;
           },

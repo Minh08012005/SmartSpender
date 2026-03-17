@@ -205,6 +205,140 @@ MultiProvider(
 
 ---
 
+## 🧪 Testing & CI/CD
+
+### Backend Testing Setup
+
+**Yêu cầu:**
+- Local MongoDB instance hoặc Docker container
+- Node.js 16+
+- npm dependencies đã install
+
+**Cài đặt MongoDB (Local Development)**
+
+Option 1: Dùng Docker (Recommended)
+```bash
+# Chạy MongoDB container
+docker run -d \
+  --name smartspender_mongo \
+  -p 27017:27017 \
+  mongo:5.0
+
+# Kiểm tra connection
+mongosh mongodb://127.0.0.1:27017
+```
+
+Option 2: Cài đặt MongoDB locally
+- Windows: Download từ https://www.mongodb.com/try/download/community
+- macOS: `brew install mongodb-community`
+- Linux: Theo hướng dẫn chính thức
+
+**Chạy Tests Locally**
+
+```bash
+cd backend
+
+# Chạy tất cả tests
+npm test
+
+# Chạy unit tests
+npm run test:unit
+
+# Chạy integration tests (cần MongoDB)
+npm run test:integration
+
+# Chạy tests với watch mode
+npm run test:watch
+
+# Xem code coverage
+npm run test:coverage
+```
+
+**CI/CD Pipeline Requirements**
+
+Đảm bảo `.github/workflows/` chứa:
+1. **test.yml** - Chạy tests trên mỗi push/PR
+   - Setup Node.js
+   - Setup MongoDB (dùng `services: mongodb:` hoặc Docker)
+   - `npm install && npm test`
+
+2. **lint.yml** - Format & Lint check
+   - `npm run lint`
+   - `npm run format:check`
+
+**Ví dụ GitHub Actions Workflow (`.github/workflows/test.yml`):**
+
+```yaml
+name: Backend Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:5.0
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: cd backend && npm ci
+      
+      - name: Run linter
+        run: cd backend && npm run lint
+      
+      - name: Run tests
+        run: cd backend && npm test
+        env:
+          MONGODB_URI: mongodb://mongo:27017/smartspender_test
+          JWT_SECRET: test_secret
+          NODE_ENV: test
+```
+
+**Test Coverage Requirements**
+
+- Mục tiêu: ≥ 80% coverage cho business logic
+- Controllers: ≥ 70% (integration tests)
+- Services: ≥ 85% (unit tests)
+- Validators: ≥ 90% (unit tests)
+
+**Viết Tests**
+
+Test format - Jest/Supertest:
+```javascript
+describe('PUT /api/transactions/:id', () => {
+  it('should update transaction', async () => {
+    const res = await request(app)
+      .put(`/api/transactions/${id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Updated' });
+    
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+});
+```
+
+Lệnh chạy test: `npm test` (tự động tìm `*.test.js` files)
+
+---
+
 ## ✅ Best Practices
 
 ### Backend

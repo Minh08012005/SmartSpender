@@ -26,18 +26,18 @@ class AuthService {
     String? serverMessage,
   }) {
     if (isLogin && statusCode == 401) {
-      return AuthResult(success: false, message: 'Sai tài khoản hoặc mật khẩu');
+      return AuthResult(success: false, message: 'Invalid email or password');
     }
 
     if (!isLogin && statusCode == 409) {
-      return AuthResult(success: false, message: 'Tài khoản đã tồn tại');
+      return AuthResult(success: false, message: 'Account already exists');
     }
 
     if (serverMessage != null && serverMessage.trim().isNotEmpty) {
       return AuthResult(success: false, message: serverMessage);
     }
 
-    return AuthResult(success: false, message: 'Lỗi server ($statusCode)');
+    return AuthResult(success: false, message: 'Server error ($statusCode)');
   }
 
   /// =======================
@@ -68,7 +68,7 @@ class AuthService {
       if (body == null) {
         return AuthResult(
           success: false,
-          message: 'Phản hồi không hợp lệ từ server',
+          message: 'Invalid response from server',
         );
       }
 
@@ -76,7 +76,7 @@ class AuthService {
       if (body['success'] == false) {
         return AuthResult(
           success: false,
-          message: body['message'] ?? 'Đăng nhập thất bại',
+          message: body['message'] ?? 'Login failed',
         );
       }
 
@@ -86,7 +86,7 @@ class AuthService {
       if (accessToken == null) {
         return AuthResult(
           success: false,
-          message: 'Không nhận được accessToken',
+          message: 'Missing access token in response',
         );
       }
 
@@ -96,20 +96,17 @@ class AuthService {
 
       return AuthResult(
         success: true,
-        message: body['message'] ?? 'Đăng nhập thành công',
+        message: body['message'] ?? 'Login successful',
       );
     } on TimeoutException {
       return AuthResult(
         success: false,
-        message: 'Kết nối quá thời gian, vui lòng thử lại',
+        message: 'Connection timed out, please try again',
       );
     } on SocketException {
-      return AuthResult(
-        success: false,
-        message: 'Không thể kết nối tới server',
-      );
+      return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
-      return AuthResult(success: false, message: 'Lỗi kết nối server');
+      return AuthResult(success: false, message: 'Server connection error');
     }
   }
 
@@ -149,7 +146,7 @@ class AuthService {
       if (body == null) {
         return AuthResult(
           success: false,
-          message: 'Phản hồi không hợp lệ từ server',
+          message: 'Invalid response from server',
         );
       }
 
@@ -166,20 +163,17 @@ class AuthService {
 
       return AuthResult(
         success: true,
-        message: body['message'] ?? 'Đăng ký thành công',
+        message: body['message'] ?? 'Registration successful',
       );
     } on TimeoutException {
       return AuthResult(
         success: false,
-        message: 'Kết nối quá thời gian, vui lòng thử lại',
+        message: 'Connection timed out, please try again',
       );
     } on SocketException {
-      return AuthResult(
-        success: false,
-        message: 'Không thể kết nối tới server',
-      );
+      return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
-      return AuthResult(success: false, message: 'Lỗi kết nối server');
+      return AuthResult(success: false, message: 'Server connection error');
     }
   }
 }
