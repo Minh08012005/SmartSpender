@@ -19,8 +19,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
-    // TODO: Switch to fetchTransactions() when Backend Task #33 CRUD is completed
     Future.microtask(_loadTransactions);
   }
 

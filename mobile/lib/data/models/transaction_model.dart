@@ -7,14 +7,14 @@ class TransactionModel {
   static const int maxNoteLength = 200;
 
   static const Map<TransactionType, List<String>> categoriesByType = {
-    TransactionType.income: ['salary', 'other income'],
+    TransactionType.income: ['salary', 'other'],
     TransactionType.expense: [
       'food',
       'travel',
       'shopping',
       'entertainment',
       'utility',
-      'other expense',
+      'other',
     ],
   };
 
@@ -42,7 +42,11 @@ class TransactionModel {
        assert(
          isCategoryValid(type, _normalizeCategory(category, type)),
          'Category is not valid for transaction type',
-       );
+       ) {
+    if (amount <= 0) {
+      throw Exception('Amount must be > 0');
+    }
+  }
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     final parsedType = _parseType(json['type']);
@@ -70,11 +74,17 @@ class TransactionModel {
   }
 
   static double _parseAmount(dynamic value) {
-    if (value == null) return 1.0;
+    if (value == null) {
+      throw Exception('Amount is required');
+    }
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 1.0;
-    return 1.0;
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+
+    throw Exception('Invalid amount format: $value');
   }
 
   static DateTime _parseDate(dynamic value) {
@@ -114,8 +124,11 @@ class TransactionModel {
 
   static String _normalizeCategory(dynamic value, TransactionType type) {
     final parsed = _normalizeRawCategory(value);
+    if (parsed == 'other income' || parsed == 'other expense') {
+      return 'other';
+    }
     if (isCategoryValid(type, parsed)) return parsed;
-    return defaultCategoryFor(type);
+    throw Exception('Invalid category: $parsed');
   }
 
   static String formatCategoryForUi(String category) {

@@ -73,7 +73,7 @@ void main() {
         amount: 100,
         type: TransactionType.expense,
         category: 'food',
-        title: '   ',
+        title: ' ',
       );
 
       final provider = TransactionProvider(apiService: mockApi);

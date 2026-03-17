@@ -132,9 +132,18 @@ class TransactionProvider extends ChangeNotifier {
           }
 
           if (transactionsData != null) {
-            _transactions = transactionsData
-                .map((json) => TransactionModel.fromJson(json))
-                .toList();
+            final List<TransactionModel> parsedList = [];
+            for (final json in transactionsData) {
+              try {
+                final tx = TransactionModel.fromJson(json);
+                parsedList.add(tx);
+              } catch (e) {
+                debugPrint('❌ Skipped invalid transaction: $e');
+                debugPrint('👉 Data: $json');
+              }
+            }
+
+            _transactions = parsedList;
 
             debugPrint('✅ Loaded ${_transactions.length} transactions');
           } else {
@@ -149,7 +158,9 @@ class TransactionProvider extends ChangeNotifier {
     } on DioException catch (e) {
       _remoteTotalIncome = null;
       _remoteTotalExpense = null;
-      _setError(e.error?.toString() ?? 'Cannot fetch transactions');
+      _setError(
+        _extractApiErrorMessage(e, 'Không thể tải danh sách giao dịch'),
+      );
       debugPrint('❌ Fetch transactions failed: ${e.message}');
     } catch (e) {
       _remoteTotalIncome = null;
@@ -233,9 +244,7 @@ class TransactionProvider extends ChangeNotifier {
 
       throw Exception(AppStrings.failedToDeleteTransaction);
     } on DioException catch (e) {
-      _setError(
-        _extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction),
-      );
+      _setError(_extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction));
       debugPrint('❌ Delete transaction failed: ${e.message}');
       return false;
     } catch (e) {
@@ -319,9 +328,17 @@ class TransactionProvider extends ChangeNotifier {
     final payload = data['data'];
     if (payload is! Map<String, dynamic>) return null;
 
-    final transaction = TransactionModel.fromJson(payload);
-    if (transaction.id.trim().isEmpty) return null;
-    return transaction;
+    try {
+      final transaction = TransactionModel.fromJson(payload);
+
+      if (transaction.id.trim().isEmpty) return null;
+
+      return transaction;
+    } catch (e) {
+      debugPrint('❌ Invalid transaction from API: $e');
+      debugPrint('👉 Data: $payload');
+      return null;
+    }
   }
   // ============== DUMMY LOAD ==============
 
@@ -329,7 +346,7 @@ class TransactionProvider extends ChangeNotifier {
     _setLoading(true);
     _clearError();
 
-    await Future.delayed(const Duration(seconds: 2)); 
+    await Future.delayed(const Duration(seconds: 2));
 
     _transactions = dummyTransactions;
     _setLoading(false);
