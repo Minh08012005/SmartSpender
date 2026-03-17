@@ -118,6 +118,22 @@ describe('Transaction API Integration Tests', () => {
     );
   });
 
+  it('GET /api/transactions - should preserve bare from/to strings for service date semantics', async () => {
+    const res = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ from: '2026-03-01', to: '2026-03-31' });
+
+    expect(res.statusCode).toBe(200);
+    expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
+      mockUserId,
+      expect.objectContaining({
+        from: '2026-03-01',
+        to: '2026-03-31',
+      })
+    );
+  });
+
   // Test trường hợp token hết hạn
   it('should return 401 if token expired', async () => {
     // Tạo token đã hết hạn

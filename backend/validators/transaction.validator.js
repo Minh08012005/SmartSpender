@@ -12,14 +12,53 @@
 const Joi = require("joi");
 const { VALID_CATEGORIES } = require('./constants');
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_TIME_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+const isoDateString = (fieldName) => Joi.string().trim().custom((value, helpers) => {
+  const normalizedValue = value.trim();
+
+  if (!DATE_ONLY_REGEX.test(normalizedValue) && !ISO_DATE_TIME_REGEX.test(normalizedValue)) {
+    return helpers.message(`${fieldName} must be a valid ISO date`);
+  }
+
+  const parsedDate = new Date(normalizedValue);
+  if (Number.isNaN(parsedDate.getTime())) {
+    return helpers.message(`${fieldName} must be a valid ISO date`);
+  }
+
+  return normalizedValue;
+}, `${fieldName} ISO validation`);
+
+const parseComparableDate = (value, { endOfDayIfDateOnly = false } = {}) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+  if (DATE_ONLY_REGEX.test(normalizedValue)) {
+    const [yearPart, monthPart, dayPart] = normalizedValue.split('-').map(Number);
+    return new Date(
+      Date.UTC(
+        yearPart,
+        monthPart - 1,
+        dayPart,
+        endOfDayIfDateOnly ? 23 : 0,
+        endOfDayIfDateOnly ? 59 : 0,
+        endOfDayIfDateOnly ? 59 : 0,
+        endOfDayIfDateOnly ? 999 : 0
+      )
+    );
+  }
+
+  return new Date(normalizedValue);
+};
+
 
 const getTransactionsSchema = Joi.object({
   // Date Range Mode
-  from: Joi.date().iso().messages({ "date.format": "from must be YYYY-MM-DD" }),
-  to: Joi.date()
-    .iso()
-    .min(Joi.ref("from"))
-    .messages({ "date.min": "to date must be after from date" }),
+  from: isoDateString('from'),
+  to: isoDateString('to'),
 
   // Monthly Mode
   month: Joi.number().integer().min(1).max(12),
@@ -52,6 +91,27 @@ const getTransactionsSchema = Joi.object({
   sortBy: Joi.string().valid("date", "amount", "category", "createdAt").default("date"),
   order: Joi.string().valid("asc", "desc").default("desc"),
 })
+
+  // Giữ from/to ở dạng string để service còn phân biệt được bare date cho end-of-day semantics.
+  .custom((value, helpers) => {
+    if (value.from !== undefined && value.to !== undefined) {
+      const fromDate = parseComparableDate(value.from);
+      const toDate = parseComparableDate(value.to, { endOfDayIfDateOnly: true });
+
+      if (
+        !fromDate || Number.isNaN(fromDate.getTime()) ||
+        !toDate || Number.isNaN(toDate.getTime())
+      ) {
+        return helpers.message('from/to must be valid ISO dates');
+      }
+
+      if (toDate < fromDate) {
+        return helpers.message('to date must be after from date');
+      }
+    }
+
+    return value;
+  }, 'Date range validation')
 
   // ❗ Không được dùng đồng thời 2 mode
   .xor("from", "month")
