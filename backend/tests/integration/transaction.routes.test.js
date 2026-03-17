@@ -89,7 +89,48 @@ describe('Transaction API Integration Tests', () => {
 
     expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
       mockUserId,
-      { page: 2, limit: 10, month: 3, year: 2025 }
+      expect.objectContaining({
+        page: 2,
+        limit: 10,
+        month: 3,
+        year: 2025,
+        sortBy: 'date',
+        order: 'desc',
+      })
+    );
+  });
+
+  it('GET /api/transactions - should normalize uppercase type/category in query', async () => {
+    const res = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ month: 2, year: 2026, type: 'INCOME', category: 'Food,TRAVEL' });
+
+    expect(res.statusCode).toBe(200);
+    expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
+      mockUserId,
+      expect.objectContaining({
+        month: 2,
+        year: 2026,
+        type: 'income',
+        category: 'food,travel',
+      })
+    );
+  });
+
+  it('GET /api/transactions - should preserve bare from/to strings for service date semantics', async () => {
+    const res = await request(app)
+      .get('/api/transactions')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ from: '2026-03-01', to: '2026-03-31' });
+
+    expect(res.statusCode).toBe(200);
+    expect(transactionService.getFilteredTransactions).toHaveBeenCalledWith(
+      mockUserId,
+      expect.objectContaining({
+        from: '2026-03-01',
+        to: '2026-03-31',
+      })
     );
   });
 

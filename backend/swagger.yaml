@@ -1,0 +1,508 @@
+﻿openapi: 3.0.0
+info:
+  title: SmartSpender API Documentation
+  version: 1.0.0
+  description: Single source of truth for SmartSpender API contract.
+
+servers:
+  - url: http://localhost:3000
+    description: Local server
+
+tags:
+  - name: Transactions
+    description: Transaction endpoints
+
+paths:
+  /api/transactions:
+    get:
+      tags:
+        - Transactions
+      summary: Get transactions with filters
+      description: |
+        Requires one of these filter modes:
+        - `month` and `year`
+        - `from` and `to`
+
+        Query filter behavior:
+        - `type` accepts case-insensitive input and is normalized to lowercase.
+        - `category` accepts comma-separated values, trims each value, and normalizes to lowercase.
+        - If `to` is provided as `YYYY-MM-DD`, the API treats it as the end of that day (`23:59:59.999`) so records later on the same date are still included.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: month
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+          description: Required with `year` when using monthly mode.
+        - in: query
+          name: year
+          schema:
+            type: integer
+            minimum: 2000
+          description: Required with `month` when using monthly mode.
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+          description: Start date. Accepts `YYYY-MM-DD` or full ISO date-time.
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+          description: End date. Accepts `YYYY-MM-DD` or full ISO date-time. Date-only values are interpreted as the end of that day.
+        - in: query
+          name: type
+          schema:
+            type: string
+            enum: [income, expense]
+          description: Transaction type. Case-insensitive input is accepted and normalized.
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Comma-separated categories. Each value is trimmed and normalized to lowercase.
+          example: Food,TRAVEL
+        - in: query
+          name: search
+          schema:
+            type: string
+            maxLength: 100
+          description: Case-insensitive search against note content.
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [date, amount, category, createdAt]
+            default: date
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Transactions fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListSuccess'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                missingToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Access token required
+                    errorCode: TOKEN_MISSING
+                invalidToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Invalid token
+                    errorCode: TOKEN_INVALID
+                expiredToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Token expired
+                    errorCode: TOKEN_EXPIRED
+    post:
+      tags:
+        - Transactions
+      summary: Create transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionCreateInput'
+      responses:
+        '201':
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionMutationSuccess'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                missingToken:
+                  summary: Missing token
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Access token required
+                    errorCode: TOKEN_MISSING
+                invalidToken:
+                  summary: Invalid token
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Invalid token
+                    errorCode: TOKEN_INVALID
+                expiredToken:
+                  summary: Expired token
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Token expired
+                    errorCode: TOKEN_EXPIRED
+
+  /api/transactions/{id}:
+    put:
+      tags:
+        - Transactions
+      summary: Update transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          description: Mongo ObjectId (24 hex chars)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransactionUpdateInput'
+      responses:
+        '200':
+          description: Transaction updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionMutationSuccess'
+        '400':
+          description: Validation failed or invalid update payload
+          content:
+            application/json:
+              examples:
+                validationFailed:
+                  value:
+                    success: false
+                    statusCode: 400
+                    message: Validation failed
+                emptyPayload:
+                  value:
+                    success: false
+                    statusCode: 400
+                    message: No fields provided for update
+                invalidDate:
+                  value:
+                    success: false
+                    statusCode: 400
+                    message: Invalid date format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                missingToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Access token required
+                    errorCode: TOKEN_MISSING
+                invalidToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Invalid token
+                    errorCode: TOKEN_INVALID
+                expiredToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Token expired
+                    errorCode: TOKEN_EXPIRED
+        '404':
+          description: Transaction not found or permission denied
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 404
+                message: Transaction not found or permission denied
+
+    delete:
+      tags:
+        - Transactions
+      summary: Delete transaction
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          description: Mongo ObjectId (24 hex chars)
+      responses:
+        '200':
+          description: Transaction deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationMessageSuccess'
+              example:
+                success: true
+                statusCode: 200
+                message: Transaction deleted successfully
+                data: null
+        '400':
+          description: Invalid ObjectId or request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                missingToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Access token required
+                    errorCode: TOKEN_MISSING
+                invalidToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Invalid token
+                    errorCode: TOKEN_INVALID
+                expiredToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Token expired
+                    errorCode: TOKEN_EXPIRED
+        '404':
+          description: Transaction not found or permission denied
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 404
+                message: Transaction not found or permission denied
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        title:
+          type: string
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [income, expense]
+        category:
+          type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
+        date:
+          type: string
+          format: date-time
+        note:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TransactionCreateInput:
+      type: object
+      required: [title, amount, category, type]
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+        amount:
+          type: number
+          minimum: 0
+        category:
+          type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
+        type:
+          type: string
+          enum: [income, expense]
+        date:
+          type: string
+          description: ISO date string (YYYY-MM-DD) or full ISO date-time
+        note:
+          type: string
+
+    TransactionUpdateInput:
+      type: object
+      description: Partial update payload. At least one field should be provided.
+      properties:
+        title:
+          type: string
+          minLength: 2
+          maxLength: 100
+        amount:
+          type: number
+          minimum: 0
+        category:
+          type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
+        type:
+          type: string
+          enum: [income, expense]
+        date:
+          type: string
+          description: ISO date string (YYYY-MM-DD) or full ISO date-time
+        note:
+          type: string
+
+    TransactionMutationSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Transaction'
+
+    TransactionListPayload:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        totalCount:
+          type: integer
+          example: 1
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        stats:
+          type: object
+          properties:
+            totalIncome:
+              type: number
+              example: 100
+            totalExpense:
+              type: number
+              example: 40
+            balance:
+              type: number
+              example: 60
+
+    TransactionListSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+          example: Transactions fetched successfully
+        data:
+          $ref: '#/components/schemas/TransactionListPayload'
+
+    MutationMessageSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        statusCode:
+          type: integer
+          example: 200
+        message:
+          type: string
+        data:
+          nullable: true
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        statusCode:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: Validation failed
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string

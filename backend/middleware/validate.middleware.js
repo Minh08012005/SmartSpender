@@ -32,7 +32,20 @@ const validate = (schema, property = 'body') => {
       });
     }
 
-    req[property] = value; // Cập nhật request với dữ liệu đã được validate và chuyển đổi
+    // Lưu dữ liệu đã validate để controller có thể dùng nguồn đã normalize một cách ổn định.
+    req.validated = req.validated || {};
+    req.validated[property] = value;
+
+    // Express query thường là object được parse qua getter; mutate in-place để
+    // đảm bảo dữ liệu đã normalize thực sự được controller nhìn thấy.
+    if (property === 'query' && req.query && typeof req.query === 'object') {
+      Object.keys(req.query).forEach((key) => {
+        delete req.query[key];
+      });
+      Object.assign(req.query, value);
+    } else {
+      req[property] = value; // Cập nhật request với dữ liệu đã được validate và chuyển đổi
+    }
     next();
   };
 };

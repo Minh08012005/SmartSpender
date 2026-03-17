@@ -72,6 +72,7 @@ const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal Server Error";
   let errors;
+  let errorCode = err.errorCode;
 
   //***  Handle specific errors
 
@@ -111,6 +112,7 @@ const errorHandler = (err, req, res, next) => {
       success: false,
       statusCode,
       message,
+      ...(errorCode && { errorCode }),
       errors,
       stack: err.stack,
       error: err,
@@ -125,15 +127,21 @@ const errorHandler = (err, req, res, next) => {
       success: false,
       statusCode,
       message,
+      ...(errorCode && { errorCode }),
       errors,
     });
   }
 
-  // CastError (ví dụ: ObjectId không hợp lệ)
+  // CastError (ví dụ: ObjectId không hợp lệ từ Mongoose khi query DB)
+  // BUG FIX: cần return sớm, nếu không code sẽ rơi xuống return 500 bên dưới
+  // dù statusCode đã được set đúng thành 400.
   if (err.name === "CastError") {
     const result = handleCastError(err);
-    statusCode = result.statusCode;
-    message = result.message;
+    return res.status(result.statusCode).json({
+      success: false,
+      statusCode: result.statusCode,
+      message: result.message,
+    });
   }
 
   // Programming/System error → hide

@@ -60,9 +60,9 @@ const swaggerOptions = {
       },
     },
   },
-  // Use YAML as single source of truth for transaction/statistic APIs.
-  // Keep auth route annotations for login/register docs.
-  apis: ['./routes/auth/*.js', './docs/*.yaml'], // Đường dẫn đến các file định nghĩa API
+  // Use backend/swagger.yaml as the single source of truth for API contract docs.
+  // Keep auth route annotations for login/register docs until they are also moved into YAML.
+  apis: ['./routes/auth/*.js', './swagger.yaml'],
 };
 
 // Thiết lập Swagger UI
