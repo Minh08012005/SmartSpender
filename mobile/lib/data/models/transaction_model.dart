@@ -34,17 +34,30 @@ class TransactionModel {
     required this.date,
     required this.note,
     required this.type,
-  }) : category = _normalizeCategory(category, type),
-       assert(amount > 0, 'Amount must be > 0'),
-       assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
-       assert(title.trim().isNotEmpty, 'Title cannot be empty'),
-       assert(note.length <= maxNoteLength, 'Note too long'),
-       assert(
-         isCategoryValid(type, _normalizeCategory(category, type)),
-         'Category is not valid for transaction type',
-       ) {
+  }) : category = _normalizeCategory(category, type) {
+    // Validate amount
     if (amount <= 0) {
       throw Exception('Amount must be > 0');
+    }
+    if (amount > maxAmount) {
+      throw Exception('Amount must be <= $maxAmount');
+    }
+
+    // Validate title
+    if (title.trim().isEmpty) {
+      throw Exception('Title cannot be empty');
+    }
+
+    // Validate note length
+    if (note.length > maxNoteLength) {
+      throw Exception('Note is too long, max $maxNoteLength characters');
+    }
+
+    // Validate category
+    if (!isCategoryValid(type, category)) {
+      throw Exception(
+        'Category "$category" is not valid for transaction type "$type"',
+      );
     }
   }
 
@@ -64,6 +77,7 @@ class TransactionModel {
 
   Map<String, dynamic> toJson() {
     return {
+      '_id': id,
       'amount': amount,
       'category': _normalizeCategory(category, type),
       'title': title,
@@ -84,7 +98,7 @@ class TransactionModel {
       if (parsed != null) return parsed;
     }
 
-    throw Exception('Invalid amount format: $value');
+    throw Exception('Amount must be a valid number');
   }
 
   static DateTime _parseDate(dynamic value) {
