@@ -3,6 +3,7 @@
 ## 1) Mục tiêu tài liệu
 
 Tài liệu này giúp Leader theo dõi nhanh:
+
 - Sơn đã xử lý đến đâu sau các commit mới nhất.
 - Mức sẵn sàng hiện tại cho giai đoạn test độc lập Mobile trước tích hợp API thật.
 - Các bước bắt buộc Sơn cần hoàn thành để có thể merge vào dev an toàn.
@@ -16,6 +17,7 @@ Phạm vi đánh giá: các thay đổi trên nhánh `feature/home-integration` 
 Trạng thái hiện tại: **Đã có tiến bộ rõ**, nhưng **chưa đủ điều kiện merge vào dev**.
 
 Lý do chính:
+
 1. Sơn đã sửa đúng nhiều điểm trọng yếu về contract và UI hiển thị.
 2. Tuy nhiên, bộ test độc lập Mobile (Provider) đang fail nhiều case, nên chưa đạt tiêu chí ổn định trước tích hợp API thật.
 
@@ -26,31 +28,39 @@ Khuyến nghị điều phối: giữ PR ở trạng thái **Changes requested**
 ## 3) Sơn đã xử lý tốt những gì
 
 ### A. Chuẩn hóa contract category gần backend hơn
+
 - Đã dùng `other` thay vì tách `other income` / `other expense` trong enum category chính.
 - Có normalize tương thích dữ liệu cũ.
 
 Tham chiếu:
+
 - [mobile/lib/data/models/transaction_model.dart#L9](mobile/lib/data/models/transaction_model.dart#L9)
 - [mobile/lib/data/models/transaction_model.dart#L127](mobile/lib/data/models/transaction_model.dart#L127)
 
 ### B. Bỏ fallback amount gây sai số liệu âm thầm
+
 - `fromJson` đã chuyển sang fail-fast khi amount null/invalid.
 
 Tham chiếu:
+
 - [mobile/lib/data/models/transaction_model.dart#L78](mobile/lib/data/models/transaction_model.dart#L78)
 
 ### C. UI Home rõ nghĩa dữ liệu hơn
+
 - `TransactionItem` đã hiển thị `title` làm dòng chính.
 - Dòng phụ có category + date + note (nếu có).
 
 Tham chiếu:
+
 - [mobile/lib/views/home/widgets/transaction_item.dart#L35](mobile/lib/views/home/widgets/transaction_item.dart#L35)
 - [mobile/lib/views/home/widgets/transaction_item.dart#L45](mobile/lib/views/home/widgets/transaction_item.dart#L45)
 
 ### D. Đã thêm test model độc lập
+
 - Có file test mới cho parse amount/category.
 
 Tham chiếu:
+
 - [mobile/test/transaction_model_test.dart](mobile/test/transaction_model_test.dart)
 
 ---
@@ -62,14 +72,17 @@ Tham chiếu:
 ### 1) Bộ test provider đang fail, chưa đạt chuẩn "test độc lập"
 
 Hiện trạng:
+
 - Chạy test trọng tâm: `flutter test test/transaction_model_test.dart test/transaction_provider_test.dart`
 - Kết quả: nhiều case fail trong `transaction_provider_test.dart`.
 
 Nguyên nhân chính (dễ hiểu cho quản lý):
+
 1. Dữ liệu mock trong test chưa khớp contract parse mới.
 2. Một số test case đang kiểm tra logic cũ, không còn phù hợp sau khi model siết validate.
 
 Ví dụ điểm lệch:
+
 - Test success đang mock payload chưa đúng shape parse tạo/update hiện tại.
   - [mobile/test/transaction_provider_test.dart#L51](mobile/test/transaction_provider_test.dart#L51)
   - [mobile/lib/data/providers/transaction_provider.dart#L326](mobile/lib/data/providers/transaction_provider.dart#L326)
@@ -80,6 +93,7 @@ Ví dụ điểm lệch:
   - [mobile/test/transaction_provider_test.dart#L234](mobile/test/transaction_provider_test.dart#L234)
 
 Tác động nếu merge ngay:
+
 - Rủi ro hồi quy cao khi bước vào tích hợp thật vì không có “lưới an toàn” test đáng tin cậy.
 
 ---
@@ -89,22 +103,27 @@ Tác động nếu merge ngay:
 ### 2) Validate amount đang bị lặp trong model
 
 Hiện trạng:
+
 - Vừa `assert(amount > 0)` vừa `throw Exception` cho cùng điều kiện.
 
 Tham chiếu:
+
 - [mobile/lib/data/models/transaction_model.dart#L40](mobile/lib/data/models/transaction_model.dart#L40)
 - [mobile/lib/data/models/transaction_model.dart#L46](mobile/lib/data/models/transaction_model.dart#L46)
 
 Khuyến nghị:
+
 - Chọn 1 cơ chế thống nhất để hành vi rõ ràng và dễ test.
 
 ### 3) Message lỗi tổng quát chưa thống nhất hoàn toàn
 
 Hiện trạng:
+
 - Nhánh Dio đã dùng message thân thiện hơn.
 - Nhưng nhánh catch tổng quát vẫn có message kỹ thuật.
 
 Tham chiếu:
+
 - [mobile/lib/data/providers/transaction_provider.dart#L162](mobile/lib/data/providers/transaction_provider.dart#L162)
 - [mobile/lib/data/providers/transaction_provider.dart#L168](mobile/lib/data/providers/transaction_provider.dart#L168)
 
@@ -140,6 +159,7 @@ Tham chiếu:
 ## 6) Cổng quyết định merge cho Leader
 
 Cho phép chuyển từ **Changes requested** sang **Approved** khi đồng thời đạt:
+
 1. Không còn test fail trong `mobile/test`.
 2. Case test provider đã khớp contract mới (không còn fail do fixture cũ).
 3. Có bằng chứng test pass được đính kèm trong PR.
