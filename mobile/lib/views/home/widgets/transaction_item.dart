@@ -30,18 +30,28 @@ class TransactionItem extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // TITLE (main)
                   Text(
-                    transaction.category,
+                    transaction.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
+
+                  // CATEGORY + DATE (sub)
                   Text(
-                    DateFormat('dd/MM/yyyy').format(transaction.date),
+                    '${transaction.categoryForUi} • ${DateFormat('dd/MM/yyyy').format(transaction.date)}',
                     style: const TextStyle(fontSize: 12, color: Colors.grey),
                   ),
+
+                  // NOTE (optional)
+                  if (transaction.note.isNotEmpty)
+                    Text(
+                      transaction.note,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
                 ],
               ),
 

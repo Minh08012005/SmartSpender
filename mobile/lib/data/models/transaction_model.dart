@@ -2,10 +2,6 @@ import 'package:intl/intl.dart';
 
 enum TransactionType { income, expense }
 
-/// Transaction Model
-///
-/// Đại diện cho một giao dịch thu/chi
-/// Hỗ trợ parse từ JSON API và format hiển thị
 class TransactionModel {
   static const double maxAmount = 1000000000;
   static const int maxNoteLength = 200;
@@ -38,14 +34,32 @@ class TransactionModel {
     required this.date,
     required this.note,
     required this.type,
-  }) : category = _normalizeCategory(category, type),
-       assert(amount > 0, 'Amount must be > 0'),
-       assert(amount <= maxAmount, 'Amount must be <= maxAmount'),
-       assert(note.length <= maxNoteLength, 'Note too long'),
-       assert(
-         isCategoryValid(type, _normalizeCategory(category, type)),
-         'Category is not valid for transaction type',
-       );
+  }) : category = _normalizeCategory(category, type) {
+    // Validate amount
+    if (amount <= 0) {
+      throw Exception('Amount must be > 0');
+    }
+    if (amount > maxAmount) {
+      throw Exception('Amount must be <= $maxAmount');
+    }
+
+    // Validate title
+    if (title.trim().isEmpty) {
+      throw Exception('Title cannot be empty');
+    }
+
+    // Validate note length
+    if (note.length > maxNoteLength) {
+      throw Exception('Note is too long, max $maxNoteLength characters');
+    }
+
+    // Validate category
+    if (!isCategoryValid(type, category)) {
+      throw Exception(
+        'Category "$category" is not valid for transaction type "$type"',
+      );
+    }
+  }
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     final parsedType = _parseType(json['type']);
@@ -54,14 +68,13 @@ class TransactionModel {
       id: json['_id'] ?? json['id'] ?? '',
       amount: _parseAmount(json['amount']),
       category: _normalizeCategory(json['category'], parsedType),
-      title: json['title'] ?? '',
+      title: json['title'] ?? 'No Title',
       date: _parseDate(json['date']),
       note: _parseNote(json['note']),
       type: parsedType,
     );
   }
 
-  /// Convert sang JSON để gửi API
   Map<String, dynamic> toJson() {
     return {
       'amount': amount,
@@ -73,18 +86,20 @@ class TransactionModel {
     };
   }
 
-  // ============== HELPER METHODS ==============
-
-  /// Parse amount với null safety
   static double _parseAmount(dynamic value) {
-    if (value == null) return 0.0;
+    if (value == null) {
+      throw Exception('Amount is required');
+    }
     if (value is double) return value;
     if (value is int) return value.toDouble();
-    if (value is String) return double.tryParse(value) ?? 0.0;
-    return 0.0;
+    if (value is String) {
+      final parsed = double.tryParse(value);
+      if (parsed != null) return parsed;
+    }
+
+    throw Exception('Amount must be a valid number');
   }
 
-  /// Parse date với null safety
   static DateTime _parseDate(dynamic value) {
     if (value == null) return DateTime.now();
     if (value is DateTime) return value;
@@ -92,7 +107,6 @@ class TransactionModel {
     return DateTime.now();
   }
 
-  /// Parse type với null safety
   static TransactionType _parseType(dynamic value) {
     if (value == null) return TransactionType.expense;
     final typeStr = value.toString().toLowerCase();
@@ -123,8 +137,11 @@ class TransactionModel {
 
   static String _normalizeCategory(dynamic value, TransactionType type) {
     final parsed = _normalizeRawCategory(value);
+    if (parsed == 'other income' || parsed == 'other expense') {
+      return 'other';
+    }
     if (isCategoryValid(type, parsed)) return parsed;
-    return defaultCategoryFor(type);
+    throw Exception('Invalid category: $parsed');
   }
 
   static String formatCategoryForUi(String category) {
@@ -136,20 +153,16 @@ class TransactionModel {
   String get categoryForUi {
     return formatCategoryForUi(category);
   }
- // ============== DISPLAY FORMATTING ==============
 
-  /// Format date để hiển thị (dd MMM yyyy)
   String get formattedDate {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  /// Format amount với dấu phẩy (123,456.00 ₫)
   String get formattedAmount {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} ₫';
+    return '${formatter.format(amount)} VND';
   }
 
-  /// Copy với một số trường thay đổi
   TransactionModel copyWith({
     String? id,
     double? amount,

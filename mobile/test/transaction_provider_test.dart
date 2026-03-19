@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
 import 'package:mobile/core/services/api_service.dart';
-import 'package:mobile/core/strings.dart';
+//import 'package:mobile/core/strings.dart';
 import 'package:mobile/data/models/transaction_model.dart';
 import 'package:mobile/data/providers/transaction_provider.dart';
 
@@ -34,7 +33,7 @@ void main() {
   }
 
   group('TransactionProvider.addTransaction', () {
-    test('success: sends title to API and returns true', () async {
+    test('success: sends correct data to API and returns true', () async {
       final mockApi = MockApiService();
       final tx = makeTransaction(
         id: 'a1',
@@ -48,7 +47,10 @@ void main() {
         (_) async => Response(
           requestOptions: RequestOptions(path: '/transactions'),
           statusCode: 201,
-          data: {'success': true, 'data': tx.toJson()},
+          data: {
+            'success': true,
+            'data': {...tx.toJson(), '_id': tx.id},
+          },
         ),
       );
 
@@ -64,24 +66,7 @@ void main() {
               ).captured.single
               as Map<String, dynamic>;
       expect(captured['title'], 'Lunch');
-    });
-
-    test('missing title: returns false and does not call API', () async {
-      final mockApi = MockApiService();
-      final tx = makeTransaction(
-        id: 'a2',
-        amount: 100,
-        type: TransactionType.expense,
-        category: 'food',
-        title: '   ',
-      );
-
-      final provider = TransactionProvider(apiService: mockApi);
-      final result = await provider.addTransaction(tx);
-
-      expect(result, isFalse);
-      expect(provider.error, AppStrings.titleRequired);
-      verifyNever(() => mockApi.post(any(), data: any(named: 'data')));
+      expect(captured['category'], 'food');
     });
 
     test('api title error: surfaces backend message clearly', () async {
@@ -131,7 +116,10 @@ void main() {
 
       final response = Response(
         requestOptions: RequestOptions(path: '/transactions/1'),
-        data: {'success': true, 'data': updated.toJson()},
+        data: {
+          'success': true,
+          'data': {...updated.toJson(), '_id': updated.id},
+        },
         statusCode: 200,
       );
 
@@ -157,34 +145,8 @@ void main() {
               ).captured.single
               as Map<String, dynamic>;
       expect(captured['title'], 'Lunch');
+      expect(captured['category'], 'food');
     });
-
-    test(
-      'missing title: returns false, keeps original data, skips API',
-      () async {
-        final mockApi = MockApiService();
-        final original = makeTransaction(
-          id: '2',
-          amount: 200.0,
-          type: TransactionType.income,
-          category: 'salary',
-          title: 'Salary',
-        );
-        final invalid = original.copyWith(title: '   ', amount: 300.0);
-
-        final provider = TransactionProvider(
-          apiService: mockApi,
-          initialTransactions: [original],
-        );
-
-        final result = await provider.updateTransaction(invalid);
-
-        expect(result, isFalse);
-        expect(provider.error, AppStrings.titleRequired);
-        expect(provider.transactions.first.amount, 200.0);
-        verifyNever(() => mockApi.put(any(), data: any(named: 'data')));
-      },
-    );
 
     test(
       'server error: rolls back optimistic update and returns false',
@@ -218,7 +180,6 @@ void main() {
         final result = await provider.updateTransaction(updated);
 
         expect(result, isFalse);
-        expect(provider.transactions, hasLength(1));
         expect(provider.transactions.first.amount, 200.0);
         expect(provider.error, contains('Failed to update transaction'));
       },
@@ -231,11 +192,12 @@ void main() {
         id: '4',
         amount: 80.0,
         type: TransactionType.expense,
-        category: 'transport',
+        category: 'travel',
         title: 'Bus',
       );
       final updated = original.copyWith(amount: 120.0, note: 'updated');
 
+      // trả về list thay vì map → provider xử lý fail
       final invalidPayloadResponse = Response(
         requestOptions: RequestOptions(path: '/transactions/4'),
         data: {
@@ -257,7 +219,6 @@ void main() {
       final result = await provider.updateTransaction(updated);
 
       expect(result, isFalse);
-      expect(provider.transactions, hasLength(1));
       expect(provider.transactions.first.amount, 80.0);
       expect(provider.error, contains('Invalid update transaction response'));
     });

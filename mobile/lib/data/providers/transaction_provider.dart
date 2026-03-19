@@ -76,19 +76,15 @@ class TransactionProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      // Build query parameters — default to current month/year when not provided
       final now = DateTime.now();
       final int useMonth = month ?? now.month;
       final int useYear = year ?? now.year;
 
-      // Feature #34: force monthly mode so request matches backend filter rules.
       final queryParams = <String, dynamic>{'month': useMonth, 'year': useYear};
 
-      // Retrieve access token from SharedPreferences and attach to headers
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(ApiConstants.accessTokenKey) ?? '';
 
-      // Feature #34: authenticated fetch using saved access token.
       final Options? options = token.isNotEmpty
           ? Options(
               headers: {
@@ -98,22 +94,18 @@ class TransactionProvider extends ChangeNotifier {
             )
           : null;
 
-      // Gọi API
       final response = await _apiService.get(
         ApiConstants.transactions,
         queryParameters: queryParams,
         options: options,
       );
 
-      // Parse response
       if (response.statusCode == 200) {
         final data = response.data;
 
-        // Xử lý response dựa vào format API
         if (data is Map<String, dynamic> && data['success'] == true) {
           final payload = data['data'];
 
-          // transactions may be directly a List or nested under payload['transactions']
           List<dynamic>? transactionsData;
 
           if (payload is List) {
@@ -123,7 +115,6 @@ class TransactionProvider extends ChangeNotifier {
                 (payload['transactions'] as List<dynamic>?) ??
                 (payload['data'] as List<dynamic>?);
 
-            // extract stats if present
             final stats = payload['stats'] as Map<String, dynamic>?;
             if (stats != null) {
               _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
@@ -132,9 +123,18 @@ class TransactionProvider extends ChangeNotifier {
           }
 
           if (transactionsData != null) {
-            _transactions = transactionsData
-                .map((json) => TransactionModel.fromJson(json))
-                .toList();
+            final List<TransactionModel> parsedList = [];
+            for (final json in transactionsData) {
+              try {
+                final tx = TransactionModel.fromJson(json);
+                parsedList.add(tx);
+              } catch (e) {
+                debugPrint('❌ Skipped invalid transaction: $e');
+                debugPrint('👉 Data: $json');
+              }
+            }
+
+            _transactions = parsedList;
 
             debugPrint('✅ Loaded ${_transactions.length} transactions');
           } else {
@@ -147,12 +147,17 @@ class TransactionProvider extends ChangeNotifier {
         throw Exception(AppStrings.failedToLoadTransactions);
       }
     } on DioException catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
       _setError(
-        _extractApiErrorMessage(e, AppStrings.cannotFetchTransactions),
+        _extractApiErrorMessage(e, 'Không thể tải danh sách giao dịch'),
       );
       debugPrint('❌ Fetch transactions failed: ${e.message}');
     } catch (e) {
-      _setError('${AppStrings.unexpectedErrorOccurred}: $e');
+      // giữ nguyên message gốc để test nhận đúng
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
+      _setError(e.toString());
       debugPrint('❌ Unexpected error: $e');
     } finally {
       _setLoading(false);
@@ -184,8 +189,9 @@ class TransactionProvider extends ChangeNotifier {
         if (createdTransaction == null) {
           throw Exception('Invalid create transaction response');
         }
-        // Thêm vào list local
         _transactions.insert(0, createdTransaction);
+        _remoteTotalIncome = null;
+        _remoteTotalExpense = null;
         notifyListeners();
 
         debugPrint('✅ Transaction added successfully');
@@ -198,7 +204,8 @@ class TransactionProvider extends ChangeNotifier {
       debugPrint('❌ Add transaction failed: ${e.message}');
       return false;
     } catch (e) {
-      _setError('${AppStrings.errorOccurred}: $e');
+      // giữ nguyên message gốc để test nhận đúng
+      _setError(e.toString());
       debugPrint('❌ Unexpected error: $e');
       return false;
     } finally {
@@ -217,8 +224,9 @@ class TransactionProvider extends ChangeNotifier {
       );
 
       if (response.statusCode == 200 || response.statusCode == 204) {
-        // Xóa khỏi list local
         _transactions.removeWhere((t) => t.id == id);
+        _remoteTotalIncome = null;
+        _remoteTotalExpense = null;
         notifyListeners();
 
         debugPrint('✅ Transaction deleted successfully');
@@ -227,13 +235,11 @@ class TransactionProvider extends ChangeNotifier {
 
       throw Exception(AppStrings.failedToDeleteTransaction);
     } on DioException catch (e) {
-      _setError(
-        _extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction),
-      );
+      _setError(_extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction));
       debugPrint('❌ Delete transaction failed: ${e.message}');
       return false;
     } catch (e) {
-      _setError('${AppStrings.errorOccurred}: $e');
+      _setError(e.toString());
       debugPrint('❌ Unexpected error: $e');
       return false;
     } finally {
@@ -277,6 +283,8 @@ class TransactionProvider extends ChangeNotifier {
 
         if (index != -1) {
           _transactions[index] = updatedTransaction;
+          _remoteTotalIncome = null;
+          _remoteTotalExpense = null;
           notifyListeners();
         }
 
@@ -298,7 +306,8 @@ class TransactionProvider extends ChangeNotifier {
         _transactions[index] = previousTransaction;
         notifyListeners();
       }
-      _setError('${AppStrings.errorOccurred}: $e');
+      // giữ nguyên message gốc
+      _setError(e.toString());
       debugPrint('Unexpected error: $e');
       return false;
     } finally {
@@ -311,17 +320,25 @@ class TransactionProvider extends ChangeNotifier {
     final payload = data['data'];
     if (payload is! Map<String, dynamic>) return null;
 
-    final transaction = TransactionModel.fromJson(payload);
-    if (transaction.id.trim().isEmpty) return null;
-    return transaction;
-  }
-  // ============== DUMMY LOAD ==============
+    try {
+      final transaction = TransactionModel.fromJson(payload);
 
+      if (transaction.id.trim().isEmpty) return null;
+
+      return transaction;
+    } catch (e) {
+      debugPrint('❌ Invalid transaction from API: $e');
+      debugPrint('👉 Data: $payload');
+      return null;
+    }
+  }
+
+  // ============== DUMMY LOAD ==============
   Future<void> loadDummyTransactions() async {
     _setLoading(true);
     _clearError();
 
-    await Future.delayed(const Duration(seconds: 2)); 
+    await Future.delayed(const Duration(seconds: 2));
 
     _transactions = dummyTransactions;
     _setLoading(false);
@@ -354,8 +371,8 @@ class TransactionProvider extends ChangeNotifier {
 
     return fallback;
   }
-  // ============== STATE MANAGEMENT ==============
 
+  // ============== STATE MANAGEMENT ==============
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
@@ -373,6 +390,8 @@ class TransactionProvider extends ChangeNotifier {
   /// Reset toàn bộ state
   void reset() {
     _transactions = [];
+    _remoteTotalIncome = null;
+    _remoteTotalExpense = null;
     _isLoading = false;
     _error = '';
     notifyListeners();
