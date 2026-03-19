@@ -41,21 +41,30 @@ const makeToken = async (userId, expiresAt) => {
 };
 
 describe("PUT /api/transactions/:id", () => {
-  let user;
-  let token;
+  let owner;
+  let ownerToken;
+  let otherUser;
+  let otherToken;
   let transaction;
 
   beforeEach(async () => {
-    user = await User.create({
+    owner = await User.create({
       fullName: "Test User",
       email: "test@example.com",
       password: "123456",
     });
 
-    token = await makeToken(user._id);
+    otherUser = await User.create({
+      fullName: "Other User",
+      email: "other@example.com",
+      password: "123456",
+    });
+
+    ownerToken = await makeToken(owner._id);
+    otherToken = await makeToken(otherUser._id);
 
     transaction = await Transaction.create({
-      userId: user._id,
+      userId: owner._id,
       title: "Old Title",
       amount: 100,
       category: "salary",
@@ -92,7 +101,7 @@ describe("PUT /api/transactions/:id", () => {
 
   it("should return 401 with TOKEN_EXPIRED if token is expired", async () => {
     const expiredToken = await makeToken(
-      user._id,
+      owner._id,
       Math.floor(Date.now() / 1000) - 10
     );
 
@@ -110,7 +119,7 @@ describe("PUT /api/transactions/:id", () => {
   it("should update successfully, including type and note", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({
         title: "Updated",
         amount: 500,
@@ -121,6 +130,8 @@ describe("PUT /api/transactions/:id", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(res.body.statusCode).toBe(200);
+    expect(res.body.message).toBe("Transaction updated successfully");
     expect(res.body.data.title).toBe("Updated");
     expect(res.body.data.type).toBe("expense");
     expect(res.body.data.note).toBe("some details");
@@ -129,7 +140,7 @@ describe("PUT /api/transactions/:id", () => {
   it("should allow setting amount to zero", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ amount: 0 });
 
     expect(res.statusCode).toBe(200);
@@ -139,7 +150,7 @@ describe("PUT /api/transactions/:id", () => {
   it("should allow partial update, only changing specified fields", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ title: "Partial Update" });
 
     expect(res.statusCode).toBe(200);
@@ -154,62 +165,86 @@ describe("PUT /api/transactions/:id", () => {
   it("should return 400 if invalid amount", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ amount: -10 });
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 400 if payload is empty", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({});
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 400 for invalid date", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ date: "not-a-date" });
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 400 for invalid category", async () => {
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ category: "unknown" });
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 400 for malformed id param", async () => {
     const res = await request(app)
       .put(`/api/transactions/123`)
-      .set("Authorization", `Bearer ${token}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
       .send({ title: "test" });
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 404 if not owner", async () => {
-   const otherUser = await User.create({
-      fullName: "Other User",
-      email: "other@example.com",
-      password: "123456",
-    });
-
-    const otherToken = await makeToken(otherUser._id);
-
     const res = await request(app)
       .put(`/api/transactions/${transaction._id}`)
       .set("Authorization", `Bearer ${otherToken}`)
       .send({ amount: 200 });
 
     expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(404);
+    expect(res.body.message).toBe("Transaction not found");
+  });
+
+  it("should return 404 if transaction does not exist", async () => {
+    const nonExistentId = new mongoose.Types.ObjectId().toString();
+
+    const res = await request(app)
+      .put(`/api/transactions/${nonExistentId}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({ amount: 200 });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(404);
+    expect(res.body.message).toBe("Transaction not found");
   });
 });
