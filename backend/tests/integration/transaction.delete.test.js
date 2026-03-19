@@ -74,6 +74,7 @@ describe("DELETE /api/transactions/:id", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body.success).toBe(true);
+    expect(res.body.statusCode).toBe(200);
     expect(res.body.message).toBe("Transaction deleted successfully");
 
     // Contract: data phải là document đã bị xóa (KHÔNG phải null – BUG-10 fix)
@@ -110,6 +111,8 @@ describe("DELETE /api/transactions/:id", () => {
     // Không được để lộ "transaction exists but you don't own it" → security
     expect(res.statusCode).toBe(404);
     expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(404);
+    expect(res.body.message).toBe("Transaction not found");
   });
 
   it("should return 404 if transaction does not exist", async () => {
@@ -121,6 +124,8 @@ describe("DELETE /api/transactions/:id", () => {
 
     expect(res.statusCode).toBe(404);
     expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(404);
+    expect(res.body.message).toBe("Transaction not found");
   });
 
   // ─── Auth ─────────────────────────────────────────────────────────────────
@@ -131,7 +136,10 @@ describe("DELETE /api/transactions/:id", () => {
     );
 
     expect(res.statusCode).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(401);
     expect(res.body.errorCode).toBe("TOKEN_MISSING");
+    expect(res.body.message).toBe("Access token required");
   });
 
   it("should return 401 with TOKEN_INVALID if token is malformed", async () => {
@@ -140,7 +148,10 @@ describe("DELETE /api/transactions/:id", () => {
       .set("Authorization", "Bearer not.a.real.token");
 
     expect(res.statusCode).toBe(401);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(401);
     expect(res.body.errorCode).toBe("TOKEN_INVALID");
+    expect(res.body.message).toBe("Invalid token");
   });
 
   // ─── Validation ───────────────────────────────────────────────────────────
@@ -153,6 +164,8 @@ describe("DELETE /api/transactions/:id", () => {
     // objectIdParamSchema bắt trước khi vào service
     expect(res.statusCode).toBe(400);
     expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   it("should return 400 if id param is too short (23 chars)", async () => {
@@ -161,6 +174,9 @@ describe("DELETE /api/transactions/:id", () => {
       .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Validation failed");
   });
 
   // ─── Idempotency check ───────────────────────────────────────────────────
@@ -177,5 +193,8 @@ describe("DELETE /api/transactions/:id", () => {
       .set("Authorization", `Bearer ${token}`);
 
     expect(res.statusCode).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(404);
+    expect(res.body.message).toBe("Transaction not found");
   });
 });
