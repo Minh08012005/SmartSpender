@@ -77,7 +77,6 @@ class TransactionModel {
 
   Map<String, dynamic> toJson() {
     return {
-      '_id': id,
       'amount': amount,
       'category': _normalizeCategory(category, type),
       'title': title,

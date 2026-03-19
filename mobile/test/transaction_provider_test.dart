@@ -67,7 +67,6 @@ void main() {
               as Map<String, dynamic>;
       expect(captured['title'], 'Lunch');
       expect(captured['category'], 'food');
-      expect(captured['_id'], 'a1');
     });
 
     test('api title error: surfaces backend message clearly', () async {
@@ -147,7 +146,6 @@ void main() {
               as Map<String, dynamic>;
       expect(captured['title'], 'Lunch');
       expect(captured['category'], 'food');
-      expect(captured['_id'], '1');
     });
 
     test(

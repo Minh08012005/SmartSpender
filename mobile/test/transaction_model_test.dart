@@ -52,5 +52,34 @@ void main() {
 
       expect(() => TransactionModel.fromJson(json), throwsException);
     });
+    test('should throw when amount <= 0', () {
+      expect(
+        () => TransactionModel(
+          id: '1',
+          amount: 0,
+          category: 'food',
+          title: 'Test',
+          date: DateTime.now(),
+          note: '',
+          type: TransactionType.expense,
+        ),
+        throwsException,
+      );
+    });
+
+    test('should throw when category invalid (constructor)', () {
+      expect(
+        () => TransactionModel(
+          id: '1',
+          amount: 100,
+          category: 'invalid',
+          title: 'Test',
+          date: DateTime.now(),
+          note: '',
+          type: TransactionType.expense,
+        ),
+        throwsException,
+      );
+    });
   });
 }
