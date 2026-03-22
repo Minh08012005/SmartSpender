@@ -8,7 +8,7 @@
  * - Đóng connection clean sau khi chạy xong
  */
 
-const mongoose = require('mongoose');
+
 require('dotenv').config();
 
 // Import Models
