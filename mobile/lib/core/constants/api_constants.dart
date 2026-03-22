@@ -26,6 +26,7 @@ class ApiConstants {
   // ============== STORAGE KEYS ==============
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
+  static const String tokenOriginKey = 'token_origin';
   static const String userIdKey = 'user_id';
   static const String userEmailKey = 'user_email';
 

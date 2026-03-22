@@ -37,6 +37,8 @@ class ApiService {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          // Prevent ngrok interstitial HTML from breaking web XHR requests.
+          'ngrok-skip-browser-warning': 'true',
         },
       ),
     );
@@ -93,6 +95,8 @@ class _AuthInterceptor extends Interceptor {
       options.headers['Authorization'] = 'Bearer $token';
       developer.log('🔑 Added token to request: ${options.path}');
     }
+
+    options.headers['ngrok-skip-browser-warning'] = 'true';
 
     handler.next(options);
   }
@@ -206,6 +210,7 @@ class _ErrorInterceptor extends Interceptor {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(ApiConstants.accessTokenKey);
     await prefs.remove(ApiConstants.refreshTokenKey);
+    await prefs.remove(ApiConstants.tokenOriginKey);
 
     developer.log('🔓 Token expired — redirecting to Login', name: 'API');
 

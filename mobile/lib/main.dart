@@ -47,6 +47,32 @@ class _MyAppState extends State<MyApp> {
   Future<bool> _checkAuthentication() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(ApiConstants.accessTokenKey);
+    final tokenOrigin = prefs.getString(ApiConstants.tokenOriginKey);
+    final currentBaseUrl = ApiConstants.baseUrl;
+
+    // Force migration: legacy token without origin metadata is treated as stale.
+    if (token != null && token.isNotEmpty) {
+      if (tokenOrigin == null || tokenOrigin.isEmpty) {
+        debugPrint('⚠️ Legacy token detected. Clearing session.');
+        await prefs.remove(ApiConstants.accessTokenKey);
+        await prefs.remove(ApiConstants.refreshTokenKey);
+        await prefs.remove(ApiConstants.tokenOriginKey);
+        return false;
+      }
+    }
+
+    // Avoid reusing token issued by another backend (e.g. local -> ngrok).
+    if (token != null && token.isNotEmpty) {
+      if (tokenOrigin != null &&
+          tokenOrigin.isNotEmpty &&
+          tokenOrigin != currentBaseUrl) {
+        debugPrint('⚠️ Token origin mismatch. Clearing stale token.');
+        await prefs.remove(ApiConstants.accessTokenKey);
+        await prefs.remove(ApiConstants.refreshTokenKey);
+        await prefs.remove(ApiConstants.tokenOriginKey);
+        return false;
+      }
+    }
 
     // Debug log
     debugPrint('🔍 Checking authentication...');

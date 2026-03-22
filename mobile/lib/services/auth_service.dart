@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/app_config.dart';
+import '../core/constants/api_constants.dart';
 
 class AuthService {
   // Using AppConfig for dynamic URL based on platform/environment
@@ -49,7 +50,10 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true',
+            },
             body: jsonEncode({'email': email, 'password': password}),
           )
           .timeout(_timeout);
@@ -91,7 +95,8 @@ class AuthService {
 
       // Lưu token (sử dụng key chuẩn)
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', accessToken);
+      await prefs.setString(ApiConstants.accessTokenKey, accessToken);
+      await prefs.setString(ApiConstants.tokenOriginKey, AppConfig.apiBaseUrl);
 
       return AuthResult(
         success: true,
@@ -123,7 +128,10 @@ class AuthService {
       final response = await http
           .post(
             url,
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+              'Content-Type': 'application/json',
+              'ngrok-skip-browser-warning': 'true',
+            },
             body: jsonEncode({
               'email': email,
               'password': password,
@@ -157,7 +165,11 @@ class AuthService {
 
       if (accessToken != null) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', accessToken);
+        await prefs.setString(ApiConstants.accessTokenKey, accessToken);
+        await prefs.setString(
+          ApiConstants.tokenOriginKey,
+          AppConfig.apiBaseUrl,
+        );
       }
 
       return AuthResult(

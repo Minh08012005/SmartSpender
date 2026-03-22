@@ -27,6 +27,9 @@ const statisticRoutes = require('./routes/statistic_routes'); // Routes cho th�
 // Khởi tạo ứng dụng Express
 const app = express();
 
+// Trust first proxy (ngrok) so rate-limit and client IP handling work correctly
+app.set('trust proxy', 1);
+
 // Bảo mật middleware
 app.use(
   helmet({
@@ -56,7 +59,11 @@ app.use(
       return callback(new Error('CORS policy: origin not allowed'));
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'ngrok-skip-browser-warning',
+    ],
     credentials: false,
   })
 );

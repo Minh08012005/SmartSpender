@@ -33,6 +33,9 @@ class _RegisterFormState extends State<RegisterForm> {
   final RegExp _emailRegex = RegExp(
     r'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$',
   );
+  final RegExp _passwordPolicyRegex = RegExp(
+    r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$',
+  );
 
   @override
   void dispose() {
@@ -137,8 +140,11 @@ class _RegisterFormState extends State<RegisterForm> {
             if (trimmed.isEmpty) {
               return 'Please enter your password';
             }
-            if (trimmed.length < 6) {
-              return 'Password must be at least 6 characters';
+            if (trimmed.length < 8) {
+              return 'Password must be at least 8 characters';
+            }
+            if (!_passwordPolicyRegex.hasMatch(trimmed)) {
+              return 'Password needs uppercase, lowercase, number and special character';
             }
             return null;
           },
