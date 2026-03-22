@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/app_config.dart';
@@ -103,7 +102,7 @@ class AuthService {
         success: false,
         message: 'Connection timed out, please try again',
       );
-    } on SocketException {
+    } on http.ClientException {
       return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
       return AuthResult(success: false, message: 'Server connection error');
@@ -170,7 +169,7 @@ class AuthService {
         success: false,
         message: 'Connection timed out, please try again',
       );
-    } on SocketException {
+    } on http.ClientException {
       return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
       return AuthResult(success: false, message: 'Server connection error');

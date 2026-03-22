@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/login.dart';
@@ -21,7 +21,7 @@ void main() async {
   await ApiService().init();
   debugPrint('✅ API Service initialized');
   debugPrint('🌐 Base URL: ${ApiConstants.baseUrl}');
-  debugPrint('📱 Platform: ${Platform.operatingSystem}');
+  debugPrint('📱 Platform: ${kIsWeb ? 'web' : defaultTargetPlatform.name}');
 
   runApp(const MyApp());
 }

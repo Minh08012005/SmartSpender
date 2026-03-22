@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 /// Environment configuration for the app
 enum Environment { development, staging, production }
@@ -66,21 +66,27 @@ class AppConfig {
       return ngrokUrl;
     }
 
+    // Web should always use host-reachable URL
+    if (kIsWeb) {
+      return 'http://localhost:$backendPort';
+    }
+
     // If testing on physical device, use local network IP
     if (usePhysicalDevice) {
       return 'http://$localNetworkIP:$backendPort';
     }
 
     // Auto-detect based on platform (for emulators/simulators)
-    if (Platform.isAndroid) {
-      // Android emulator uses 10.0.2.2 to access host machine
-      return 'http://10.0.2.2:$backendPort';
-    } else if (Platform.isIOS) {
-      // iOS simulator can use localhost directly
-      return 'http://localhost:$backendPort';
-    } else {
-      // Web, Windows, macOS, Linux
-      return 'http://localhost:$backendPort';
+    switch (defaultTargetPlatform) {
+      case TargetPlatform.android:
+        // Android emulator uses 10.0.2.2 to access host machine
+        return 'http://10.0.2.2:$backendPort';
+      case TargetPlatform.iOS:
+        // iOS simulator can use localhost directly
+        return 'http://localhost:$backendPort';
+      default:
+        // Windows, macOS, Linux
+        return 'http://localhost:$backendPort';
     }
   }
 
