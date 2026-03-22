@@ -1,16 +1,45 @@
-# mobile
+# Mobile App
 
-A new Flutter project.
+## Quick Start
 
-## Getting Started
+```bash
+flutter pub get
+flutter run
+```
 
-This project is a starting point for a Flutter application.
+## Remote Integration Testing (Option B)
 
-A few resources to get you started if this is your first Flutter project:
+Use this mode when backend is hosted on a shared staging server (team is remote,
+not testing on local backend).
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 1) Run with shared API URL
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+flutter run --dart-define=APP_ENV=staging --dart-define=API_BASE_URL=https://your-staging-domain
+```
+
+### 2) Device-specific examples
+
+Android emulator with local backend:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:3000
+```
+
+iOS simulator with local backend:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://localhost:3000
+```
+
+Real device with backend on teammate machine:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.20:3000
+```
+
+## Notes
+
+- `API_BASE_URL` always has highest priority.
+- If `API_BASE_URL` is not provided, app falls back to auto platform config.
+- Do not include trailing slash in `API_BASE_URL`.
