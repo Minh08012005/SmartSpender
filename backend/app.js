@@ -8,6 +8,7 @@
  *   Sử dụng middleware xử lý lỗi toàn cục để đảm bảo phản hồi lỗi nhất quán
  */
 const express = require('express'); // Framework web cho Node.js
+const cors = require('cors');
 const helmet = require('helmet'); // Bảo mật HTTP headers
 const morgan = require('morgan'); // Ghi log HTTP requests
 const swaggerJsdoc = require('swagger-jsdoc'); // Tạo tài liệu Swagger từ JSDoc
@@ -31,6 +32,32 @@ app.use(
   helmet({
     contentSecurityPolicy: false, // Tắt CSP cho API
     crossOriginEmbedderPolicy: false,
+  })
+);
+
+// CORS cho Flutter Web/dev browsers
+const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser requests (curl/postman) and configured browser origins
+      if (
+        !origin ||
+        localOriginPattern.test(origin) ||
+        extraAllowedOrigins.includes(origin)
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error('CORS policy: origin not allowed'));
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: false,
   })
 );
 
