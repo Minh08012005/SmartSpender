@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../screens/add_transaction_screen.dart';
+import '../../screens/edit_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/balance_card.dart';
 import 'states/home_loading.dart';
@@ -115,7 +116,23 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: provider.transactions.length,
         itemBuilder: (context, index) {
-          return TransactionItem(transaction: provider.transactions[index]);
+          final transaction = provider.transactions[index];
+          return TransactionItem(
+            transaction: transaction,
+            onTap: () async {
+              final updated = await Navigator.push<bool>(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      EditTransactionScreen(transaction: transaction),
+                ),
+              );
+
+              if (updated == true && context.mounted) {
+                await _refreshTransactions();
+              }
+            },
+          );
         },
       ),
     );
