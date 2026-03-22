@@ -5,7 +5,36 @@ enum Environment { development, staging, production }
 
 /// App configuration that auto-detects platform and provides correct API URLs
 class AppConfig {
-  static Environment _environment = Environment.development;
+  // Runtime overrides from flutter --dart-define
+  static const String _apiBaseUrlOverride = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+  static const String _environmentOverride = String.fromEnvironment(
+    'APP_ENV',
+    defaultValue: 'development',
+  );
+
+  static Environment _environment = _resolveEnvironment();
+
+  static Environment _resolveEnvironment() {
+    switch (_environmentOverride.toLowerCase()) {
+      case 'staging':
+        return Environment.staging;
+      case 'production':
+        return Environment.production;
+      default:
+        return Environment.development;
+    }
+  }
+
+  static String _normalizeBaseUrl(String value) {
+    final trimmed = value.trim();
+    if (trimmed.endsWith('/')) {
+      return trimmed.substring(0, trimmed.length - 1);
+    }
+    return trimmed;
+  }
 
   /// Set the current environment
   static void setEnvironment(Environment env) {
@@ -16,6 +45,10 @@ class AppConfig {
 
   /// Get the base API URL based on platform and environment
   static String get apiBaseUrl {
+    if (_apiBaseUrlOverride.trim().isNotEmpty) {
+      return _normalizeBaseUrl(_apiBaseUrlOverride);
+    }
+
     switch (_environment) {
       case Environment.development:
         return _developmentUrl;
@@ -32,7 +65,7 @@ class AppConfig {
     if (ngrokUrl.isNotEmpty) {
       return ngrokUrl;
     }
-    
+
     // If testing on physical device, use local network IP
     if (usePhysicalDevice) {
       return 'http://$localNetworkIP:$backendPort';
@@ -59,7 +92,7 @@ class AppConfig {
   /// Your machine's local IP (for physical devices on same WiFi)
   /// Run: ipconfig (Windows) or ifconfig (Mac/Linux) to find it
   static const String localNetworkIP = '172.20.18.151';
-  
+
   /// Set to true when testing on PHYSICAL devices (not emulator)
   static const bool usePhysicalDevice = false;
 
@@ -88,6 +121,11 @@ class AppConfig {
     print('║       SmartSpender App Config        ║');
     print('╠══════════════════════════════════════╣');
     print('║ Environment: ${_environment.name.padRight(21)}║');
+    print('║ APP_ENV: ${_environmentOverride.padRight(25)}║');
+    final source = _apiBaseUrlOverride.trim().isNotEmpty
+        ? 'dart-define'
+        : 'auto-config';
+    print('║ URL Source: ${source.padRight(22)}║');
     print('║ API Base: ${apiBaseUrl.padRight(24)}║');
     print('╚══════════════════════════════════════╝');
   }
