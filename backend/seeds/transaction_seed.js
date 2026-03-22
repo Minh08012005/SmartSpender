@@ -8,27 +8,27 @@
  * - Đóng connection clean sau khi chạy xong
  */
 
-const mongoose = require("mongoose");
-require("dotenv").config();
+const mongoose = require('mongoose');
+require('dotenv').config();
 
 // Import Models
-const Transaction = require("../models/transaction_schema");
-const User = require("../models/users.model"); // đúng tên file User model của bạn
+const Transaction = require('../models/transaction_schema');
+const User = require('../models/users.model'); // đúng tên file User model của bạn
 
 // ============================================================
 // CATEGORY LISTS - Tách riêng theo loại giao dịch
 // ============================================================
-// Lý do: Trong thực tế, "Salary" chỉ là income, "Food" chỉ là expense
+// Lý do: Trong thực tế, "salary" chỉ là income, "food" chỉ là expense
 // Nếu dùng chung 1 list → có thể tạo data vô lý như "Salary expense"
-const incomeCategories = ["Salary", "Bonus", "Investment", "Gift", "Other"];
+// IMPORTANT: Categories phải match với VALID_CATEGORIES trong validators/constants.js
+const incomeCategories = ['salary', 'other'];
 const expenseCategories = [
-  "Food",
-  "Transport",
-  "Shopping",
-  "Entertainment",
-  "Health",
-  "Education",
-  "Other",
+  'food',
+  'travel',
+  'shopping',
+  'entertainment',
+  'utility',
+  'other',
 ];
 
 /**
@@ -41,7 +41,7 @@ const expenseCategories = [
  *   getRandomCategory("expense") → "Food" hoặc "Transport" hoặc "Shopping"...
  */
 function getRandomCategory(type) {
-  const list = type === "income" ? incomeCategories : expenseCategories;
+  const list = type === 'income' ? incomeCategories : expenseCategories;
   return list[Math.floor(Math.random() * list.length)];
 }
 
@@ -85,7 +85,31 @@ function getRandomAmount() {
  * Math.random() > 0.5 → true/false với xác suất 50-50
  */
 function getRandomType() {
-  return Math.random() > 0.5 ? "income" : "expense";
+  return Math.random() > 0.5 ? 'income' : 'expense';
+}
+
+/**
+ * Generate title phù hợp với category
+ * @param {string} category - category của transaction
+ * @param {string} type - "income" hoặc "expense"
+ * @returns {string} title
+ */
+function getRandomTitle(category, type) {
+  const titles = {
+    // Income titles
+    salary: ['Monthly Salary', 'Salary Payment', 'Paycheck'],
+    other: ['Other Income', 'Miscellaneous Income', 'Extra Income'],
+
+    // Expense titles
+    food: ['Lunch', 'Dinner', 'Breakfast', 'Coffee', 'Snacks', 'Groceries'],
+    travel: ['Taxi', 'Bus Fare', 'Uber', 'Gas', 'Parking', 'Flight'],
+    shopping: ['Clothes', 'Books', 'Gadgets', 'Home Items', 'Online Shopping'],
+    entertainment: ['Movie', 'Concert', 'Game', 'Streaming', 'Fun Activity'],
+    utility: ['Electricity', 'Water', 'Internet', 'Gas', 'Phone Bill'],
+  };
+
+  const categoryTitles = titles[category] || ['Transaction'];
+  return categoryTitles[Math.floor(Math.random() * categoryTitles.length)];
 }
 
 /**
@@ -96,12 +120,12 @@ async function seedTransactions() {
     const uri = process.env.MONGO_URI;
 
     if (!uri) {
-      throw new Error("Missing MONGO_URI in .env file");
+      throw new Error('Missing MONGO_URI in .env file');
     }
 
-    console.log("⏳ Connecting to MongoDB...");
+    console.log('⏳ Connecting to MongoDB...');
     await mongoose.connect(uri);
-    console.log("✅ MongoDB Connected!");
+    console.log('✅ MongoDB Connected!');
 
     // ================================
     // 1. Get Real User from Database
@@ -110,11 +134,11 @@ async function seedTransactions() {
 
     if (!user) {
       throw new Error(
-        "No user found in DB. Please seed/register a user first!",
+        'No user found in DB. Please seed/register a user first!'
       );
     }
 
-    console.log("👤 Using User:", user.email, "| ID:", user._id);
+    console.log('👤 Using User:', user.email, '| ID:', user._id);
 
     // ================================
     // 2. Generate Mock Transactions
@@ -128,12 +152,14 @@ async function seedTransactions() {
     for (let i = 0; i < 20; i++) {
       // Quan trọng: Lấy type TRƯỚC, rồi mới lấy category PHÙ HỢP với type
       const type = getRandomType();
+      const category = getRandomCategory(type);
 
       mockTransactions.push({
         userId: user._id,
+        title: getRandomTitle(category, type), // ← THÊM title
         amount: getRandomAmount(),
         type: type,
-        category: getRandomCategory(type), // ← Truyền type vào để lấy category phù hợp
+        category: category,
         date: getRandomDate(),
         note: `Mock transaction #${i + 1}`,
       });
@@ -143,12 +169,12 @@ async function seedTransactions() {
     // 3. Reset + Insert New Data
     // ================================
     await Transaction.deleteMany();
-    console.log("🗑 Old transactions deleted");
+    console.log('🗑 Old transactions deleted');
 
     await Transaction.insertMany(mockTransactions);
     console.log(
-      "✅ Seed Transactions Success! Inserted:",
-      mockTransactions.length,
+      '✅ Seed Transactions Success! Inserted:',
+      mockTransactions.length
     );
 
     // ================================
@@ -157,11 +183,11 @@ async function seedTransactions() {
     // Quan trọng: PHẢI đóng connection sau khi seed xong
     // Nếu không → connection bị treo, memory leak
     await mongoose.connection.close();
-    console.log("🔌 MongoDB Connection Closed!");
+    console.log('🔌 MongoDB Connection Closed!');
 
     process.exit(0);
   } catch (error) {
-    console.error("Seed Failed:", error.message);
+    console.error('Seed Failed:', error.message);
 
     // Ensure connection closed even if error happens
     await mongoose.connection.close();
