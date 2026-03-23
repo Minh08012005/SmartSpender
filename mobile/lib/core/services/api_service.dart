@@ -187,22 +187,49 @@ class _ErrorInterceptor extends Interceptor {
 
   /// Convert DioException thành message dễ hiểu
   String _getErrorMessage(DioException err) {
+    final serverMessage = _extractServerMessage(err.response?.data);
+
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Connection timed out, please try again';
+        return 'Connection timed out. Please try again.';
+      case DioExceptionType.connectionError:
+        return 'Cannot connect to server. Please check your network or backend and try again.';
       case DioExceptionType.sendTimeout:
-        return 'Request send timed out';
+        return 'Request timed out while sending data.';
       case DioExceptionType.receiveTimeout:
-        return 'Response receive timed out';
+        return 'Server took too long to respond.';
       case DioExceptionType.badResponse:
-        return err.response?.data['message'] ?? 'Server error';
+        return serverMessage ?? 'Server returned an error.';
       case DioExceptionType.cancel:
-        return 'Request was cancelled';
+        return 'Request was cancelled.';
       case DioExceptionType.unknown:
-        return 'Unable to connect to server';
+        return 'Cannot connect to server. Please check your network or backend and try again.';
       default:
-        return 'An unexpected error occurred';
+        return serverMessage ?? 'Something went wrong. Please try again.';
     }
+  }
+
+  String? _extractServerMessage(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final message = data['message']?.toString().trim();
+      if (message != null && message.isNotEmpty) {
+        return message;
+      }
+
+      final error = data['error']?.toString().trim();
+      if (error != null && error.isNotEmpty) {
+        return error;
+      }
+    }
+
+    if (data is String) {
+      final message = data.trim();
+      if (message.isNotEmpty) {
+        return message;
+      }
+    }
+
+    return null;
   }
 
   /// Xử lý khi token hết hạn — xóa token và điều hướng về LoginScreen
