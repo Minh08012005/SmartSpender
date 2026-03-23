@@ -147,9 +147,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     }
     // Add explicit category check
     if (_selectedCategory.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text(AppStrings.pleaseSelectCategory)));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppStrings.pleaseSelectCategory)),
+      );
       return;
     }
 
@@ -173,7 +173,9 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppStrings.transactionUpdatedSuccessfully)),
+        const SnackBar(
+          content: Text(AppStrings.transactionUpdatedSuccessfully),
+        ),
       );
       Navigator.pop(context, true);
       return;
@@ -182,7 +184,62 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty ? AppStrings.cannotUpdateTransaction : provider.error,
+          provider.error.isEmpty
+              ? AppStrings.cannotUpdateTransaction
+              : provider.error,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _delete() async {
+    final provider = context.read<TransactionProvider>();
+    if (provider.isLoading) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(AppStrings.deleteTransactionTitle),
+          content: const Text(AppStrings.deleteTransactionConfirmMessage),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text(AppStrings.cancel),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                AppStrings.delete,
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+
+    final success = await provider.deleteTransaction(widget.transaction.id);
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(AppStrings.transactionDeletedSuccessfully),
+        ),
+      );
+      Navigator.pop(context, true);
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          provider.error.isEmpty
+              ? AppStrings.cannotDeleteTransaction
+              : provider.error,
         ),
       ),
     );
@@ -235,6 +292,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               onCategoryChanged: _onCategoryChanged,
               onPickDate: _pickDate,
               onSubmit: _submit,
+              onDelete: _delete,
               validateAmount: _validateAmount,
               validateTitle: _validateTitle,
               validateNote: _validateNote,

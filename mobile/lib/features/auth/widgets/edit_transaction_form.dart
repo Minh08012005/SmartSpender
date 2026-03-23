@@ -21,6 +21,7 @@ class EditTransactionForm extends StatefulWidget {
     required this.onCategoryChanged,
     required this.onPickDate,
     required this.onSubmit,
+    required this.onDelete,
     required this.validateAmount,
     required this.validateTitle,
     required this.validateNote,
@@ -40,6 +41,7 @@ class EditTransactionForm extends StatefulWidget {
   final ValueChanged<String?> onCategoryChanged;
   final VoidCallback onPickDate;
   final VoidCallback onSubmit;
+  final VoidCallback onDelete;
   final String? Function(String?) validateAmount;
   final String? Function(String?) validateTitle;
   final String? Function(String?) validateNote;
@@ -166,8 +168,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                     backgroundColor: teal,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed:
-                      (widget.isLoading || !_isFormValid)
+                  onPressed: (widget.isLoading || !_isFormValid)
                       ? null
                       : widget.onSubmit,
                   child: widget.isLoading
@@ -180,6 +181,18 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                           ),
                         )
                       : const Text('Update Transaction'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: widget.isLoading ? null : widget.onDelete,
+                  child: const Text('Delete Transaction'),
                 ),
               ),
             ],

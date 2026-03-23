@@ -1,21 +1,21 @@
-# HƯỚNG DẪN TEST MOBILE API CHO ĐỨC ANH
+# HƯỚNG DẪN TEST MOBILE API CHO LEADER (TEST TRỰC TIẾP)
 
 Ngày cập nhật: 23/03/2026
-Mục tiêu: Đức Anh test toàn bộ luồng mobile gọi API thật, ghi kết quả rõ ràng để Leader chốt sprint.
+Mục tiêu: Leader trực tiếp test toàn bộ luồng mobile gọi API thật, ghi kết quả rõ ràng để chốt sprint.
 
 ---
 
 ## 1. PHÂN VAI
 
-- Đức Anh: test mobile app theo từng bước bên dưới, ghi PASS/FAIL.
-- Sơn: sửa lỗi mobile nếu Đức Anh báo FAIL (UI, state, parse, flow).
-- Leader: đối soát API/DB và chốt kết quả cuối buổi.
+- Leader: tester chính, trực tiếp test mobile app theo từng bước bên dưới và ghi PASS/FAIL.
+- Sơn: sửa lỗi mobile khi Leader báo FAIL (UI, state, parse, flow).
+- Thành viên backend: sửa lỗi API/DB nếu có lỗi phía server.
 
 ---
 
-## 2. ĐẦU VÀO BẮT BUỘC (LEADER GỬI CHO ĐỨC ANH)
+## 2. ĐẦU VÀO BẮT BUỘC (LEADER TỰ CHUẨN BỊ)
 
-Đức Anh chỉ bắt đầu test khi đã có đủ 4 thông tin sau:
+Chỉ bắt đầu test khi đã có đủ 4 thông tin sau:
 
 1. Base URL đang dùng
 
@@ -56,12 +56,12 @@ Mẫu ghi kết quả:
 
 Nếu FAIL:
 
-- Gửi log flutter run + screenshot cho Sơn và Leader.
+- Gửi log flutter run + screenshot cho thành viên phụ trách sửa lỗi.
 - Không qua bước tiếp theo khi app chưa mở được.
 
 ---
 
-## 4. TEST FLOW CHI TIẾT CHO ĐỨC ANH
+## 4. TEST FLOW CHI TIẾT CHO LEADER
 
 ## Bước M1 - Login
 
@@ -198,7 +198,7 @@ Mẫu ghi kết quả:
 Thao tác:
 
 1. Leader tạm dừng backend.
-2. Đức Anh thử tạo transaction.
+2. Leader thử tạo transaction.
 
 Kỳ vọng:
 
@@ -218,7 +218,7 @@ Mẫu ghi kết quả:
 
 ## 5. MẪU BÁO LỖI CHUẨN (BẮT BUỘC KHI FAIL)
 
-Khi có FAIL, Đức Anh gửi đúng mẫu này để Sơn sửa nhanh:
+Khi có FAIL, Leader gửi đúng mẫu này để thành viên phụ trách sửa nhanh:
 
 ```text
 [CASE ID]: Mx-...
@@ -241,7 +241,7 @@ Khi có FAIL, Đức Anh gửi đúng mẫu này để Sơn sửa nhanh:
 - log flutter run: ...
 
 [Mức độ]: Critical/Major/Minor
-[Owner sửa]: Sơn (mobile) hoặc Leader/Backend (nếu nghi API)
+[Owner sửa]: Sơn (mobile) hoặc Backend team (nếu nghi API)
 [Trạng thái]: Open/Fixed/Retest Pass/Retest Fail
 ```
 
@@ -249,9 +249,9 @@ Khi có FAIL, Đức Anh gửi đúng mẫu này để Sơn sửa nhanh:
 
 ## 6. LUỒNG PHỐI HỢP KHI PHÁT SINH LỖI
 
-1. Đức Anh báo lỗi theo mẫu ở mục 5.
+1. Leader báo lỗi theo mẫu ở mục 5.
 2. Sơn nhận lỗi và sửa phần mobile.
-3. Đức Anh re-test đúng case đó.
+3. Leader re-test đúng case đó.
 4. Nếu pass, đánh dấu "Retest Pass".
 5. Nếu fail tiếp, gửi lại log mới và Sơn sửa tiếp.
 6. Leader cập nhật bảng tổng hợp và chốt cuối buổi.
@@ -261,16 +261,22 @@ Khi có FAIL, Đức Anh gửi đúng mẫu này để Sơn sửa nhanh:
 ## 7. BẢNG TỔNG HỢP ĐỂ CHỐT
 
 ```text
-M0-SETUP:   PASS/FAIL
-M1-LOGIN:   PASS/FAIL
-M2-CREATE:  PASS/FAIL
-M3-READ:    PASS/FAIL
-M4-UPDATE:  PASS/FAIL
-M5-DELETE:  PASS/FAIL
-M6-ERROR:   PASS/FAIL
+M0-SETUP:   PASS
+M1-LOGIN:   PASS
+M2-CREATE:  PASS
+M3-READ:    PASS
+M4-UPDATE:  PASS
+M5-DELETE:  PASS
+M6-ERROR:   PASS
 
-OVERALL: DEMO READY / NEED FIX / NOT READY
+OVERALL: DEMO READY
 ```
+
+Ghi chú thực tế buổi test 23/03/2026:
+
+- M3 trên web không có pull-to-refresh, đã xác nhận bằng browser refresh (Ctrl+R/F5) và dữ liệu vẫn đúng.
+- M5 đã được bổ sung nút Delete Transaction trên màn Edit, xóa thành công có dialog xác nhận.
+- M6 hiển thị lỗi và không crash, tuy nhiên thông báo "An unexpected error occurred" còn chung chung (đề xuất cải thiện ở sprint sau).
 
 Điều kiện chốt "Demo Ready":
 
@@ -282,9 +288,64 @@ OVERALL: DEMO READY / NEED FIX / NOT READY
 
 ## 8. BIÊN BẢN CUỐI BUỔI
 
-Leader: ********\_\_\_\_********
-Đức Anh (mobile test): ********\_\_\_\_********
-Sơn (mobile fix): ********\_\_\_\_********
-Ngày: \_**\_ / \_\_** / **\_\_**
+Leader: **\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\***
+Tester chính (Leader): **\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\***
+Người sửa mobile (Sơn): **\*\*\*\*\*\***\_\_\_\_\***\*\*\*\*\***
+Ngày: 23 / 03 / 2026
 Tổng thời gian test: **\_\_** giờ
-Kết luận: [Demo Ready / Need Fix / Not Ready]
+Kết luận: Demo Ready
+
+---
+
+## 9. EVIDENCE (DÁN ẢNH CHO TEAM XEM)
+
+Lưu ảnh vào thư mục `test_evidence/2026-03-23/`, sau đó dán link theo mẫu dưới đây:
+
+```markdown
+### M1 - Login
+
+- Kết quả: PASS
+- Ảnh: ![M1 Login](test_evidence/2026-03-23/m1-login.png)
+
+### M2 - Create
+
+- Kết quả: PASS
+- Ảnh form nhập: ![M2 Form](test_evidence/2026-03-23/m2-create-form.png)
+- Ảnh sau khi tạo: ![M2 Result](test_evidence/2026-03-23/m2-create-result.png)
+
+### M3 - Read
+
+- Kết quả: PASS
+- Ảnh: ![M3 Read](test_evidence/2026-03-23/m3-read.png)
+
+### M4 - Update
+
+- Kết quả: PASS
+- Ảnh trước update: ![M4 Before](test_evidence/2026-03-23/m4-before.png)
+- Ảnh sau update: ![M4 After](test_evidence/2026-03-23/m4-after.png)
+
+### M5 - Delete
+
+- Kết quả: PASS
+- Ảnh nút delete: ![M5 Button](test_evidence/2026-03-23/m5-delete-button.png)
+- Ảnh dialog xác nhận: ![M5 Confirm](test_evidence/2026-03-23/m5-delete-confirm.png)
+- Ảnh sau khi xóa: ![M5 Result](test_evidence/2026-03-23/m5-delete-result.png)
+
+### M6 - Error handling
+
+- Kết quả: PASS
+- Ảnh thông báo lỗi: ![M6 Error](test_evidence/2026-03-23/m6-error.png)
+```
+
+Quy ước đặt tên ảnh:
+
+- m1-login.png
+- m2-create-form.png
+- m2-create-result.png
+- m3-read.png
+- m4-before.png
+- m4-after.png
+- m5-delete-button.png
+- m5-delete-confirm.png
+- m5-delete-result.png
+- m6-error.png
