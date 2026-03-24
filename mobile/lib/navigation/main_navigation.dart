@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../views/home/home_screen.dart';
+import '../views/statistic/statistic_screen.dart';
 import '../views/profile/profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -14,8 +15,8 @@ class _MainNavigationState extends State<MainNavigation> {
 
   final List<Widget> _screens = const [
     HomeScreen(), // Home
-    Placeholder(), // Statistic (sau này thay)
-    Placeholder(), // Wallet (sau này thay)
+    StatisticScreen(), // Statistic
+    Placeholder(), // Wallet (sắp tới)
     ProfileScreen(), // Profile
   ];
 
