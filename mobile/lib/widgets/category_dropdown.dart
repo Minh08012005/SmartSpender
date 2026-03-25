@@ -9,7 +9,7 @@ class CategoryDropdown extends StatelessWidget {
     required this.value,
     required this.categories,
     required this.onChanged,
-    this.labelText = 'Category',
+    this.labelText = AppStrings.category,
   });
 
   final String? value;

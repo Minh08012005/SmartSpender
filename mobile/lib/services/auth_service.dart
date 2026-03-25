@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config/app_config.dart';
 import '../core/constants/api_constants.dart';
+import '../core/strings.dart';
 
 class AuthService {
   // Using AppConfig for dynamic URL based on platform/environment
@@ -26,18 +27,27 @@ class AuthService {
     String? serverMessage,
   }) {
     if (isLogin && statusCode == 401) {
-      return AuthResult(success: false, message: 'Invalid email or password');
+      return AuthResult(
+        success: false,
+        message: AppStrings.invalidEmailOrPassword,
+      );
     }
 
     if (!isLogin && statusCode == 409) {
-      return AuthResult(success: false, message: 'Account already exists');
+      return AuthResult(
+        success: false,
+        message: AppStrings.accountAlreadyExists,
+      );
     }
 
     if (serverMessage != null && serverMessage.trim().isNotEmpty) {
       return AuthResult(success: false, message: serverMessage);
     }
 
-    return AuthResult(success: false, message: 'Server error ($statusCode)');
+    return AuthResult(
+      success: false,
+      message: '${AppStrings.serverErrorPrefix} ($statusCode)',
+    );
   }
 
   /// =======================
@@ -71,7 +81,7 @@ class AuthService {
       if (body == null) {
         return AuthResult(
           success: false,
-          message: 'Invalid response from server',
+          message: AppStrings.invalidServerResponse,
         );
       }
 
@@ -79,7 +89,7 @@ class AuthService {
       if (body['success'] == false) {
         return AuthResult(
           success: false,
-          message: body['message'] ?? 'Login failed',
+          message: body['message'] ?? AppStrings.loginFailed,
         );
       }
 
@@ -89,7 +99,7 @@ class AuthService {
       if (accessToken == null) {
         return AuthResult(
           success: false,
-          message: 'Missing access token in response',
+          message: AppStrings.missingAccessToken,
         );
       }
 
@@ -100,17 +110,20 @@ class AuthService {
 
       return AuthResult(
         success: true,
-        message: body['message'] ?? 'Login successful',
+        message: body['message'] ?? AppStrings.loginSuccess,
       );
     } on TimeoutException {
+      return AuthResult(success: false, message: AppStrings.timeoutTryAgain);
+    } on http.ClientException {
       return AuthResult(
         success: false,
-        message: 'Connection timed out, please try again',
+        message: AppStrings.cannotConnectServer,
       );
-    } on http.ClientException {
-      return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
-      return AuthResult(success: false, message: 'Server connection error');
+      return AuthResult(
+        success: false,
+        message: AppStrings.serverConnectionError,
+      );
     }
   }
 
@@ -153,7 +166,7 @@ class AuthService {
       if (body == null) {
         return AuthResult(
           success: false,
-          message: 'Invalid response from server',
+          message: AppStrings.invalidServerResponse,
         );
       }
 
@@ -174,17 +187,20 @@ class AuthService {
 
       return AuthResult(
         success: true,
-        message: body['message'] ?? 'Registration successful',
+        message: body['message'] ?? AppStrings.registerSuccess,
       );
     } on TimeoutException {
+      return AuthResult(success: false, message: AppStrings.timeoutTryAgain);
+    } on http.ClientException {
       return AuthResult(
         success: false,
-        message: 'Connection timed out, please try again',
+        message: AppStrings.cannotConnectServer,
       );
-    } on http.ClientException {
-      return AuthResult(success: false, message: 'Unable to connect to server');
     } catch (e) {
-      return AuthResult(success: false, message: 'Server connection error');
+      return AuthResult(
+        success: false,
+        message: AppStrings.serverConnectionError,
+      );
     }
   }
 }

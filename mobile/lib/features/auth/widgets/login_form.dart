@@ -5,6 +5,7 @@ import '../../../shared/widgets/forms/custom_password_field.dart';
 import '../../../shared/widgets/smooth_primary_button.dart';
 import '../../../shared/widgets/animated_error_message.dart';
 import '../../../services/auth_service.dart';
+import '../../../core/strings.dart';
 
 class LoginForm extends StatefulWidget {
   final VoidCallback onLoginSuccess;
@@ -63,7 +64,7 @@ class _LoginFormState extends State<LoginForm> {
 
           // Login Button (Smooth Loading)
           SmoothPrimaryButton(
-            text: 'Sign in',
+            text: AppStrings.signIn,
             isLoading: _isLoading,
             onPressed: _handleLogin,
           ),
@@ -80,9 +81,9 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Welcome Back', style: AppTextStyle.welcomeTitle),
+        Text(AppStrings.welcomeBack, style: AppTextStyle.welcomeTitle),
         const SizedBox(height: 8),
-        Text('Hello there, sign in to continue', style: AppTextStyle.subtitle),
+        Text(AppStrings.signInToContinue, style: AppTextStyle.subtitle),
       ],
     );
   }
@@ -92,16 +93,16 @@ class _LoginFormState extends State<LoginForm> {
       children: [
         CustomTextField(
           controller: _emailController,
-          hintText: 'Email',
+          hintText: AppStrings.enterEmail,
           keyboardType: TextInputType.emailAddress,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please enter your email';
+              return AppStrings.pleaseEnterEmail;
             }
             if (!_emailRegex.hasMatch(trimmed)) {
-              return 'Invalid email format';
+              return AppStrings.invalidEmailFormat;
             }
             return null;
           },
@@ -109,12 +110,12 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: 16),
         CustomPasswordField(
           controller: _passwordController,
-          hintText: 'Password',
+          hintText: AppStrings.enterPassword,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please enter your password';
+              return AppStrings.pleaseEnterPassword;
             }
             return null;
           },
@@ -126,7 +127,7 @@ class _LoginFormState extends State<LoginForm> {
   Widget _buildForgotPasswordLink() {
     return Align(
       alignment: Alignment.centerRight,
-      child: Text('Forgot your password ?', style: AppTextStyle.link),
+      child: Text(AppStrings.forgotPassword, style: AppTextStyle.link),
     );
   }
 
@@ -134,10 +135,10 @@ class _LoginFormState extends State<LoginForm> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Don't have an account? ", style: AppTextStyle.subtitle),
+        Text(AppStrings.noAccount, style: AppTextStyle.subtitle),
         GestureDetector(
           onTap: widget.onNavigateToRegister,
-          child: Text('Sign Up', style: AppTextStyle.link),
+          child: Text(AppStrings.signUp, style: AppTextStyle.link),
         ),
       ],
     );

@@ -18,6 +18,16 @@ class TransactionModel {
     ],
   };
 
+  static const Map<String, String> categoryLabelMap = {
+    'salary': 'Lương',
+    'food': 'Ăn uống',
+    'travel': 'Di chuyển',
+    'shopping': 'Mua sắm',
+    'entertainment': 'Giải trí',
+    'utility': 'Tiện ích',
+    'other': 'Khác',
+  };
+
   final String id;
   final double amount;
   final String category;
@@ -37,26 +47,26 @@ class TransactionModel {
   }) : category = _normalizeCategory(category, type) {
     // Validate amount
     if (amount <= 0) {
-      throw Exception('Amount must be > 0');
+      throw Exception('Số tiền phải lớn hơn 0');
     }
     if (amount > maxAmount) {
-      throw Exception('Amount must be <= $maxAmount');
+      throw Exception('Số tiền phải nhỏ hơn hoặc bằng $maxAmount');
     }
 
     // Validate title
     if (title.trim().isEmpty) {
-      throw Exception('Title cannot be empty');
+      throw Exception('Tiêu đề không được để trống');
     }
 
     // Validate note length
     if (note.length > maxNoteLength) {
-      throw Exception('Note is too long, max $maxNoteLength characters');
+      throw Exception('Ghi chú quá dài, tối đa $maxNoteLength ký tự');
     }
 
     // Validate category
     if (!isCategoryValid(type, category)) {
       throw Exception(
-        'Category "$category" is not valid for transaction type "$type"',
+        'Danh mục "$category" không hợp lệ với loại giao dịch "$type"',
       );
     }
   }
@@ -68,7 +78,7 @@ class TransactionModel {
       id: json['_id'] ?? json['id'] ?? '',
       amount: _parseAmount(json['amount']),
       category: _normalizeCategory(json['category'], parsedType),
-      title: json['title'] ?? 'No Title',
+      title: json['title'] ?? 'Không có tiêu đề',
       date: _parseDate(json['date']),
       note: _parseNote(json['note']),
       type: parsedType,
@@ -88,7 +98,7 @@ class TransactionModel {
 
   static double _parseAmount(dynamic value) {
     if (value == null) {
-      throw Exception('Amount is required');
+      throw Exception('Vui lòng nhập số tiền');
     }
     if (value is double) return value;
     if (value is int) return value.toDouble();
@@ -97,7 +107,7 @@ class TransactionModel {
       if (parsed != null) return parsed;
     }
 
-    throw Exception('Amount must be a valid number');
+    throw Exception('Số tiền phải là một số hợp lệ');
   }
 
   static DateTime _parseDate(dynamic value) {
@@ -141,13 +151,14 @@ class TransactionModel {
       return 'other';
     }
     if (isCategoryValid(type, parsed)) return parsed;
-    throw Exception('Invalid category: $parsed');
+    throw Exception('Danh mục không hợp lệ: $parsed');
   }
 
   static String formatCategoryForUi(String category) {
     final normalized = _normalizeRawCategory(category);
     if (normalized.isEmpty) return '';
-    return normalized[0].toUpperCase() + normalized.substring(1);
+    return categoryLabelMap[normalized] ??
+        (normalized[0].toUpperCase() + normalized.substring(1));
   }
 
   String get categoryForUi {
@@ -155,12 +166,12 @@ class TransactionModel {
   }
 
   String get formattedDate {
-    return DateFormat('dd MMM yyyy').format(date);
+    return DateFormat('dd/MM/yyyy').format(date);
   }
 
   String get formattedAmount {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} VND';
+    return '${formatter.format(amount)} ₫';
   }
 
   TransactionModel copyWith({

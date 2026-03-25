@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/strings.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -34,7 +35,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 12),
                   Text(
-                    'Enjelin Morgeana',
+                    AppStrings.profileDisplayName,
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -43,7 +44,7 @@ class ProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    '@enjelin_morgeana',
+                    AppStrings.profileUsername,
                     style: TextStyle(color: Colors.white70),
                   ),
                 ],
@@ -52,11 +53,23 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            _ProfileItem(icon: Icons.person, title: 'Personal info'),
-            _ProfileItem(icon: Icons.lock, title: 'Login & security'),
-            _ProfileItem(icon: Icons.notifications, title: 'Notifications'),
-            _ProfileItem(icon: Icons.privacy_tip, title: 'Privacy'),
-            _ProfileItem(icon: Icons.logout, title: 'Logout'),
+            _ProfileItem(
+              icon: Icons.person,
+              title: AppStrings.profilePersonalInfo,
+            ),
+            _ProfileItem(
+              icon: Icons.lock,
+              title: AppStrings.profileLoginSecurity,
+            ),
+            _ProfileItem(
+              icon: Icons.notifications,
+              title: AppStrings.profileNotifications,
+            ),
+            _ProfileItem(
+              icon: Icons.privacy_tip,
+              title: AppStrings.profilePrivacy,
+            ),
+            _ProfileItem(icon: Icons.logout, title: AppStrings.profileLogout),
           ],
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/strings.dart';
 
 class HomeError extends StatelessWidget {
   final String message;
@@ -22,7 +23,10 @@ class HomeError extends StatelessWidget {
               style: const TextStyle(fontSize: 16, color: Colors.grey),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: onRetry, child: const Text("Thử lại")),
+            ElevatedButton(
+              onPressed: onRetry,
+              child: const Text(AppStrings.retry),
+            ),
           ],
         ),
       ),

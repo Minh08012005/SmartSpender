@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/strings.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
 import 'statistic_utils.dart';
@@ -27,12 +28,10 @@ class _StatisticScreenState extends State<StatisticScreen> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
+    final provider = context.read<TransactionProvider>();
 
     Future.microtask(() {
-      context.read<TransactionProvider>().fetchTransactions(
-        month: _selectedMonth,
-        year: _selectedYear,
-      );
+      provider.fetchTransactions(month: _selectedMonth, year: _selectedYear);
     });
   }
 
@@ -57,7 +56,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
         elevation: 0,
         foregroundColor: Colors.white,
         title: const Text(
-          'Thống Kê',
+          AppStrings.statisticTitle,
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         centerTitle: false,
@@ -107,31 +106,37 @@ class _StatisticScreenState extends State<StatisticScreen> {
     );
   }
 
-  Widget _buildKpiCards(double totalExpense, double totalIncome, double balance) {
+  Widget _buildKpiCards(
+    double totalExpense,
+    double totalIncome,
+    double balance,
+  ) {
     return Column(
       children: [
         KpiCardWidget(
-          title: 'Tổng Chi Tiêu',
+          title: AppStrings.statisticKpiTotalExpense,
           value: formatAmount(totalExpense),
           color: const Color(0xffFF5252),
           icon: Icons.trending_down,
-          subtitle: 'Tiền đã chi',
+          subtitle: AppStrings.statisticSpentSubtitle,
         ),
         const SizedBox(height: 12),
         KpiCardWidget(
-          title: 'Tổng Thu Nhập',
+          title: AppStrings.statisticKpiTotalIncome,
           value: formatAmount(totalIncome),
           color: const Color(0xff4CAF50),
           icon: Icons.trending_up,
-          subtitle: 'Tiền đã nhập',
+          subtitle: AppStrings.statisticReceivedSubtitle,
         ),
         const SizedBox(height: 12),
         KpiCardWidget(
-          title: 'Số Dư Còn Lại',
+          title: AppStrings.statisticKpiBalance,
           value: formatAmount(balance),
           color: const Color(0xff2196F3),
           icon: Icons.account_balance_wallet,
-          subtitle: balance >= 0 ? 'Còn lại' : 'Âm',
+          subtitle: balance >= 0
+              ? AppStrings.statisticRemaining
+              : AppStrings.statisticNegative,
         ),
       ],
     );
@@ -165,7 +170,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Chi Tiêu Theo Danh Mục',
+                AppStrings.statisticCategorySection,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -174,11 +179,8 @@ class _StatisticScreenState extends State<StatisticScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tổng chi: ${formatAmount(totalExpense)}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xff999999),
-                ),
+                '${AppStrings.statisticTotalExpensePrefix}: ${formatAmount(totalExpense)}',
+                style: const TextStyle(fontSize: 12, color: Color(0xff999999)),
               ),
             ],
           ),
@@ -198,7 +200,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
           )
         else if (totalExpense <= 0)
           const EmptyStateWidget(
-            message: 'Không có chi tiêu trong kỳ này',
+            message: AppStrings.statisticNoExpenseInPeriod,
             icon: Icons.trending_down,
           )
         else
@@ -236,7 +238,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Giao Dịch Gần Đây',
+                AppStrings.statisticRecentTransactions,
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
@@ -245,11 +247,8 @@ class _StatisticScreenState extends State<StatisticScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tối đa 5 giao dịch mới nhất',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Color(0xff999999),
-                ),
+                AppStrings.statisticRecentTransactionsHint,
+                style: const TextStyle(fontSize: 12, color: Color(0xff999999)),
               ),
             ],
           ),
@@ -269,7 +268,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
           )
         else if (transactions.isEmpty)
           const EmptyStateWidget(
-            message: 'Không có giao dịch nào',
+            message: AppStrings.homeEmptyTransactions,
             icon: Icons.receipt_long,
           )
         else

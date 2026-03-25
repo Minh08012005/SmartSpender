@@ -129,19 +129,19 @@ class TransactionProvider extends ChangeNotifier {
                 final tx = TransactionModel.fromJson(json);
                 parsedList.add(tx);
               } catch (e) {
-                debugPrint('❌ Skipped invalid transaction: $e');
-                debugPrint('👉 Data: $json');
+                debugPrint('❌ Bỏ qua giao dịch không hợp lệ: $e');
+                debugPrint('👉 Dữ liệu: $json');
               }
             }
 
             _transactions = parsedList;
 
-            debugPrint('✅ Loaded ${_transactions.length} transactions');
+            debugPrint('✅ Đã tải ${_transactions.length} giao dịch');
           } else {
             _transactions = [];
           }
         } else {
-          throw Exception('Invalid response format');
+          throw Exception('Định dạng phản hồi không hợp lệ');
         }
       } else {
         throw Exception(AppStrings.failedToLoadTransactions);
@@ -152,13 +152,13 @@ class TransactionProvider extends ChangeNotifier {
       _setError(
         _extractApiErrorMessage(e, 'Không thể tải danh sách giao dịch'),
       );
-      debugPrint('❌ Fetch transactions failed: ${e.message}');
+      debugPrint('❌ Tải giao dịch thất bại: ${e.message}');
     } catch (e) {
       // giữ nguyên message gốc để test nhận đúng
       _remoteTotalIncome = null;
       _remoteTotalExpense = null;
       _setError(e.toString());
-      debugPrint('❌ Unexpected error: $e');
+      debugPrint('❌ Lỗi không mong muốn: $e');
     } finally {
       _setLoading(false);
     }
@@ -187,26 +187,26 @@ class TransactionProvider extends ChangeNotifier {
           response.data,
         );
         if (createdTransaction == null) {
-          throw Exception('Invalid create transaction response');
+          throw Exception('Phản hồi tạo giao dịch không hợp lệ');
         }
         _transactions.insert(0, createdTransaction);
         _remoteTotalIncome = null;
         _remoteTotalExpense = null;
         notifyListeners();
 
-        debugPrint('✅ Transaction added successfully');
+        debugPrint('✅ Thêm giao dịch thành công');
         return true;
       }
 
       throw Exception(AppStrings.failedToAddTransaction);
     } on DioException catch (e) {
       _setError(_extractApiErrorMessage(e, AppStrings.cannotAddTransaction));
-      debugPrint('❌ Add transaction failed: ${e.message}');
+      debugPrint('❌ Thêm giao dịch thất bại: ${e.message}');
       return false;
     } catch (e) {
       // giữ nguyên message gốc để test nhận đúng
       _setError(e.toString());
-      debugPrint('❌ Unexpected error: $e');
+      debugPrint('❌ Lỗi không mong muốn: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -229,18 +229,18 @@ class TransactionProvider extends ChangeNotifier {
         _remoteTotalExpense = null;
         notifyListeners();
 
-        debugPrint('✅ Transaction deleted successfully');
+        debugPrint('✅ Xóa giao dịch thành công');
         return true;
       }
 
       throw Exception(AppStrings.failedToDeleteTransaction);
     } on DioException catch (e) {
       _setError(_extractApiErrorMessage(e, AppStrings.cannotDeleteTransaction));
-      debugPrint('❌ Delete transaction failed: ${e.message}');
+      debugPrint('❌ Xóa giao dịch thất bại: ${e.message}');
       return false;
     } catch (e) {
       _setError(e.toString());
-      debugPrint('❌ Unexpected error: $e');
+      debugPrint('❌ Lỗi không mong muốn: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -278,7 +278,7 @@ class TransactionProvider extends ChangeNotifier {
           response.data,
         );
         if (updatedTransaction == null) {
-          throw Exception('Invalid update transaction response');
+          throw Exception('Phản hồi cập nhật giao dịch không hợp lệ');
         }
 
         if (index != -1) {
@@ -288,7 +288,7 @@ class TransactionProvider extends ChangeNotifier {
           notifyListeners();
         }
 
-        debugPrint('Transaction updated successfully');
+        debugPrint('✅ Cập nhật giao dịch thành công');
         return true;
       }
 
@@ -299,7 +299,7 @@ class TransactionProvider extends ChangeNotifier {
         notifyListeners();
       }
       _setError(_extractApiErrorMessage(e, AppStrings.cannotUpdateTransaction));
-      debugPrint('Update transaction failed: ${e.message}');
+      debugPrint('❌ Cập nhật giao dịch thất bại: ${e.message}');
       return false;
     } catch (e) {
       if (didOptimisticUpdate && previousTransaction != null) {
@@ -308,7 +308,7 @@ class TransactionProvider extends ChangeNotifier {
       }
       // giữ nguyên message gốc
       _setError(e.toString());
-      debugPrint('Unexpected error: $e');
+      debugPrint('❌ Lỗi không mong muốn: $e');
       return false;
     } finally {
       _setLoading(false);
@@ -327,8 +327,8 @@ class TransactionProvider extends ChangeNotifier {
 
       return transaction;
     } catch (e) {
-      debugPrint('❌ Invalid transaction from API: $e');
-      debugPrint('👉 Data: $payload');
+      debugPrint('❌ Giao dịch từ API không hợp lệ: $e');
+      debugPrint('👉 Dữ liệu: $payload');
       return null;
     }
   }

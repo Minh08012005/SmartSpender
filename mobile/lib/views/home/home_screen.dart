@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../core/strings.dart';
 import '../../screens/add_transaction_screen.dart';
 import '../../screens/edit_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
@@ -59,10 +60,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Transactions History',
+                    AppStrings.homeTransactionHistory,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  Text('See all', style: TextStyle(color: Colors.grey)),
+                  Text(
+                    AppStrings.homeSeeAll,
+                    style: TextStyle(color: Colors.grey),
+                  ),
                 ],
               ),
             ),

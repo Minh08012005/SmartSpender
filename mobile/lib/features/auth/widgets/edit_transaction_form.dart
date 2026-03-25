@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../core/strings.dart';
 import '../../../data/models/transaction_model.dart';
 import '../../../widgets/category_dropdown.dart';
 
@@ -96,7 +97,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                 ],
                 decoration: const InputDecoration(
-                  labelText: 'Amount',
+                  labelText: AppStrings.amountLabel,
                   border: OutlineInputBorder(),
                 ),
                 validator: widget.validateAmount,
@@ -106,8 +107,8 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                 controller: widget.titleController,
                 maxLength: 100,
                 decoration: const InputDecoration(
-                  labelText: 'Title',
-                  hintText: 'e.g. Lunch with friends',
+                  labelText: AppStrings.title,
+                  hintText: AppStrings.titleHint,
                   border: OutlineInputBorder(),
                 ),
                 validator: widget.validateTitle,
@@ -117,17 +118,17 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                 key: ValueKey(widget.selectedType),
                 initialValue: widget.selectedType,
                 decoration: const InputDecoration(
-                  labelText: 'Transaction Type',
+                  labelText: AppStrings.transactionType,
                   border: OutlineInputBorder(),
                 ),
                 items: const [
                   DropdownMenuItem(
                     value: TransactionType.income,
-                    child: Text('Income'),
+                    child: Text(AppStrings.income),
                   ),
                   DropdownMenuItem(
                     value: TransactionType.expense,
-                    child: Text('Expense'),
+                    child: Text(AppStrings.expense),
                   ),
                 ],
                 onChanged: widget.onTypeChanged,
@@ -143,7 +144,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                 onTap: widget.onPickDate,
                 child: InputDecorator(
                   decoration: const InputDecoration(
-                    labelText: 'Date',
+                    labelText: AppStrings.date,
                     border: OutlineInputBorder(),
                   ),
                   child: Text(widget.dateText, style: TextStyle(color: teal)),
@@ -155,7 +156,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                 maxLength: TransactionModel.maxNoteLength,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                  labelText: 'Note',
+                  labelText: AppStrings.note,
                   border: OutlineInputBorder(),
                 ),
                 validator: widget.validateNote,
@@ -180,7 +181,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                             color: Colors.white,
                           ),
                         )
-                      : const Text('Update Transaction'),
+                      : const Text(AppStrings.updateTransaction),
                 ),
               ),
               const SizedBox(height: 12),
@@ -192,7 +193,7 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                     foregroundColor: Colors.white,
                   ),
                   onPressed: widget.isLoading ? null : widget.onDelete,
-                  child: const Text('Delete Transaction'),
+                  child: const Text(AppStrings.deleteTransaction),
                 ),
               ),
             ],

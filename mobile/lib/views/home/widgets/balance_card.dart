@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/data/providers/transaction_provider.dart';
+import '../../../core/strings.dart';
 
 class BalanceCard extends StatelessWidget {
   const BalanceCard({super.key});
@@ -35,7 +36,7 @@ class BalanceCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Total Balance',
+              AppStrings.totalBalance,
               style: TextStyle(color: Colors.white70),
             ),
             const SizedBox(height: 8),
@@ -55,11 +56,11 @@ class BalanceCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _BalanceInfo(
-                  title: 'Income',
+                  title: AppStrings.totalIncome,
                   amount: '${formatter.format(provider.totalIncome)} ₫',
                 ),
                 _BalanceInfo(
-                  title: 'Expenses',
+                  title: AppStrings.totalExpense,
                   amount: '${formatter.format(provider.totalExpense)} ₫',
                 ),
               ],

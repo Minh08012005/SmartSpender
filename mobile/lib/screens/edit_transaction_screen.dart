@@ -273,7 +273,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
         appBar: AppBar(
           backgroundColor: teal,
           foregroundColor: Colors.white,
-          title: const Text('Edit Transaction'),
+          title: const Text(AppStrings.editTransaction),
         ),
         body: Consumer<TransactionProvider>(
           builder: (context, provider, _) {

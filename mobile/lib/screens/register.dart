@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../navigation/main_navigation.dart';
+import '../core/strings.dart';
 import '../features/auth/widgets/auth_header.dart';
 import '../features/auth/widgets/auth_form_wrapper.dart';
 import '../features/auth/widgets/register_form.dart';
@@ -27,7 +28,10 @@ class RegisterScreen extends StatelessWidget {
           child: Column(
             children: [
               // Header
-              const AuthHeader(title: 'Create Account', showBackButton: true),
+              const AuthHeader(
+                title: AppStrings.createAccount,
+                showBackButton: true,
+              ),
 
               // Form Content
               Expanded(

@@ -24,8 +24,8 @@ class TransactionTileWidget extends StatelessWidget {
           CircleAvatar(
             radius: 18,
             backgroundColor: isIncome
-                ? const Color(0xff4CAF50).withOpacity(0.12)
-                : const Color(0xffFF5252).withOpacity(0.12),
+                ? const Color(0xff4CAF50).withValues(alpha: 0.12)
+                : const Color(0xffFF5252).withValues(alpha: 0.12),
             child: Icon(
               isIncome ? Icons.arrow_downward : Icons.arrow_upward,
               size: 18,

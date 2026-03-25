@@ -22,7 +22,7 @@ class AuthHeader extends StatelessWidget {
         children: [
           if (showBackButton) ...[
             GestureDetector(
-              onTap: onBackPressed ?? () => Navigator.pop(context),
+              onTap: onBackPressed ?? () => Navigator.maybePop(context),
               child: const Icon(
                 Icons.arrow_back,
                 color: AppColors.textSecondary,

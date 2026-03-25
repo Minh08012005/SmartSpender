@@ -29,6 +29,7 @@ class ApiConstants {
   static const String tokenOriginKey = 'token_origin';
   static const String userIdKey = 'user_id';
   static const String userEmailKey = 'user_email';
+  static const String onboardingSeenKey = 'onboarding_seen';
 
   // ============== HTTP TIMEOUTS ==============
   static const Duration connectTimeout = Duration(seconds: 30);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/strings.dart';
 import '../statistic_utils.dart';
 
 class PeriodPickerWidget extends StatelessWidget {
@@ -46,7 +47,7 @@ class PeriodPickerWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
             child: const Text(
-              'Tháng Này',
+              AppStrings.statisticCurrentMonth,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -64,7 +65,7 @@ class PeriodPickerWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 8),
             ),
             child: const Text(
-              'Tháng Trước',
+              AppStrings.statisticPreviousMonth,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,

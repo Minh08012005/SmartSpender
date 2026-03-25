@@ -123,16 +123,16 @@ class AppConfig {
 
   /// Print current config (for debugging)
   static void printConfig() {
-    print('╔══════════════════════════════════════╗');
-    print('║       SmartSpender App Config        ║');
-    print('╠══════════════════════════════════════╣');
-    print('║ Environment: ${_environment.name.padRight(21)}║');
-    print('║ APP_ENV: ${_environmentOverride.padRight(25)}║');
+    debugPrint('╔══════════════════════════════════════╗');
+    debugPrint('║       SmartSpender App Config        ║');
+    debugPrint('╠══════════════════════════════════════╣');
+    debugPrint('║ Environment: ${_environment.name.padRight(21)}║');
+    debugPrint('║ APP_ENV: ${_environmentOverride.padRight(25)}║');
     final source = _apiBaseUrlOverride.trim().isNotEmpty
         ? 'dart-define'
         : 'auto-config';
-    print('║ URL Source: ${source.padRight(22)}║');
-    print('║ API Base: ${apiBaseUrl.padRight(24)}║');
-    print('╚══════════════════════════════════════╝');
+    debugPrint('║ URL Source: ${source.padRight(22)}║');
+    debugPrint('║ API Base: ${apiBaseUrl.padRight(24)}║');
+    debugPrint('╚══════════════════════════════════════╝');
   }
 }

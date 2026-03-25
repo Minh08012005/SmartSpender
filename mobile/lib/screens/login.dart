@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../navigation/main_navigation.dart';
+import '../core/strings.dart';
 import '../features/auth/widgets/auth_header.dart';
 import '../features/auth/widgets/auth_form_wrapper.dart';
 import '../features/auth/widgets/login_form.dart';
@@ -28,7 +29,7 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             children: [
               // Header
-              const AuthHeader(title: 'Sign in', showBackButton: true),
+              const AuthHeader(title: AppStrings.signIn, showBackButton: true),
 
               // Form Content
               Expanded(

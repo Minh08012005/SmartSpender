@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/strings.dart';
 
 class HomeEmpty extends StatelessWidget {
   const HomeEmpty({super.key});
@@ -12,7 +13,7 @@ class HomeEmpty extends StatelessWidget {
           Icon(Icons.receipt_long, size: 70, color: Colors.grey),
           SizedBox(height: 16),
           Text(
-            "không có giao dịch nào",
+            AppStrings.homeEmptyTransactions,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,

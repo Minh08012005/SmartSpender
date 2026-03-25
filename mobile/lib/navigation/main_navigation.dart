@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/strings.dart';
 import '../views/home/home_screen.dart';
 import '../views/statistic/statistic_screen.dart';
 import '../views/profile/profile_screen.dart';
@@ -36,16 +37,22 @@ class _MainNavigationState extends State<MainNavigation> {
         selectedItemColor: const Color(0xff2A7C76),
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: AppStrings.navHome,
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.bar_chart),
-            label: 'Statistic',
+            label: AppStrings.navStatistic,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_balance_wallet),
-            label: 'Wallet',
+            label: AppStrings.navWallet,
           ),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: AppStrings.navProfile,
+          ),
         ],
       ),
     );

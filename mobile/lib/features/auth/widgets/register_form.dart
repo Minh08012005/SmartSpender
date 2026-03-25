@@ -5,6 +5,7 @@ import '../../../shared/widgets/forms/custom_password_field.dart';
 import '../../../shared/widgets/smooth_primary_button.dart';
 import '../../../shared/widgets/animated_error_message.dart';
 import '../../../services/auth_service.dart';
+import '../../../core/strings.dart';
 
 class RegisterForm extends StatefulWidget {
   final VoidCallback onRegisterSuccess;
@@ -66,7 +67,7 @@ class _RegisterFormState extends State<RegisterForm> {
 
           // Register Button (Smooth Loading)
           SmoothPrimaryButton(
-            text: 'Create Account',
+            text: AppStrings.createAccount,
             isLoading: _isLoading,
             onPressed: _handleRegister,
           ),
@@ -83,9 +84,9 @@ class _RegisterFormState extends State<RegisterForm> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Create Account', style: AppTextStyle.welcomeTitle),
+        Text(AppStrings.createAccount, style: AppTextStyle.welcomeTitle),
         const SizedBox(height: 8),
-        Text('Sign up to get started', style: AppTextStyle.subtitle),
+        Text(AppStrings.signUpToGetStarted, style: AppTextStyle.subtitle),
       ],
     );
   }
@@ -96,15 +97,15 @@ class _RegisterFormState extends State<RegisterForm> {
         // Name Field
         CustomTextField(
           controller: _nameController,
-          hintText: 'Enter your full name',
+          hintText: AppStrings.enterFullName,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please enter your full name';
+              return AppStrings.pleaseEnterFullName;
             }
             if (trimmed.length < 2) {
-              return 'Full name is too short';
+              return AppStrings.fullNameTooShort;
             }
             return null;
           },
@@ -114,16 +115,16 @@ class _RegisterFormState extends State<RegisterForm> {
         // Email Field
         CustomTextField(
           controller: _emailController,
-          hintText: 'Enter your email',
+          hintText: AppStrings.enterEmail,
           keyboardType: TextInputType.emailAddress,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please enter your email';
+              return AppStrings.pleaseEnterEmail;
             }
             if (!_emailRegex.hasMatch(trimmed)) {
-              return 'Invalid email format';
+              return AppStrings.invalidEmailFormat;
             }
             return null;
           },
@@ -133,18 +134,18 @@ class _RegisterFormState extends State<RegisterForm> {
         // Password Field
         CustomPasswordField(
           controller: _passwordController,
-          hintText: 'Enter password',
+          hintText: AppStrings.enterPassword,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please enter your password';
+              return AppStrings.pleaseEnterPassword;
             }
             if (trimmed.length < 8) {
-              return 'Password must be at least 8 characters';
+              return AppStrings.passwordMinLength;
             }
             if (!_passwordPolicyRegex.hasMatch(trimmed)) {
-              return 'Password needs uppercase, lowercase, number and special character';
+              return AppStrings.passwordPolicy;
             }
             return null;
           },
@@ -154,15 +155,15 @@ class _RegisterFormState extends State<RegisterForm> {
         // Confirm Password Field
         CustomPasswordField(
           controller: _confirmPasswordController,
-          hintText: 'Confirm password',
+          hintText: AppStrings.confirmPassword,
           forceValidation: _forceValidation,
           validator: (value) {
             final trimmed = value?.trim() ?? '';
             if (trimmed.isEmpty) {
-              return 'Please confirm your password';
+              return AppStrings.pleaseConfirmPassword;
             }
             if (trimmed != _passwordController.text.trim()) {
-              return 'Passwords do not match';
+              return AppStrings.passwordMismatch;
             }
             return null;
           },
@@ -175,10 +176,10 @@ class _RegisterFormState extends State<RegisterForm> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('Already have an account? ', style: AppTextStyle.subtitle),
+        Text(AppStrings.alreadyHaveAccount, style: AppTextStyle.subtitle),
         GestureDetector(
           onTap: widget.onNavigateToLogin,
-          child: Text('Sign In', style: AppTextStyle.link),
+          child: Text(AppStrings.signIn, style: AppTextStyle.link),
         ),
       ],
     );

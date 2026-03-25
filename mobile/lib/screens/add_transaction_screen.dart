@@ -156,7 +156,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          provider.error.isEmpty ? AppStrings.failedToAddTransaction : provider.error,
+          provider.error.isEmpty
+              ? AppStrings.failedToAddTransaction
+              : provider.error,
         ),
       ),
     );
@@ -190,7 +192,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         appBar: AppBar(
           backgroundColor: teal,
           foregroundColor: Colors.white,
-          title: const Text('Add Transaction'),
+          title: const Text(AppStrings.addTransaction),
         ),
         body: Consumer<TransactionProvider>(
           builder: (context, provider, _) {
@@ -210,8 +212,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
                       ],
                       decoration: const InputDecoration(
-                        labelText: 'Amount',
-                        hintText: 'Nhập số tiền',
+                        labelText: AppStrings.amountLabel,
+                        hintText: AppStrings.amountHint,
                         border: OutlineInputBorder(),
                       ),
                       validator: _validateAmount,
@@ -220,17 +222,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     DropdownButtonFormField<TransactionType>(
                       initialValue: _selectedType,
                       decoration: const InputDecoration(
-                        labelText: 'Transaction Type',
+                        labelText: AppStrings.transactionType,
                         border: OutlineInputBorder(),
                       ),
                       items: const [
                         DropdownMenuItem(
                           value: TransactionType.income,
-                          child: Text('Income'),
+                          child: Text(AppStrings.income),
                         ),
                         DropdownMenuItem(
                           value: TransactionType.expense,
-                          child: Text('Expense'),
+                          child: Text(AppStrings.expense),
                         ),
                       ],
                       onChanged: _onTypeChanged,
@@ -239,7 +241,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     DropdownButtonFormField<String>(
                       initialValue: _selectedCategory,
                       decoration: const InputDecoration(
-                        labelText: 'Category',
+                        labelText: AppStrings.category,
                         border: OutlineInputBorder(),
                       ),
                       items: _categoryOptions
@@ -265,8 +267,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       controller: _titleController,
                       maxLength: 100,
                       decoration: const InputDecoration(
-                        labelText: 'Title',
-                        hintText: 'e.g. Lunch with friends',
+                        labelText: AppStrings.title,
+                        hintText: AppStrings.titleHint,
                         border: OutlineInputBorder(),
                       ),
                       validator: _validateTitle,
@@ -276,7 +278,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       onTap: _pickDate,
                       child: InputDecorator(
                         decoration: const InputDecoration(
-                          labelText: 'Date',
+                          labelText: AppStrings.date,
                           border: OutlineInputBorder(),
                         ),
                         child: Text(dateText, style: TextStyle(color: teal)),
@@ -288,7 +290,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                       maxLength: TransactionModel.maxNoteLength,
                       maxLines: 3,
                       decoration: const InputDecoration(
-                        labelText: 'Note',
+                        labelText: AppStrings.note,
                         border: OutlineInputBorder(),
                       ),
                       validator: _validateNote,
@@ -311,7 +313,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text('Save Transaction'),
+                            : const Text(AppStrings.saveTransaction),
                       ),
                     ),
                   ],

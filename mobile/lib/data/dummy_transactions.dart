@@ -13,11 +13,11 @@ final List<TransactionModel> dummyTransactions = [
   ),
   TransactionModel(
     id: 't2',
-    title: 'Freelance project',
+    title: 'Dự án tự do',
     amount: 2500000,
     category: 'other',
     date: DateTime(2026, 3, 10),
-    note: 'Dự án web design',
+    note: 'Thiết kế website',
     type: TransactionType.income,
   ),
   TransactionModel(
@@ -33,7 +33,7 @@ final List<TransactionModel> dummyTransactions = [
   // ========== EXPENSE - Food (Ăn uống) ==========
   TransactionModel(
     id: 't4',
-    title: 'Breakfast tại quán A',
+    title: 'Ăn sáng tại quán A',
     amount: 45000,
     category: 'food',
     date: DateTime(2026, 3, 2),
@@ -42,7 +42,7 @@ final List<TransactionModel> dummyTransactions = [
   ),
   TransactionModel(
     id: 't5',
-    title: 'Lunch tại restorant',
+    title: 'Ăn trưa tại nhà hàng',
     amount: 125000,
     category: 'food',
     date: DateTime(2026, 3, 3),
@@ -100,7 +100,7 @@ final List<TransactionModel> dummyTransactions = [
   // ========== EXPENSE - Shopping (Mua sắm) ==========
   TransactionModel(
     id: 't11',
-    title: 'Quần áo tại mall',
+    title: 'Mua quần áo ở trung tâm thương mại',
     amount: 650000,
     category: 'shopping',
     date: DateTime(2026, 3, 9),
@@ -129,7 +129,7 @@ final List<TransactionModel> dummyTransactions = [
   ),
   TransactionModel(
     id: 't14',
-    title: 'Game online topup',
+    title: 'Nạp game online',
     amount: 200000,
     category: 'entertainment',
     date: DateTime(2026, 3, 11),
@@ -149,7 +149,7 @@ final List<TransactionModel> dummyTransactions = [
   ),
   TransactionModel(
     id: 't16',
-    title: 'Internet & TV',
+    title: 'Internet và truyền hình',
     amount: 250000,
     category: 'utility',
     date: DateTime(2026, 3, 1),
