@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
+import '../../services/auth_service.dart';
 import '../../screens/login.dart';
 
 /// Centralized API Service
@@ -234,10 +235,7 @@ class _ErrorInterceptor extends Interceptor {
 
   /// Xử lý khi token hết hạn — xóa token và điều hướng về LoginScreen
   Future<void> _handleTokenExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(ApiConstants.accessTokenKey);
-    await prefs.remove(ApiConstants.refreshTokenKey);
-    await prefs.remove(ApiConstants.tokenOriginKey);
+    await AuthService.clearSession();
 
     developer.log('🔓 Token expired — redirecting to Login', name: 'API');
 

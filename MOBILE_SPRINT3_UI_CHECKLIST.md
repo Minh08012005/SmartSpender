@@ -14,7 +14,7 @@ Mục tiêu: Tạo bộ khung task rõ ràng để team mobile copy vào GitHub 
 
 ## 2) Mẫu Issue #1 - [Mobile] Tích Hợp Màn Hình Thống Kê MVP
 
-Người phụ trách: Trịnh Thái Sơn  
+Người phụ trách: Minh(leader)
 Độ ưu tiên: P0  
 Ước lượng: 1.5 - 2 ngày
 

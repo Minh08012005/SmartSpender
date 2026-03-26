@@ -340,7 +340,7 @@ Lưu ảnh vào thư mục `test_evidence/2026-03-23/`, sau đó dán link theo 
 Quy ước đặt tên ảnh:
 
 - m1-login.png
-- m2-create-form.png
+- m2-create-form.pnggi
 - m2-create-result.png
 - m3-read.png
 - m4-before.png

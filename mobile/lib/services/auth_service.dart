@@ -11,6 +11,52 @@ class AuthService {
   static String get _baseUrl => AppConfig.authApiUrl;
   static const Duration _timeout = Duration(seconds: 30);
 
+  static String? _normalized(dynamic value) {
+    if (value == null) return null;
+    final parsed = value.toString().trim();
+    if (parsed.isEmpty) return null;
+    return parsed;
+  }
+
+  static Future<void> _setOrRemove(
+    SharedPreferences prefs,
+    String key,
+    String? value,
+  ) async {
+    if (value == null) {
+      await prefs.remove(key);
+      return;
+    }
+    await prefs.setString(key, value);
+  }
+
+  static Future<void> _saveUserData(Map<String, dynamic>? user) async {
+    if (user == null) return;
+
+    final prefs = await SharedPreferences.getInstance();
+
+    final userId = _normalized(user['id']);
+    final fullName = _normalized(user['fullName']);
+    final username = _normalized(user['username']) ?? fullName;
+    final email = _normalized(user['email']);
+
+    await _setOrRemove(prefs, ApiConstants.userIdKey, userId);
+    await _setOrRemove(prefs, ApiConstants.fullNameKey, fullName);
+    await _setOrRemove(prefs, ApiConstants.usernameKey, username);
+    await _setOrRemove(prefs, ApiConstants.userEmailKey, email);
+  }
+
+  static Future<void> clearSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(ApiConstants.accessTokenKey);
+    await prefs.remove(ApiConstants.refreshTokenKey);
+    await prefs.remove(ApiConstants.tokenOriginKey);
+    await prefs.remove(ApiConstants.userIdKey);
+    await prefs.remove(ApiConstants.usernameKey);
+    await prefs.remove(ApiConstants.fullNameKey);
+    await prefs.remove(ApiConstants.userEmailKey);
+  }
+
   static Map<String, dynamic>? _tryDecodeBody(String body) {
     try {
       final decoded = jsonDecode(body);
@@ -107,6 +153,7 @@ class AuthService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(ApiConstants.accessTokenKey, accessToken);
       await prefs.setString(ApiConstants.tokenOriginKey, AppConfig.apiBaseUrl);
+      await _saveUserData(body['data']?['user']);
 
       return AuthResult(
         success: true,
@@ -183,6 +230,7 @@ class AuthService {
           ApiConstants.tokenOriginKey,
           AppConfig.apiBaseUrl,
         );
+        await _saveUserData(body['data']?['user']);
       }
 
       return AuthResult(
