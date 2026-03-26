@@ -14,11 +14,13 @@ class EditTransactionForm extends StatefulWidget {
     required this.noteController,
     required this.showValidationErrors,
     required this.selectedType,
+    required this.selectedWalletType,
     required this.selectedCategory,
     required this.categoryOptions,
     required this.dateText,
     required this.isLoading,
     required this.onTypeChanged,
+    required this.onWalletTypeChanged,
     required this.onCategoryChanged,
     required this.onPickDate,
     required this.onSubmit,
@@ -34,11 +36,13 @@ class EditTransactionForm extends StatefulWidget {
   final TextEditingController noteController;
   final bool showValidationErrors;
   final TransactionType selectedType;
+  final WalletType selectedWalletType;
   final String selectedCategory;
   final List<String> categoryOptions;
   final String dateText;
   final bool isLoading;
   final ValueChanged<TransactionType?> onTypeChanged;
+  final ValueChanged<WalletType?> onWalletTypeChanged;
   final ValueChanged<String?> onCategoryChanged;
   final VoidCallback onPickDate;
   final VoidCallback onSubmit;
@@ -132,6 +136,26 @@ class _EditTransactionFormState extends State<EditTransactionForm> {
                   ),
                 ],
                 onChanged: widget.onTypeChanged,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<WalletType>(
+                key: ValueKey(widget.selectedWalletType),
+                initialValue: widget.selectedWalletType,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.transactionWallet,
+                  border: OutlineInputBorder(),
+                ),
+                items: WalletType.values
+                    .map(
+                      (walletType) => DropdownMenuItem<WalletType>(
+                        value: walletType,
+                        child: Text(
+                          TransactionModel.walletTypeLabel(walletType),
+                        ),
+                      ),
+                    )
+                    .toList(),
+                onChanged: widget.onWalletTypeChanged,
               ),
               const SizedBox(height: 16),
               CategoryDropdown(

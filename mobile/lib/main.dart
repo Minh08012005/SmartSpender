@@ -9,7 +9,9 @@ import 'core/config/app_config.dart';
 import 'core/services/api_service.dart';
 import 'core/constants/api_constants.dart';
 import 'data/providers/transaction_provider.dart';
+import 'data/providers/statistic_provider.dart';
 import 'core/strings.dart';
+import 'data/providers/wallet_provider.dart';
 
 void main() async {
   // Ensure Flutter binding initialized
@@ -106,6 +108,12 @@ class _MyAppState extends State<MyApp> {
       providers: [
         // Transaction Provider
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
+
+        // Statistic Provider
+        ChangeNotifierProvider(create: (_) => StatisticProvider()),
+
+        // Wallet Provider
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
 
         // TODO: Thêm các providers khác ở đây
         // ChangeNotifierProvider(create: (_) => AuthProvider()),

@@ -23,6 +23,7 @@ const registerRoute = require('./routes/auth/register.route'); // Routes cho reg
 const loginRoute = require('./routes/auth/login.route'); // Routes cho login
 const transactionRoutes = require('./routes/transaction_routes'); // Routes cho transactions
 const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
+const walletRoutes = require('./routes/wallet_routes'); // Routes cho wallets
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -108,6 +109,7 @@ app.use('/api/auth', registerRoute);
 app.use('/api/auth', loginRoute);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/statistics', statisticRoutes);
+app.use('/api/wallets', walletRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

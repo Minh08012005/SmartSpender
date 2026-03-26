@@ -21,6 +21,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final _noteController = TextEditingController();
 
   TransactionType _selectedType = TransactionType.expense;
+  WalletType _selectedWalletType = WalletType.cash;
   late String _selectedCategory;
   DateTime? _selectedDate;
 
@@ -134,6 +135,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       amount: amount,
       type: _selectedType,
+      walletType: _selectedWalletType,
       category: _selectedCategory,
       title: _titleController.text.trim(),
       date: _selectedDate ?? DateTime.now(),
@@ -261,6 +263,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                         });
                       },
                       validator: _validateCategory,
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<WalletType>(
+                      initialValue: _selectedWalletType,
+                      decoration: const InputDecoration(
+                        labelText: AppStrings.transactionWallet,
+                        border: OutlineInputBorder(),
+                      ),
+                      items: WalletType.values
+                          .map(
+                            (walletType) => DropdownMenuItem<WalletType>(
+                              value: walletType,
+                              child: Text(
+                                TransactionModel.walletTypeLabel(walletType),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setState(() {
+                          _selectedWalletType = value;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(

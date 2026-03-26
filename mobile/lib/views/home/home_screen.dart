@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../data/providers/wallet_provider.dart';
 import '../../core/strings.dart';
+import '../../screens/all_transactions_screen.dart';
 import '../../screens/add_transaction_screen.dart';
 import '../../screens/edit_transaction_screen.dart';
 import 'widgets/transaction_item.dart';
@@ -26,20 +28,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Load transactions (used for initial load and retry)
   void _loadTransactions() {
-    // Switch to real API fetch
-    context.read<TransactionProvider>().fetchTransactions(
-      month: DateTime.now().month,
-      year: DateTime.now().year,
-    );
+    final now = DateTime.now();
+    Future.wait([
+      context.read<TransactionProvider>().fetchTransactions(
+        month: now.month,
+        year: now.year,
+      ),
+      context.read<WalletProvider>().fetchWallets(forceRefresh: true),
+    ]);
   }
 
   /// Refresh transactions (used for pull-to-refresh)
   Future<void> _refreshTransactions() async {
-    // Refresh from real API
-    await context.read<TransactionProvider>().fetchTransactions(
-      month: DateTime.now().month,
-      year: DateTime.now().year,
-    );
+    final now = DateTime.now();
+    await Future.wait([
+      context.read<TransactionProvider>().fetchTransactions(
+        month: now.month,
+        year: now.year,
+      ),
+      context.read<WalletProvider>().fetchWallets(forceRefresh: true),
+    ]);
   }
 
   @override
@@ -54,18 +62,28 @@ class _HomeScreenState extends State<HomeScreen> {
             const BalanceCard(),
             const SizedBox(height: 20),
 
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
+                  const Text(
                     AppStrings.homeTransactionHistory,
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  Text(
-                    AppStrings.homeSeeAll,
-                    style: TextStyle(color: Colors.grey),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const AllTransactionsScreen(),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      AppStrings.homeSeeAll,
+                      style: TextStyle(color: Colors.grey),
+                    ),
                   ),
                 ],
               ),
@@ -80,11 +98,15 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: const Color(0xff2A7C76),
         foregroundColor: Colors.white,
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final created = await Navigator.push<bool>(
             context,
             MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
           );
+
+          if (created == true && context.mounted) {
+            await _refreshTransactions();
+          }
         },
         child: const Icon(Icons.add),
       ),

@@ -42,9 +42,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return fullName ?? username ?? emailPrefix ?? AppStrings.profileDisplayName;
   }
 
-  String _resolveSubtitle(SharedPreferences prefs, String displayName) {
+  String _resolveSubtitle(SharedPreferences prefs) {
     final email = _nonEmpty(prefs.getString(ApiConstants.userEmailKey));
     return email ?? AppStrings.profileUsername;
+  }
+
+  String _resolveAvatarText(String displayName) {
+    final normalized = displayName.trim();
+    if (normalized.isEmpty) return AppStrings.profileAvatarFallback;
+    return normalized.substring(0, 1).toUpperCase();
   }
 
   // ===== LOGOUT FUNCTION =====
@@ -55,6 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _isLoggingOut = true;
     });
 
+    // Small delay for visual feedback
+    await Future.delayed(const Duration(milliseconds: 300));
+
     try {
       await AuthService.clearSession();
 
@@ -64,17 +73,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
       if (!mounted) return;
 
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (route) => false,
-      );
+      if (mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Không thể đăng xuất lúc này, vui lòng thử lại.'),
-        ),
+        const SnackBar(content: Text(AppStrings.profileLogoutFailed)),
       );
     } finally {
       if (mounted) {
@@ -86,36 +95,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   // ===== CONFIRM DIALOG =====
-  Future<void> _confirmLogout(BuildContext context) async {
+  void _confirmLogout(BuildContext context) {
     if (_isLoggingOut) return;
 
-    final confirm = await showDialog<bool>(
+    showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text(AppStrings.profileLogout),
-        content: const Text('Bạn có chắc muốn đăng xuất không?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(AppStrings.cancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(AppStrings.profileLogout),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true && mounted) {
-      await _handleLogout();
-    }
+      barrierDismissible: true,
+      builder: (_) => const _LogoutConfirmDialog(),
+    ).then((confirm) async {
+      if (confirm == true && mounted) {
+        await _handleLogout();
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF6F6F6),
+      appBar: AppBar(
+        elevation: 0,
+        backgroundColor: const Color(0xff2A7C76),
+        title: const Text(
+          'Hồ sơ',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+            onPressed: () {
+              // TODO: Navigate to notifications
+            },
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -123,9 +141,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               // ===== HEADER =====
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
                 decoration: const BoxDecoration(
-                  color: Color(0xff2A7C76),
+                  gradient: LinearGradient(
+                    colors: [Color(0xff2A7C76), Color(0xff4BA99B)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(28),
                     bottomRight: Radius.circular(28),
@@ -134,42 +156,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: FutureBuilder<SharedPreferences>(
                   future: SharedPreferences.getInstance(),
                   builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const Center(
-                        child: CircularProgressIndicator(color: Colors.white),
-                      );
-                    }
+                    final prefs = snapshot.data;
+                    final displayName = prefs == null
+                        ? AppStrings.profileDisplayName
+                        : _resolveDisplayName(prefs);
+                    final subtitle = prefs == null
+                        ? AppStrings.profileUsername
+                        : _resolveSubtitle(prefs);
+                    final avatarText = _resolveAvatarText(displayName);
 
-                    final prefs = snapshot.data!;
-                    final displayName = _resolveDisplayName(prefs);
-                    final subtitle = _resolveSubtitle(prefs, displayName);
-
-                    return Column(
-                      children: [
-                        const CircleAvatar(
-                          radius: 42,
-                          backgroundColor: Colors.white,
-                          child: Icon(
-                            Icons.person,
-                            size: 40,
-                            color: Color(0xff2A7C76),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          displayName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          subtitle,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                      ],
+                    return _ProfileHeader(
+                      displayName: displayName,
+                      subtitle: subtitle,
+                      avatarText: avatarText,
+                      onEdit: () {
+                        // TODO: Navigate to edit profile screen when available.
+                      },
                     );
                   },
                 ),
@@ -178,37 +180,321 @@ class _ProfileScreenState extends State<ProfileScreen> {
               const SizedBox(height: 24),
 
               // ===== MENU =====
-              _ProfileItem(
-                icon: Icons.person,
-                title: AppStrings.profilePersonalInfo,
-                onTap: () {},
+              _ProfileMenuSection(
+                items: [
+                  _ProfileItem(
+                    icon: Icons.account_circle_outlined,
+                    title: AppStrings.profilePersonalInfo,
+                    onTap: () {},
+                  ),
+                  _ProfileItem(
+                    icon: Icons.lock_outline,
+                    title: AppStrings.profileLoginSecurity,
+                    onTap: () {},
+                  ),
+                  _ProfileItem(
+                    icon: Icons.notifications_none,
+                    title: AppStrings.profileNotifications,
+                    onTap: () {},
+                  ),
+                  _ProfileItem(
+                    icon: Icons.privacy_tip_outlined,
+                    title: AppStrings.profilePrivacy,
+                    onTap: () {},
+                  ),
+                  _ProfileItem(
+                    icon: Icons.logout,
+                    title: AppStrings.profileLogout,
+                    isLogout: true,
+                    isLoading: _isLoggingOut,
+                    onTap: _isLoggingOut ? null : () => _confirmLogout(context),
+                  ),
+                ],
               ),
-              _ProfileItem(
-                icon: Icons.lock,
-                title: AppStrings.profileLoginSecurity,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: Icons.notifications,
-                title: AppStrings.profileNotifications,
-                onTap: () {},
-              ),
-              _ProfileItem(
-                icon: Icons.privacy_tip,
-                title: AppStrings.profilePrivacy,
-                onTap: () {},
-              ),
-
-              // ===== LOGOUT =====
-              _ProfileItem(
-                icon: Icons.logout,
-                title: AppStrings.profileLogout,
-                isLogout: true,
-                isLoading: _isLoggingOut,
-                onTap: _isLoggingOut ? null : () => _confirmLogout(context),
-              ),
+              const SizedBox(height: 8),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LogoutConfirmDialog extends StatelessWidget {
+  const _LogoutConfirmDialog();
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 12,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Icon
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.logout_rounded,
+                size: 32,
+                color: Colors.red.shade700,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Title
+            Text(
+              AppStrings.profileLogout,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.black87,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Message
+            Text(
+              AppStrings.profileLogoutConfirmMessage,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade700,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: TextButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: Text(
+                      AppStrings.cancel,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.red.shade700,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text(
+                      'Xác nhận',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileHeader extends StatelessWidget {
+  final String displayName;
+  final String subtitle;
+  final String avatarText;
+  final VoidCallback onEdit;
+
+  const _ProfileHeader({
+    required this.displayName,
+    required this.subtitle,
+    required this.avatarText,
+    required this.onEdit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        const Positioned(
+          right: -32,
+          top: -24,
+          child: _HeaderAccentCircle(size: 120, opacity: 0.12),
+        ),
+        const Positioned(
+          left: -20,
+          bottom: -34,
+          child: _HeaderAccentCircle(size: 92, opacity: 0.1),
+        ),
+        Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.5),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33000000),
+                        blurRadius: 14,
+                        offset: Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    backgroundColor: Colors.white,
+                    child: Text(
+                      avatarText,
+                      style: const TextStyle(
+                        color: Color(0xff2A7C76),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 26,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.86),
+                            fontSize: 14,
+                            height: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                style: FilledButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.white.withValues(alpha: 0.2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: onEdit,
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text(AppStrings.profileEdit),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderAccentCircle extends StatelessWidget {
+  final double size;
+  final double opacity;
+
+  const _HeaderAccentCircle({required this.size, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.white.withValues(alpha: opacity),
+      ),
+    );
+  }
+}
+
+class _ProfileMenuSection extends StatelessWidget {
+  final List<Widget> items;
+
+  const _ProfileMenuSection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xffFFFFFF),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x12000000),
+              blurRadius: 14,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            for (var i = 0; i < items.length; i++) ...[
+              items[i],
+              if (i != items.length - 1)
+                const Divider(height: 10, color: Color(0x14000000)),
+            ],
+          ],
         ),
       ),
     );
@@ -232,40 +518,51 @@ class _ProfileItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+    final accentColor = isLogout ? Colors.red : const Color(0xff2A7C76);
+
+    return Material(
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
+        splashColor: accentColor.withValues(alpha: 0.14),
+        highlightColor: accentColor.withValues(alpha: 0.08),
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isLogout ? Colors.red.shade50 : Colors.white,
-            borderRadius: BorderRadius.circular(14),
-          ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
           child: Row(
             children: [
-              Icon(
-                icon,
-                color: isLogout ? Colors.red : const Color(0xff2A7C76),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(icon, color: accentColor, size: 20),
               ),
               const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: isLogout ? Colors.red : Colors.black,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 15.5,
+                    color: isLogout ? Colors.red.shade700 : Colors.black87,
+                    fontWeight: FontWeight.w500,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
-              const Spacer(),
               if (isLoading)
-                const SizedBox(
+                SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(accentColor),
+                  ),
                 )
               else
-                const Icon(Icons.chevron_right, color: Colors.grey),
+                Icon(Icons.chevron_right_rounded, color: Colors.grey.shade500),
             ],
           ),
         ),

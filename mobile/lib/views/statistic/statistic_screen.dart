@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../core/strings.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
+import '../../data/providers/statistic_provider.dart';
 import 'statistic_utils.dart';
 import 'widgets/category_row_widget.dart';
 import 'widgets/empty_state_widget.dart';
@@ -20,6 +21,7 @@ class StatisticScreen extends StatefulWidget {
 
 class _StatisticScreenState extends State<StatisticScreen> {
   bool _initialized = false;
+  bool _isPeriodChanging = false;
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
 
@@ -28,21 +30,25 @@ class _StatisticScreenState extends State<StatisticScreen> {
     super.didChangeDependencies();
     if (_initialized) return;
     _initialized = true;
-    final provider = context.read<TransactionProvider>();
+    final txProvider = context.read<TransactionProvider>();
+    final statProvider = context.read<StatisticProvider>();
 
     Future.microtask(() {
-      provider.fetchTransactions(month: _selectedMonth, year: _selectedYear);
+      txProvider.fetchTransactions(month: _selectedMonth, year: _selectedYear);
+      statProvider.fetchStatistics(month: _selectedMonth, year: _selectedYear);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<TransactionProvider>();
-    final transactions = provider.transactions;
+    final txProvider = context.watch<TransactionProvider>();
+    final statProvider = context.watch<StatisticProvider>();
+    final transactions = txProvider.transactions;
 
-    final totalIncome = sumByType(transactions, TransactionType.income);
-    final totalExpense = sumByType(transactions, TransactionType.expense);
-    final balance = totalIncome - totalExpense;
+    // Sử dụng data từ API statistics provider
+    final totalIncome = statProvider.totalIncome;
+    final totalExpense = statProvider.totalExpense;
+    final balance = statProvider.balance;
 
     final categoryBreakdown = buildCategoryBreakdown(
       transactions,
@@ -72,7 +78,12 @@ class _StatisticScreenState extends State<StatisticScreen> {
               PeriodPickerWidget(
                 selectedMonth: _selectedMonth,
                 selectedYear: _selectedYear,
+                isBusy: _isPeriodChanging,
                 onChanged: (month, year) async {
+                  if (_isPeriodChanging ||
+                      (_selectedMonth == month && _selectedYear == year)) {
+                    return;
+                  }
                   setState(() {
                     _selectedMonth = month;
                     _selectedYear = year;
@@ -83,20 +94,54 @@ class _StatisticScreenState extends State<StatisticScreen> {
               const SizedBox(height: 20),
 
               // KPI Cards
-              if (provider.isLoading && transactions.isEmpty)
-                _buildLoadingKpiCards()
-              else
-                _buildKpiCards(totalExpense, totalIncome, balance),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child:
+                    (statProvider.isLoading &&
+                        totalIncome == 0 &&
+                        totalExpense == 0)
+                    ? _buildLoadingKpiCards(
+                        key: const ValueKey<String>('loading_kpi'),
+                      )
+                    : _buildKpiCards(
+                        totalExpense,
+                        totalIncome,
+                        balance,
+                        key: ValueKey<String>(
+                          'kpi_${_selectedMonth}_${_selectedYear}_${totalExpense}_$totalIncome',
+                        ),
+                      ),
+              ),
 
               const SizedBox(height: 24),
 
               // Category Breakdown Section
-              _buildCategorySection(categoryBreakdown, totalExpense),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _buildCategorySection(
+                  categoryBreakdown,
+                  totalExpense,
+                  key: ValueKey<String>(
+                    'cat_${_selectedMonth}_${_selectedYear}_${categoryBreakdown.length}_$totalExpense',
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 24),
 
               // Recent Transactions Section
-              _buildTransactionSection(provider, transactions),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                child: _buildTransactionSection(
+                  txProvider,
+                  transactions,
+                  key: ValueKey<String>(
+                    'tx_${_selectedMonth}_${_selectedYear}_${transactions.length}',
+                  ),
+                ),
+              ),
 
               const SizedBox(height: 20),
             ],
@@ -109,9 +154,11 @@ class _StatisticScreenState extends State<StatisticScreen> {
   Widget _buildKpiCards(
     double totalExpense,
     double totalIncome,
-    double balance,
-  ) {
+    double balance, {
+    Key? key,
+  }) {
     return Column(
+      key: key,
       children: [
         KpiCardWidget(
           title: AppStrings.statisticKpiTotalExpense,
@@ -142,8 +189,9 @@ class _StatisticScreenState extends State<StatisticScreen> {
     );
   }
 
-  Widget _buildLoadingKpiCards() {
+  Widget _buildLoadingKpiCards({Key? key}) {
     return Column(
+      key: key,
       children: [
         LoadingSkeletonWidget(type: 'card'),
         const SizedBox(height: 12),
@@ -156,11 +204,13 @@ class _StatisticScreenState extends State<StatisticScreen> {
 
   Widget _buildCategorySection(
     List<CategoryStat> categoryBreakdown,
-    double totalExpense,
-  ) {
-    final provider = context.watch<TransactionProvider>();
+    double totalExpense, {
+    Key? key,
+  }) {
+    final txProvider = context.watch<TransactionProvider>();
 
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
@@ -188,7 +238,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
         const SizedBox(height: 12),
 
         // Content
-        if (provider.isLoading && provider.transactions.isEmpty)
+        if (txProvider.isLoading && txProvider.transactions.isEmpty)
           Column(
             children: List.generate(
               3,
@@ -225,10 +275,12 @@ class _StatisticScreenState extends State<StatisticScreen> {
   }
 
   Widget _buildTransactionSection(
-    TransactionProvider provider,
-    List<TransactionModel> transactions,
-  ) {
+    TransactionProvider txProvider,
+    List<TransactionModel> transactions, {
+    Key? key,
+  }) {
     return Column(
+      key: key,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Header
@@ -256,7 +308,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
         const SizedBox(height: 12),
 
         // Content
-        if (provider.isLoading && transactions.isEmpty)
+        if (txProvider.isLoading && transactions.isEmpty)
           Column(
             children: List.generate(
               3,
@@ -288,9 +340,32 @@ class _StatisticScreenState extends State<StatisticScreen> {
   }
 
   Future<void> _reload() async {
-    await context.read<TransactionProvider>().fetchTransactions(
-      month: _selectedMonth,
-      year: _selectedYear,
-    );
+    if (_isPeriodChanging) return;
+
+    final txProvider = context.read<TransactionProvider>();
+    final statProvider = context.read<StatisticProvider>();
+
+    setState(() {
+      _isPeriodChanging = true;
+    });
+
+    try {
+      await Future.wait([
+        txProvider.fetchTransactions(
+          month: _selectedMonth,
+          year: _selectedYear,
+        ),
+        statProvider.fetchStatistics(
+          month: _selectedMonth,
+          year: _selectedYear,
+        ),
+      ]);
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPeriodChanging = false;
+        });
+      }
+    }
   }
 }

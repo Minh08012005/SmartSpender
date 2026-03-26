@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const { SignJWT } = require('jose');
 const { TextEncoder } = require('util');
 const User = require('../models/users.model');
+const { initializeWalletsForUser } = require('./wallet.service');
 
 // Tạo secret key từ biến môi trường
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -47,6 +48,11 @@ const registerUser = async ({ email, password, fullName }) => {
     email,
     password: hashedPassword,
     fullName,
+  });
+
+  // Initialize default wallets for new user (async - doesn't need to await)
+  initializeWalletsForUser(user._id.toString()).catch((err) => {
+    console.error('Failed to initialize wallets:', err);
   });
 
   // Tạo access token

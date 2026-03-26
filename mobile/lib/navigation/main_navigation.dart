@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../core/strings.dart';
 import '../views/home/home_screen.dart';
 import '../views/statistic/statistic_screen.dart';
+import '../views/wallet/wallet_screen.dart';
 import '../views/profile/profile_screen.dart';
 
 class MainNavigation extends StatefulWidget {
@@ -17,7 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = const [
     HomeScreen(), // Home
     StatisticScreen(), // Statistic
-    Placeholder(), // Wallet (sắp tới)
+    WalletScreen(), // Wallet
     ProfileScreen(), // Profile
   ];
 

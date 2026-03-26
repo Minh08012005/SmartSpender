@@ -23,6 +23,17 @@ const Map<String, IconData> categoryIconMap = {
   'other': Icons.category,
 };
 
+// Category colors used by breakdown bars
+const Map<String, Color> categoryColorMap = {
+  'food': Color(0xffFF7043),
+  'travel': Color(0xff42A5F5),
+  'shopping': Color(0xffAB47BC),
+  'entertainment': Color(0xff26A69A),
+  'utility': Color(0xffFFA726),
+  'salary': Color(0xff66BB6A),
+  'other': Color(0xff78909C),
+};
+
 // Month names in Vietnamese
 const List<String> monthNames = [
   'Tháng 1',

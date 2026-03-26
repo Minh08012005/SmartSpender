@@ -24,6 +24,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
   bool _showValidationErrors = false;
 
   late TransactionType _selectedType;
+  late WalletType _selectedWalletType;
   late String _selectedCategory;
   DateTime? _selectedDate;
 
@@ -32,6 +33,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     super.initState();
     final transaction = widget.transaction;
     _selectedType = transaction.type;
+    _selectedWalletType = transaction.walletType;
     _selectedCategory =
         TransactionModel.isCategoryValid(transaction.type, transaction.category)
         ? transaction.category
@@ -70,6 +72,13 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     if (value == null) return;
     setState(() {
       _selectedCategory = value;
+    });
+  }
+
+  void _onWalletTypeChanged(WalletType? value) {
+    if (value == null) return;
+    setState(() {
+      _selectedWalletType = value;
     });
   }
 
@@ -161,6 +170,7 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
     final transaction = widget.transaction.copyWith(
       amount: amount,
       type: _selectedType,
+      walletType: _selectedWalletType,
       category: _selectedCategory,
       title: _titleController.text.trim(),
       date: _selectedDate ?? DateTime.now(),
@@ -284,11 +294,13 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
               noteController: _noteController,
               showValidationErrors: _showValidationErrors,
               selectedType: _selectedType,
+              selectedWalletType: _selectedWalletType,
               selectedCategory: _selectedCategory,
               categoryOptions: _categoryOptions,
               dateText: dateText,
               isLoading: provider.isLoading,
               onTypeChanged: _onTypeChanged,
+              onWalletTypeChanged: _onWalletTypeChanged,
               onCategoryChanged: _onCategoryChanged,
               onPickDate: _pickDate,
               onSubmit: _submit,

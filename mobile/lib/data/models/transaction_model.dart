@@ -2,6 +2,8 @@ import 'package:intl/intl.dart';
 
 enum TransactionType { income, expense }
 
+enum WalletType { cash, bank, ewallet }
+
 class TransactionModel {
   static const double maxAmount = 1000000000;
   static const int maxNoteLength = 200;
@@ -35,6 +37,7 @@ class TransactionModel {
   final DateTime date;
   final String note;
   final TransactionType type;
+  final WalletType walletType;
 
   TransactionModel({
     required this.id,
@@ -44,6 +47,7 @@ class TransactionModel {
     required this.date,
     required this.note,
     required this.type,
+    this.walletType = WalletType.cash,
   }) : category = _normalizeCategory(category, type) {
     // Validate amount
     if (amount <= 0) {
@@ -82,6 +86,7 @@ class TransactionModel {
       date: _parseDate(json['date']),
       note: _parseNote(json['note']),
       type: parsedType,
+      walletType: _parseWalletType(json['walletType']),
     );
   }
 
@@ -93,7 +98,32 @@ class TransactionModel {
       'date': date.toIso8601String(),
       'note': note,
       'type': type.name,
+      'walletType': walletType.name,
     };
+  }
+
+  static WalletType _parseWalletType(dynamic value) {
+    final raw = value?.toString().toLowerCase().trim();
+    switch (raw) {
+      case 'bank':
+        return WalletType.bank;
+      case 'ewallet':
+        return WalletType.ewallet;
+      case 'cash':
+      default:
+        return WalletType.cash;
+    }
+  }
+
+  static String walletTypeLabel(WalletType walletType) {
+    switch (walletType) {
+      case WalletType.cash:
+        return 'Tiền mặt';
+      case WalletType.bank:
+        return 'Ngân hàng';
+      case WalletType.ewallet:
+        return 'Ví điện tử';
+    }
   }
 
   static double _parseAmount(dynamic value) {
@@ -182,6 +212,7 @@ class TransactionModel {
     DateTime? date,
     String? note,
     TransactionType? type,
+    WalletType? walletType,
   }) {
     return TransactionModel(
       id: id ?? this.id,
@@ -191,6 +222,7 @@ class TransactionModel {
       date: date ?? this.date,
       note: note ?? this.note,
       type: type ?? this.type,
+      walletType: walletType ?? this.walletType,
     );
   }
 

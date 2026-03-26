@@ -3,10 +3,51 @@
  */
 
 const Transaction = require('../models/transaction_schema');
+const Wallet = require('../models/wallet.model');
 const mongoose = require('mongoose');
 const AppError = require('../utils/appError');
 const escapeStringRegexp = require('regex-escape');
-const { VALID_CATEGORIES } = require('../validators/constants');
+const {
+  VALID_CATEGORIES,
+  VALID_WALLET_TYPES,
+} = require('../validators/constants');
+const { initializeWalletsForUser } = require('./wallet.service');
+
+const ensureWalletsAndGetMap = async (userId) => {
+  await initializeWalletsForUser(userId);
+  const wallets = await Wallet.find({ userId });
+  const walletMap = new Map(
+    wallets.map((wallet) => [wallet.walletType, wallet])
+  );
+
+  for (const walletType of VALID_WALLET_TYPES) {
+    if (!walletMap.has(walletType)) {
+      throw new AppError(`Wallet ${walletType} not found`, 404);
+    }
+  }
+
+  return walletMap;
+};
+
+const calculateDelta = (type, amount) => (type === 'income' ? amount : -amount);
+
+const applyWalletDelta = (wallet, delta, walletType) => {
+  const nextBalance = Number(wallet.balance) + Number(delta);
+  if (nextBalance < 0) {
+    throw new AppError(`Insufficient balance in ${walletType} wallet`, 400);
+  }
+
+  wallet.balance = nextBalance;
+  wallet.lastUpdated = new Date();
+};
+
+const normalizeWalletType = (value) => {
+  const normalized = (value || 'cash').toString().trim().toLowerCase();
+  if (!VALID_WALLET_TYPES.includes(normalized)) {
+    throw new AppError('Invalid wallet type', 400);
+  }
+  return normalized;
+};
 
 /**
  * Create a transaction for user
@@ -50,13 +91,21 @@ exports.createTransaction = async (userId, body) => {
     throw new AppError('Invalid type', 400);
   }
 
+  const normalizedWalletType = normalizeWalletType(body.walletType);
+
   let normalizedDate;
   if (body.date !== undefined) {
-    normalizedDate = body.date instanceof Date ? body.date : new Date(body.date);
+    normalizedDate =
+      body.date instanceof Date ? body.date : new Date(body.date);
     if (!normalizedDate || Number.isNaN(normalizedDate.getTime())) {
       throw new AppError('Invalid date format', 400);
     }
   }
+
+  const wallets = await ensureWalletsAndGetMap(userId);
+  const wallet = wallets.get(normalizedWalletType);
+  const delta = calculateDelta(normalizedType, amountNum);
+  applyWalletDelta(wallet, delta, normalizedWalletType);
 
   const created = await Transaction.create({
     ...body,
@@ -64,9 +113,12 @@ exports.createTransaction = async (userId, body) => {
     amount: amountNum,
     category: normalizedCategory,
     type: normalizedType,
+    walletType: normalizedWalletType,
     ...(normalizedDate && { date: normalizedDate }),
     userId: new mongoose.Types.ObjectId(userId),
   });
+
+  await wallet.save();
 
   return created.toObject ? created.toObject() : created;
 };
@@ -96,13 +148,19 @@ exports.getFilteredTransactions = async (userId, filters) => {
 
   const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 
-  const parseDateOrThrow = (value, fieldName, { endOfDayIfDateOnly = false } = {}) => {
+  const parseDateOrThrow = (
+    value,
+    fieldName,
+    { endOfDayIfDateOnly = false } = {}
+  ) => {
     if (typeof value === 'string') {
       const normalizedValue = value.trim();
 
       // Nếu client gửi YYYY-MM-DD cho `to`, nâng lên cuối ngày để không bỏ sót dữ liệu ngày cuối.
       if (DATE_ONLY_REGEX.test(normalizedValue)) {
-        const [yearPart, monthPart, dayPart] = normalizedValue.split('-').map(Number);
+        const [yearPart, monthPart, dayPart] = normalizedValue
+          .split('-')
+          .map(Number);
         const parsedDate = new Date(
           Date.UTC(
             yearPart,
@@ -138,7 +196,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
   // Xử lý Date Logic (Priority: from/to > month/year)
   if (from !== undefined || to !== undefined) {
     if (from === undefined || to === undefined) {
-      throw new AppError("Both 'from' and 'to' are required when using date range mode", 400);
+      throw new AppError(
+        "Both 'from' and 'to' are required when using date range mode",
+        400
+      );
     }
 
     const fromDate = parseDateOrThrow(from, 'from');
@@ -150,7 +211,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
     query.date = { $gte: fromDate, $lte: toDate };
   } else if (month !== undefined || year !== undefined) {
     if (month === undefined || year === undefined) {
-      throw new AppError("Both 'month' and 'year' are required when using monthly mode", 400);
+      throw new AppError(
+        "Both 'month' and 'year' are required when using monthly mode",
+        400
+      );
     }
 
     const monthNumber = Number(month);
@@ -159,7 +223,10 @@ exports.getFilteredTransactions = async (userId, filters) => {
       throw new AppError('month must be an integer between 1 and 12', 400);
     }
     if (!Number.isInteger(yearNumber) || yearNumber < 2000) {
-      throw new AppError('year must be an integer greater than or equal to 2000', 400);
+      throw new AppError(
+        'year must be an integer greater than or equal to 2000',
+        400
+      );
     }
 
     const startDate = new Date(yearNumber, monthNumber - 1, 1);
@@ -201,7 +268,9 @@ exports.getFilteredTransactions = async (userId, filters) => {
       throw new AppError('Invalid category filter', 400);
     }
 
-    const invalidCategory = categoryArray.find((cat) => !VALID_CATEGORIES.includes(cat));
+    const invalidCategory = categoryArray.find(
+      (cat) => !VALID_CATEGORIES.includes(cat)
+    );
     if (invalidCategory) {
       throw new AppError('Invalid category filter', 400);
     }
@@ -242,7 +311,11 @@ exports.getFilteredTransactions = async (userId, filters) => {
           },
           totalExpense: {
             $sum: {
-              $cond: [{ $eq: [{ $toLower: '$type' }, 'expense'] }, '$amount', 0],
+              $cond: [
+                { $eq: [{ $toLower: '$type' }, 'expense'] },
+                '$amount',
+                0,
+              ],
             },
           },
         },
@@ -300,28 +373,61 @@ exports.updateTransaction = async (userId, id, body) => {
   // validator đã normalize nhưng service không nên tin hoàn toàn vào upstream).
   const update = { ...body };
   if (typeof update.title === 'string') update.title = update.title.trim();
-  if (typeof update.category === 'string') update.category = update.category.trim().toLowerCase();
-  if (typeof update.type === 'string') update.type = update.type.trim().toLowerCase();
+  if (typeof update.category === 'string')
+    update.category = update.category.trim().toLowerCase();
+  if (typeof update.type === 'string')
+    update.type = update.type.trim().toLowerCase();
   if (update.date !== undefined) {
     const d = update.date instanceof Date ? update.date : new Date(update.date);
-    if (Number.isNaN(d.getTime())) throw new AppError('Invalid date format', 400);
+    if (Number.isNaN(d.getTime()))
+      throw new AppError('Invalid date format', 400);
     update.date = d;
   }
 
-  const updated = await Transaction.findOneAndUpdate(
-    {
-      _id: new mongoose.Types.ObjectId(id),
-      userId: new mongoose.Types.ObjectId(userId),
-    },
-    { $set: update },
-    { new: true, runValidators: true }
-  ).lean();
+  const existing = await Transaction.findOne({
+    _id: new mongoose.Types.ObjectId(id),
+    userId: new mongoose.Types.ObjectId(userId),
+  });
 
-  if (!updated) {
+  if (!existing) {
     throw new AppError('Transaction not found', 404);
   }
 
-  return updated;
+  const nextType = update.type ?? existing.type;
+  const nextAmount =
+    update.amount !== undefined
+      ? Number(update.amount)
+      : Number(existing.amount);
+  const nextWalletType = normalizeWalletType(
+    update.walletType ?? existing.walletType
+  );
+
+  const wallets = await ensureWalletsAndGetMap(userId);
+  const oldWalletType = normalizeWalletType(existing.walletType);
+
+  const oldWallet = wallets.get(oldWalletType);
+  const newWallet = wallets.get(nextWalletType);
+
+  const rollbackDelta = -calculateDelta(existing.type, Number(existing.amount));
+  applyWalletDelta(oldWallet, rollbackDelta, oldWalletType);
+
+  const newDelta = calculateDelta(nextType, nextAmount);
+  applyWalletDelta(newWallet, newDelta, nextWalletType);
+
+  Object.assign(existing, {
+    ...update,
+    ...(update.amount !== undefined && { amount: nextAmount }),
+    walletType: nextWalletType,
+  });
+
+  const walletSaves =
+    oldWallet === newWallet
+      ? [oldWallet.save()]
+      : [oldWallet.save(), newWallet.save()];
+
+  await Promise.all([existing.save(), ...walletSaves]);
+
+  return existing.toObject ? existing.toObject() : existing;
 };
 
 /**
@@ -340,14 +446,23 @@ exports.deleteTransaction = async (userId, id) => {
     throw new AppError('Invalid transaction id', 400);
   }
 
-  const deleted = await Transaction.findOneAndDelete({
+  const deleted = await Transaction.findOne({
     _id: new mongoose.Types.ObjectId(id),
     userId: new mongoose.Types.ObjectId(userId),
-  }).lean();
+  });
 
   if (!deleted) {
     throw new AppError('Transaction not found', 404);
   }
 
-  return deleted;
+  const walletType = normalizeWalletType(deleted.walletType);
+  const wallets = await ensureWalletsAndGetMap(userId);
+  const wallet = wallets.get(walletType);
+
+  const rollbackDelta = -calculateDelta(deleted.type, Number(deleted.amount));
+  applyWalletDelta(wallet, rollbackDelta, walletType);
+
+  await Promise.all([wallet.save(), deleted.deleteOne()]);
+
+  return deleted.toObject ? deleted.toObject() : deleted;
 };

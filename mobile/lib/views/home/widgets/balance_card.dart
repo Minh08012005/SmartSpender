@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile/data/providers/transaction_provider.dart';
+import 'package:mobile/data/providers/wallet_provider.dart';
 import '../../../core/strings.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -9,7 +10,8 @@ class BalanceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<TransactionProvider>();
+    final transactionProvider = context.watch<TransactionProvider>();
+    final walletProvider = context.watch<WalletProvider>();
     final formatter = NumberFormat('#,###', 'vi_VN');
 
     return Container(
@@ -41,9 +43,8 @@ class BalanceCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            /// ✅ SỬA Ở ĐÂY
             Text(
-              '${formatter.format(provider.balance)} ₫',
+              '${formatter.format(walletProvider.totalBalance)} ₫',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 26,
@@ -57,11 +58,13 @@ class BalanceCard extends StatelessWidget {
               children: [
                 _BalanceInfo(
                   title: AppStrings.totalIncome,
-                  amount: '${formatter.format(provider.totalIncome)} ₫',
+                  amount:
+                      '${formatter.format(transactionProvider.totalIncome)} ₫',
                 ),
                 _BalanceInfo(
                   title: AppStrings.totalExpense,
-                  amount: '${formatter.format(provider.totalExpense)} ₫',
+                  amount:
+                      '${formatter.format(transactionProvider.totalExpense)} ₫',
                 ),
               ],
             ),

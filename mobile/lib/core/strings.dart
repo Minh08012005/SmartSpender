@@ -3,6 +3,8 @@ class AppStrings {
 
   // Validation messages
   static const String amountRequired = 'Vui lòng nhập số tiền';
+  static const String apply = 'Áp dụng';
+  static const String year = 'Năm';
   static const String invalidAmount = 'Số tiền không hợp lệ';
   static const String amountMustBeGreaterThanZero = 'Số tiền phải lớn hơn 0';
   static const String amountMustNotExceedOneBillion =
@@ -50,6 +52,7 @@ class AppStrings {
   // Home screen
   static const String homeTransactionHistory = 'Lịch sử giao dịch';
   static const String homeSeeAll = 'Xem tất cả';
+  static const String allTransactionsTitle = 'Tất cả giao dịch';
   static const String homeEmptyTransactions = 'Không có giao dịch nào';
   static const String loading = 'Đang tải...';
   static const String retry = 'Thử lại';
@@ -90,6 +93,7 @@ class AppStrings {
   static const String amountLabel = 'Số tiền';
   static const String amountHint = 'Nhập số tiền';
   static const String transactionType = 'Loại giao dịch';
+  static const String transactionWallet = 'Ví';
   static const String income = 'Thu nhập';
   static const String expense = 'Chi tiêu';
   static const String category = 'Danh mục';
@@ -119,6 +123,7 @@ class AppStrings {
       'Tối đa 5 giao dịch mới nhất';
   static const String statisticCurrentMonth = 'Tháng này';
   static const String statisticPreviousMonth = 'Tháng trước';
+  static const String statisticSelectMonth = 'Chọn tháng';
 
   // Profile
   static const String profilePersonalInfo = 'Thông tin cá nhân';
@@ -126,6 +131,12 @@ class AppStrings {
   static const String profileNotifications = 'Thông báo';
   static const String profilePrivacy = 'Quyền riêng tư';
   static const String profileLogout = 'Đăng xuất';
+  static const String profileEdit = 'Chỉnh sửa';
+  static const String profileAvatarFallback = 'U';
+  static const String profileLogoutConfirmMessage =
+      'Bạn có chắc muốn đăng xuất không?';
+  static const String profileLogoutFailed =
+      'Không thể đăng xuất lúc này, vui lòng thử lại.';
   static const String profileDisplayName = 'Người dùng SmartSpender';
   static const String profileUsername = '@nguoi_dung';
 
@@ -149,4 +160,35 @@ class AppStrings {
   static const String serverConnectionError = 'Lỗi kết nối máy chủ';
   static const String missingAccessToken =
       'Không tìm thấy access token trong phản hồi';
+
+  // Wallet screen
+  static const String walletTitle = 'Ví của tôi';
+  static const String walletListLabel = 'Danh sách ví';
+  static const String walletTransferButtonLabel = 'Điều chuyển';
+  static const String walletAddButtonLabel = 'Thêm ví';
+
+  static const String walletTransferModalTitle = 'Điều chuyển tiền';
+  static const String walletFromLabel = 'Từ ví';
+  static const String walletToLabel = 'Đến ví';
+  static const String walletAmountLabel = 'Số tiền';
+  static const String walletNoteLabel = 'Ghi chú (tùy chọn)';
+  static const String walletConfirmCheckboxLabel = 'Xác nhận điều chuyển';
+  static const String walletConfirmButtonLabel = 'Xác nhận';
+
+  // Wallet error messages
+  static const String walletSourceDestinationSame =
+      'Ví nguồn và ví đích phải khác nhau';
+  static const String walletAmountMustBePositive = 'Số tiền phải lớn hơn 0';
+  static const String walletInsufficientBalance = 'Số dư không đủ';
+  static const String walletPleaseSelectWallet = 'Vui lòng chọn ví';
+  static const String walletPleaseConfirm = 'Vui lòng xác nhận điều chuyển';
+
+  // Wallet success messages
+  static const String walletTransferSuccess = 'Điều chuyển thành công';
+  static const String walletTransferFailed = 'Điều chuyển thất bại';
+
+  // Wallet names
+  static const String walletNameCash = 'Tiền mặt';
+  static const String walletNameBank = 'Ngân hàng';
+  static const String walletNameEwallet = 'Ví điện tử';
 }

@@ -27,7 +27,7 @@ class TransactionTileWidget extends StatelessWidget {
                 ? const Color(0xff4CAF50).withValues(alpha: 0.12)
                 : const Color(0xffFF5252).withValues(alpha: 0.12),
             child: Icon(
-              isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+              isIncome ? Icons.arrow_upward : Icons.arrow_downward,
               size: 18,
               color: isIncome
                   ? const Color(0xff4CAF50)

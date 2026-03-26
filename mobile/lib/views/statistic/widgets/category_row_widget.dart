@@ -17,8 +17,10 @@ class CategoryRowWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentText = '${(percentage * 100).toStringAsFixed(1)}%';
+    final normalizedPercentage = percentage.clamp(0.0, 1.0);
     final icon = categoryIconMap[categoryKey] ?? Icons.category;
+    final accentColor =
+        categoryColorMap[categoryKey] ?? const Color(0xff2A7C76);
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -32,7 +34,7 @@ class CategoryRowWidget extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 18, color: const Color(0xff2A7C76)),
+              Icon(icon, size: 18, color: accentColor),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -47,13 +49,23 @@ class CategoryRowWidget extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(
-                percentText,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xff2A7C76),
-                ),
+              TweenAnimationBuilder<double>(
+                key: ValueKey<String>('percent_${categoryKey}_$percentage'),
+                tween: Tween<double>(begin: 0, end: normalizedPercentage),
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeOutCubic,
+                builder: (context, animatedValue, child) {
+                  final percentText =
+                      '${(animatedValue * 100).toStringAsFixed(1)}%';
+                  return Text(
+                    percentText,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: accentColor,
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 8),
               Text(
@@ -69,11 +81,19 @@ class CategoryRowWidget extends StatelessWidget {
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: percentage,
-              minHeight: 6,
-              backgroundColor: Colors.grey.shade200,
-              color: const Color(0xff2A7C76),
+            child: TweenAnimationBuilder<double>(
+              key: ValueKey<String>('bar_${categoryKey}_$percentage'),
+              tween: Tween<double>(begin: 0, end: normalizedPercentage),
+              duration: const Duration(milliseconds: 520),
+              curve: Curves.easeOutCubic,
+              builder: (context, animatedValue, child) {
+                return LinearProgressIndicator(
+                  value: animatedValue,
+                  minHeight: 6,
+                  backgroundColor: Colors.grey.shade200,
+                  color: accentColor,
+                );
+              },
             ),
           ),
         ],

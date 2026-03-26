@@ -8,10 +8,10 @@
  * - Đóng connection clean sau khi chạy xong
  */
 
-
 require('dotenv').config();
 
-// Import Models
+// Import MongoDB & Models
+const mongoose = require('mongoose');
 const Transaction = require('../models/transaction_schema');
 const User = require('../models/users.model'); // đúng tên file User model của bạn
 
@@ -96,19 +96,25 @@ function getRandomType() {
  */
 function getRandomTitle(category, type) {
   const titles = {
-    // Income titles
-    salary: ['Monthly Salary', 'Salary Payment', 'Paycheck'],
-    other: ['Other Income', 'Miscellaneous Income', 'Extra Income'],
+    // Thu nhập
+    salary: ['Lương tháng', 'Thanh toán lương', 'Phiếu lương'],
+    other: ['Thu nhập khác', 'Thu nhập thêm', 'Thu nhập lặt vặt'],
 
-    // Expense titles
-    food: ['Lunch', 'Dinner', 'Breakfast', 'Coffee', 'Snacks', 'Groceries'],
-    travel: ['Taxi', 'Bus Fare', 'Uber', 'Gas', 'Parking', 'Flight'],
-    shopping: ['Clothes', 'Books', 'Gadgets', 'Home Items', 'Online Shopping'],
-    entertainment: ['Movie', 'Concert', 'Game', 'Streaming', 'Fun Activity'],
-    utility: ['Electricity', 'Water', 'Internet', 'Gas', 'Phone Bill'],
+    // Chi tiêu
+    food: ['Ăn trưa', 'Ăn tối', 'Ăn sáng', 'Cà phê', 'Đồ ăn vặt', 'Bánh mì'],
+    travel: ['Taxi', 'Xe buýt', 'Uber', 'Xăng xe', 'Đỗ xe', 'Vé máy bay'],
+    shopping: ['Quần áo', 'Sách', 'Điện tử', 'Đồ gia dụng', 'Mua sắm online'],
+    entertainment: [
+      'Xem phim',
+      'Hòa nhạc',
+      'Chơi game',
+      'Streaming',
+      'Hoạt động giải trí',
+    ],
+    utility: ['Điện', 'Nước', 'Internet', 'Gas', 'Hóa đơn điện thoại'],
   };
 
-  const categoryTitles = titles[category] || ['Transaction'];
+  const categoryTitles = titles[category] || ['Giao dịch'];
   return categoryTitles[Math.floor(Math.random() * categoryTitles.length)];
 }
 
