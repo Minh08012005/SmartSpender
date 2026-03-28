@@ -73,6 +73,18 @@ describe('API contract readiness - GET /api/transactions & GET /api/statistics/s
   });
 
   describe('GET /api/transactions', () => {
+    it('supports v1 prefix - GET /api/v1/transactions returns success envelope', async () => {
+      const res = await request(app)
+        .get('/api/v1/transactions')
+        .set('Authorization', `Bearer ${validToken}`)
+        .query({ month: 3, year: 2026 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('data');
+    });
+
     it('new user with no transactions - returns 200 and empty list', async () => {
       transactionService.getFilteredTransactions.mockResolvedValueOnce({
         transactions: [],
@@ -281,6 +293,18 @@ describe('API contract readiness - GET /api/transactions & GET /api/statistics/s
   });
 
   describe('GET /api/statistics/summary', () => {
+    it('supports v1 prefix - GET /api/v1/statistics/summary returns success envelope', async () => {
+      const res = await request(app)
+        .get('/api/v1/statistics/summary')
+        .set('Authorization', `Bearer ${validToken}`)
+        .query({ month: 3, year: 2026 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.statusCode).toBe(200);
+      expect(res.body).toHaveProperty('data');
+    });
+
     it('month with data - returns computed summary', async () => {
       statisticService.getMonthlyStatistics.mockResolvedValueOnce({
         totalIncome: 500,
@@ -380,6 +404,20 @@ describe('API contract readiness - GET /api/transactions & GET /api/statistics/s
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
       expect(res.body.message).toBe('Validation failed');
+    });
+  });
+
+  describe('CORS behavior', () => {
+    it('returns 403 with stable error code for blocked origins', async () => {
+      const res = await request(app)
+        .get('/health')
+        .set('Origin', 'https://blocked-origin.example.com');
+
+      expect(res.status).toBe(403);
+      expect(res.body.success).toBe(false);
+      expect(res.body.statusCode).toBe(403);
+      expect(res.body.errorCode).toBe('CORS_ORIGIN_NOT_ALLOWED');
+      expect(res.body.message).toMatch(/CORS origin blocked/i);
     });
   });
 });

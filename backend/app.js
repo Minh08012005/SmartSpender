@@ -57,7 +57,13 @@ app.use(
       ) {
         return callback(null, true);
       }
-      return callback(new Error('CORS policy: origin not allowed'));
+      const corsError = new Error(
+        'CORS origin blocked: this mobile/web origin is not allowed. Contact backend team to whitelist it via CORS_ALLOWED_ORIGINS.'
+      );
+      corsError.statusCode = 403;
+      corsError.errorCode = 'CORS_ORIGIN_NOT_ALLOWED';
+      corsError.isOperational = true;
+      return callback(corsError);
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -88,7 +94,10 @@ const swaggerOptions = {
       version: '1.0.0',
       description: 'Tài liệu API cho ứng dụng quản lý chi tiêu',
     },
-    servers: [{ url: 'http://localhost:3000/api' }],
+    servers: [
+      { url: 'http://localhost:3000/api' },
+      { url: 'http://localhost:3000/api/v1' },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
@@ -105,11 +114,14 @@ const specs = swaggerJsdoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // Định tuyến routes
-app.use('/api/auth', registerRoute);
-app.use('/api/auth', loginRoute);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/statistics', statisticRoutes);
-app.use('/api/wallets', walletRoutes);
+const apiPrefixes = ['/api', '/api/v1'];
+apiPrefixes.forEach((prefix) => {
+  app.use(`${prefix}/auth`, registerRoute);
+  app.use(`${prefix}/auth`, loginRoute);
+  app.use(`${prefix}/transactions`, transactionRoutes);
+  app.use(`${prefix}/statistics`, statisticRoutes);
+  app.use(`${prefix}/wallets`, walletRoutes);
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
