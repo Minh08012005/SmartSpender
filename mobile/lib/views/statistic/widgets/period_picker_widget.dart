@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/strings.dart';
+import '../../../theme/colors.dart';
 import '../statistic_utils.dart';
 
 class PeriodPickerWidget extends StatelessWidget {
@@ -23,13 +24,13 @@ class PeriodPickerWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Row(
         children: [
-          const Icon(Icons.calendar_today, size: 18, color: Color(0xff2A7C76)),
+          const Icon(Icons.calendar_today, size: 18, color: AppColors.primary),
           const SizedBox(width: 8),
           InkWell(
             borderRadius: BorderRadius.circular(8),
@@ -43,14 +44,14 @@ class PeriodPickerWidget extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xff333333),
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(width: 2),
                   const Icon(
                     Icons.arrow_drop_down,
                     size: 18,
-                    color: Color(0xff2A7C76),
+                    color: AppColors.primary,
                   ),
                 ],
               ),
@@ -77,7 +78,7 @@ class PeriodPickerWidget extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xff2A7C76),
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -97,7 +98,7 @@ class PeriodPickerWidget extends StatelessWidget {
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Color(0xff2A7C76),
+                color: AppColors.primary,
               ),
             ),
           ),

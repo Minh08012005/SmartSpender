@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../statistic_utils.dart';
+import '../../../theme/colors.dart';
 
 class CategoryRowWidget extends StatelessWidget {
   final String category;
@@ -19,15 +20,14 @@ class CategoryRowWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final normalizedPercentage = percentage.clamp(0.0, 1.0);
     final icon = categoryIconMap[categoryKey] ?? Icons.category;
-    final accentColor =
-        categoryColorMap[categoryKey] ?? const Color(0xff2A7C76);
+    final accentColor = categoryColorMap[categoryKey] ?? AppColors.primary;
 
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +44,7 @@ class CategoryRowWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xff333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
@@ -73,7 +73,7 @@ class CategoryRowWidget extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xff666666),
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
@@ -90,7 +90,7 @@ class CategoryRowWidget extends StatelessWidget {
                 return LinearProgressIndicator(
                   value: animatedValue,
                   minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: AppColors.surfaceBorder,
                   color: accentColor,
                 );
               },

@@ -6,6 +6,8 @@ import '../../core/strings.dart';
 import '../../screens/all_transactions_screen.dart';
 import '../../screens/add_transaction_screen.dart';
 import '../../screens/edit_transaction_screen.dart';
+import '../../shared/widgets/section_reveal.dart';
+import '../../theme/colors.dart';
 import 'widgets/transaction_item.dart';
 import 'widgets/balance_card.dart';
 import 'states/home_loading.dart';
@@ -55,49 +57,58 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = context.watch<TransactionProvider>();
 
     return Scaffold(
-      backgroundColor: const Color(0xffF6F6F6),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: [
-            const BalanceCard(),
+            const SectionReveal(delayMs: 0, child: BalanceCard()),
             const SizedBox(height: 20),
 
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    AppStrings.homeTransactionHistory,
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const AllTransactionsScreen(),
-                        ),
-                      );
-                    },
-                    child: const Text(
-                      AppStrings.homeSeeAll,
-                      style: TextStyle(color: Colors.grey),
+            SectionReveal(
+              delayMs: 90,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      AppStrings.homeTransactionHistory,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const AllTransactionsScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        AppStrings.homeSeeAll,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
             const SizedBox(height: 8),
 
-            Expanded(child: _buildBody(provider)),
+            Expanded(
+              child: SectionReveal(delayMs: 140, child: _buildBody(provider)),
+            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xff2A7C76),
-        foregroundColor: Colors.white,
         onPressed: () async {
           final created = await Navigator.push<bool>(
             context,
@@ -143,21 +154,32 @@ class _HomeScreenState extends State<HomeScreen> {
         itemCount: provider.transactions.length,
         itemBuilder: (context, index) {
           final transaction = provider.transactions[index];
-          return TransactionItem(
-            transaction: transaction,
-            onTap: () async {
-              final updated = await Navigator.push<bool>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      EditTransactionScreen(transaction: transaction),
-                ),
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: 1),
+            duration: Duration(milliseconds: 180 + (index * 40).clamp(0, 240)),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Transform.translate(
+                offset: Offset(0, (1 - value) * 8),
+                child: Opacity(opacity: value, child: child),
               );
-
-              if (updated == true && context.mounted) {
-                await _refreshTransactions();
-              }
             },
+            child: TransactionItem(
+              transaction: transaction,
+              onTap: () async {
+                final updated = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        EditTransactionScreen(transaction: transaction),
+                  ),
+                );
+
+                if (updated == true && context.mounted) {
+                  await _refreshTransactions();
+                }
+              },
+            ),
           );
         },
       ),

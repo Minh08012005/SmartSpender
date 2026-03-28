@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -94,12 +95,17 @@ class WalletProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _apiService.transferBetweenWallets(
-        fromWalletId: fromWalletId,
-        toWalletId: toWalletId,
-        amount: amount,
-        note: note.trim(),
-      );
+      final response = await _apiService
+          .transferBetweenWallets(
+            fromWalletId: fromWalletId,
+            toWalletId: toWalletId,
+            amount: amount,
+            note: note.trim(),
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw TimeoutException('Wallet transfer timeout'),
+          );
 
       if (response.success) {
         _updateWalletFromApi(response.data.fromWallet);
@@ -115,6 +121,12 @@ class WalletProvider extends ChangeNotifier {
       await _saveToCache();
       return true;
     } catch (e) {
+      if (e is TimeoutException) {
+        _errorMessage = 'Điều chuyển quá thời gian. Vui lòng thử lại';
+        notifyListeners();
+        return false;
+      }
+
       final message = e.toString().replaceFirst('Exception: ', '').trim();
       _errorMessage = message.isNotEmpty
           ? message

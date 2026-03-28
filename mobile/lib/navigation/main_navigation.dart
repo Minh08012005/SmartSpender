@@ -25,36 +25,54 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 220),
+        child: KeyedSubtree(
+          key: ValueKey<int>(_currentIndex),
+          child: _screens[_currentIndex],
+        ),
+      ),
 
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // QUAN TRỌNG để hiện 4 icon
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        selectedItemColor: const Color(0xff2A7C76),
-        unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: AppStrings.navHome,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart),
-            label: AppStrings.navStatistic,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet),
-            label: AppStrings.navWallet,
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: AppStrings.navProfile,
-          ),
-        ],
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 16,
+              offset: Offset(0, -2),
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_rounded),
+              activeIcon: Icon(Icons.home_rounded),
+              label: AppStrings.navHome,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.bar_chart_rounded),
+              activeIcon: Icon(Icons.bar_chart_rounded),
+              label: AppStrings.navStatistic,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.account_balance_wallet_rounded),
+              activeIcon: Icon(Icons.account_balance_wallet_rounded),
+              label: AppStrings.navWallet,
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_rounded),
+              activeIcon: Icon(Icons.person_rounded),
+              label: AppStrings.navProfile,
+            ),
+          ],
+        ),
       ),
     );
   }

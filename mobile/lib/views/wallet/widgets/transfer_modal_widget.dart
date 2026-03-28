@@ -118,8 +118,10 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     labelText: AppStrings.walletAmountLabel,
                     hintText: AppStrings.amountHint,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    filled: true,
+                    fillColor: const Color(0xffFBFBFB),
                     prefixIcon: const Icon(Icons.money, color: teal),
                   ),
                 ),
@@ -134,8 +136,10 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     labelText: AppStrings.walletNoteLabel,
                     hintText: 'Ví dụ: Chuyển tiền dự phòng',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(12),
                     ),
+                    filled: true,
+                    fillColor: const Color(0xffFBFBFB),
                     prefixIcon: const Icon(Icons.note, color: teal),
                   ),
                 ),
@@ -187,9 +191,9 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                           foregroundColor: Colors.black87,
                           side: BorderSide(color: Colors.grey.shade400),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                         ),
                         onPressed: _isProcessing
                             ? null
@@ -204,10 +208,11 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: teal,
                           foregroundColor: Colors.white,
+                          elevation: 0,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                         ),
                         onPressed: _isProcessing || !_canSubmit
                             ? null
@@ -262,7 +267,9 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
           initialValue: value,
           onChanged: onChanged,
           decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+            fillColor: const Color(0xffFBFBFB),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 12,

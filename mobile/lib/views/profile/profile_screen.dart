@@ -6,7 +6,9 @@ import '../../core/strings.dart';
 import '../../core/constants/api_constants.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../services/auth_service.dart';
+import '../../shared/widgets/section_reveal.dart';
 import '../../screens/login.dart';
+import '../../theme/colors.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -112,19 +114,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xffF6F6F6),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xff2A7C76),
-        title: const Text(
+        title: Text(
           'Hồ sơ',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-          ),
+          style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
-        centerTitle: true,
         actions: [
           IconButton(
             icon: const Icon(Icons.notifications_outlined, color: Colors.white),
@@ -139,77 +134,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: Column(
             children: [
               // ===== HEADER =====
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Color(0xff2A7C76), Color(0xff4BA99B)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              SectionReveal(
+                delayMs: 0,
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary, Color(0xff4BA99B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(28),
+                      bottomRight: Radius.circular(28),
+                    ),
                   ),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(28),
-                    bottomRight: Radius.circular(28),
-                  ),
-                ),
-                child: FutureBuilder<SharedPreferences>(
-                  future: SharedPreferences.getInstance(),
-                  builder: (context, snapshot) {
-                    final prefs = snapshot.data;
-                    final displayName = prefs == null
-                        ? AppStrings.profileDisplayName
-                        : _resolveDisplayName(prefs);
-                    final subtitle = prefs == null
-                        ? AppStrings.profileUsername
-                        : _resolveSubtitle(prefs);
-                    final avatarText = _resolveAvatarText(displayName);
+                  child: FutureBuilder<SharedPreferences>(
+                    future: SharedPreferences.getInstance(),
+                    builder: (context, snapshot) {
+                      final prefs = snapshot.data;
+                      final displayName = prefs == null
+                          ? AppStrings.profileDisplayName
+                          : _resolveDisplayName(prefs);
+                      final subtitle = prefs == null
+                          ? AppStrings.profileUsername
+                          : _resolveSubtitle(prefs);
+                      final avatarText = _resolveAvatarText(displayName);
 
-                    return _ProfileHeader(
-                      displayName: displayName,
-                      subtitle: subtitle,
-                      avatarText: avatarText,
-                      onEdit: () {
-                        // TODO: Navigate to edit profile screen when available.
-                      },
-                    );
-                  },
+                      return _ProfileHeader(
+                        displayName: displayName,
+                        subtitle: subtitle,
+                        avatarText: avatarText,
+                        onEdit: () {
+                          // TODO: Navigate to edit profile screen when available.
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
 
               const SizedBox(height: 24),
 
               // ===== MENU =====
-              _ProfileMenuSection(
-                items: [
-                  _ProfileItem(
-                    icon: Icons.account_circle_outlined,
-                    title: AppStrings.profilePersonalInfo,
-                    onTap: () {},
-                  ),
-                  _ProfileItem(
-                    icon: Icons.lock_outline,
-                    title: AppStrings.profileLoginSecurity,
-                    onTap: () {},
-                  ),
-                  _ProfileItem(
-                    icon: Icons.notifications_none,
-                    title: AppStrings.profileNotifications,
-                    onTap: () {},
-                  ),
-                  _ProfileItem(
-                    icon: Icons.privacy_tip_outlined,
-                    title: AppStrings.profilePrivacy,
-                    onTap: () {},
-                  ),
-                  _ProfileItem(
-                    icon: Icons.logout,
-                    title: AppStrings.profileLogout,
-                    isLogout: true,
-                    isLoading: _isLoggingOut,
-                    onTap: _isLoggingOut ? null : () => _confirmLogout(context),
-                  ),
-                ],
+              SectionReveal(
+                delayMs: 100,
+                child: _ProfileMenuSection(
+                  items: [
+                    _ProfileItem(
+                      icon: Icons.account_circle_outlined,
+                      title: AppStrings.profilePersonalInfo,
+                      onTap: () {},
+                    ),
+                    _ProfileItem(
+                      icon: Icons.lock_outline,
+                      title: AppStrings.profileLoginSecurity,
+                      onTap: () {},
+                    ),
+                    _ProfileItem(
+                      icon: Icons.notifications_none,
+                      title: AppStrings.profileNotifications,
+                      onTap: () {},
+                    ),
+                    _ProfileItem(
+                      icon: Icons.privacy_tip_outlined,
+                      title: AppStrings.profilePrivacy,
+                      onTap: () {},
+                    ),
+                    _ProfileItem(
+                      icon: Icons.logout,
+                      title: AppStrings.profileLogout,
+                      isLogout: true,
+                      isLoading: _isLoggingOut,
+                      onTap: _isLoggingOut
+                          ? null
+                          : () => _confirmLogout(context),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
             ],
@@ -477,8 +480,9 @@ class _ProfileMenuSection extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xffFFFFFF),
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.surfaceBorder),
           boxShadow: const [
             BoxShadow(
               color: Color(0x12000000),

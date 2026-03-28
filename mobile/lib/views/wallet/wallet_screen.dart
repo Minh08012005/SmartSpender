@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../core/strings.dart';
 import '../../data/models/wallet_model.dart';
 import '../../data/providers/wallet_provider.dart';
+import '../../shared/widgets/section_reveal.dart';
+import '../../theme/colors.dart';
 import 'widgets/total_balance_card.dart';
 import 'widgets/transfer_modal_widget.dart';
 import 'widgets/wallet_card.dart';
@@ -33,17 +35,11 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const teal = Color(0xff2A7C76);
+    const teal = AppColors.primary;
 
     return Scaffold(
-      backgroundColor: const Color(0xffF6F6F6),
-      appBar: AppBar(
-        backgroundColor: teal,
-        foregroundColor: Colors.white,
-        title: const Text(AppStrings.walletTitle),
-        centerTitle: true,
-        elevation: 0,
-      ),
+      backgroundColor: AppColors.background,
+      appBar: AppBar(title: const Text(AppStrings.walletTitle)),
       body: Consumer<WalletProvider>(
         builder: (context, walletProvider, _) {
           final wallets = walletProvider.wallets;
@@ -57,7 +53,7 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Text(
                 'Không có ví nào',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.black54,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -65,75 +61,107 @@ class _WalletScreenState extends State<WalletScreen> {
           }
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TotalBalanceCard(totalBalance: walletProvider.totalBalance),
+                SectionReveal(
+                  delayMs: 0,
+                  child: TotalBalanceCard(
+                    totalBalance: walletProvider.totalBalance,
+                  ),
+                ),
                 const SizedBox(height: 24),
-                Text(
-                  AppStrings.walletListLabel,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                SectionReveal(
+                  delayMs: 90,
+                  child: Text(
+                    AppStrings.walletListLabel,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: wallets.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final wallet = wallets[index];
-                    return WalletCard(
-                      wallet: wallet,
-                      onTap: () => _showTransferModal(context, wallets),
-                    );
-                  },
+                SectionReveal(
+                  delayMs: 130,
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: wallets.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final wallet = wallets[index];
+                      return WalletCard(
+                        wallet: wallet,
+                        onTap: () => _showTransferModal(context, wallets),
+                      );
+                    },
+                  ),
                 ),
                 const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: teal,
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
+                SectionReveal(
+                  delayMs: 180,
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: AppColors.surfaceBorder),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x14000000),
+                          blurRadius: 14,
+                          offset: Offset(0, 6),
                         ),
-                        onPressed: () => _showTransferModal(context, wallets),
-                        icon: const Icon(Icons.swap_horiz),
-                        label: const Text(AppStrings.walletTransferButtonLabel),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: teal,
-                          side: const BorderSide(color: teal),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tính năng sẽ được cập nhật'),
-                              duration: Duration(seconds: 2),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: teal,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                          );
-                        },
-                        icon: const Icon(Icons.add),
-                        label: const Text(AppStrings.walletAddButtonLabel),
-                      ),
+                            onPressed: () =>
+                                _showTransferModal(context, wallets),
+                            icon: const Icon(Icons.swap_horiz),
+                            label: const Text(
+                              AppStrings.walletTransferButtonLabel,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: teal,
+                              side: const BorderSide(color: teal),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                            ),
+                            onPressed: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Tính năng sẽ được cập nhật'),
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            },
+                            icon: const Icon(Icons.add),
+                            label: const Text(AppStrings.walletAddButtonLabel),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ],
             ),

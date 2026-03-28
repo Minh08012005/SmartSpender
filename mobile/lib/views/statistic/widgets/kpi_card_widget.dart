@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/colors.dart';
 
 class KpiCardWidget extends StatelessWidget {
   final String title;
@@ -21,9 +22,16 @@ class KpiCardWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppColors.surfaceBorder),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0E000000),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -42,7 +50,7 @@ class KpiCardWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xff666666),
+                    color: AppColors.textSecondary,
                   ),
                 ),
                 if (subtitle != null) ...[
@@ -51,7 +59,7 @@ class KpiCardWidget extends StatelessWidget {
                     subtitle!,
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Color(0xff999999),
+                      color: AppColors.textHint,
                     ),
                   ),
                 ],

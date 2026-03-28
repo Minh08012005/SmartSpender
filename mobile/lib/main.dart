@@ -12,6 +12,7 @@ import 'data/providers/transaction_provider.dart';
 import 'data/providers/statistic_provider.dart';
 import 'core/strings.dart';
 import 'data/providers/wallet_provider.dart';
+import 'theme/colors.dart';
 
 void main() async {
   // Ensure Flutter binding initialized
@@ -38,6 +39,121 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   late Future<_LaunchTarget> _launchTargetFuture;
+
+  static const Color _appPrimary = Color(0xff2A7C76);
+
+  ThemeData _buildAppTheme() {
+    final base = ThemeData(useMaterial3: true);
+    final colorScheme = ColorScheme.fromSeed(
+      seedColor: _appPrimary,
+      brightness: Brightness.light,
+    );
+
+    return base.copyWith(
+      colorScheme: colorScheme,
+      scaffoldBackgroundColor: AppColors.background,
+      textTheme: base.textTheme.copyWith(
+        headlineSmall: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+          letterSpacing: -0.2,
+        ),
+        titleLarge: const TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimary,
+        ),
+        titleMedium: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        bodyLarge: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+        bodyMedium: const TextStyle(
+          fontSize: 14,
+          color: AppColors.textSecondary,
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: _appPrimary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: Colors.white,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.surfaceBorder),
+        ),
+        focusedBorder: const OutlineInputBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+          borderSide: BorderSide(color: _appPrimary, width: 1.5),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+          side: const BorderSide(color: AppColors.primary),
+          foregroundColor: AppColors.primary,
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        ),
+      ),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: Colors.white,
+        selectedItemColor: _appPrimary,
+        unselectedItemColor: Colors.grey.shade500,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+      ),
+      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+        backgroundColor: _appPrimary,
+        foregroundColor: Colors.white,
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -123,7 +239,7 @@ class _MyAppState extends State<MyApp> {
         debugShowCheckedModeBanner: false,
         title: 'SmartSpender',
         navigatorKey: ApiService.navigatorKey,
-        theme: ThemeData(primarySwatch: Colors.teal, useMaterial3: true),
+        theme: _buildAppTheme(),
 
         // ===== AUTO-LOGIN LOGIC =====
         home: FutureBuilder<_LaunchTarget>(

@@ -102,7 +102,7 @@ void main() {
     expect(find.text('Tiền mặt'), findsOneWidget);
     expect(find.text('Ngân hàng'), findsOneWidget);
     expect(find.textContaining('390'), findsWidgets);
-    expect(find.textContaining('VND'), findsWidgets);
+    expect(find.textContaining('₫'), findsWidgets);
   });
 
   testWidgets('WalletScreen opens transfer modal when tapping transfer button',

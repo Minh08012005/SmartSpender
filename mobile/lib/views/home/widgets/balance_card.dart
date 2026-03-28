@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:mobile/data/providers/transaction_provider.dart';
 import 'package:mobile/data/providers/wallet_provider.dart';
 import '../../../core/strings.dart';
+import '../../../theme/colors.dart';
 
 class BalanceCard extends StatelessWidget {
   const BalanceCard({super.key});
@@ -60,11 +61,13 @@ class BalanceCard extends StatelessWidget {
                   title: AppStrings.totalIncome,
                   amount:
                       '${formatter.format(transactionProvider.totalIncome)} ₫',
+                  accentColor: AppColors.success,
                 ),
                 _BalanceInfo(
                   title: AppStrings.totalExpense,
                   amount:
                       '${formatter.format(transactionProvider.totalExpense)} ₫',
+                  accentColor: AppColors.danger,
                 ),
               ],
             ),
@@ -78,8 +81,13 @@ class BalanceCard extends StatelessWidget {
 class _BalanceInfo extends StatelessWidget {
   final String title;
   final String amount;
+  final Color accentColor;
 
-  const _BalanceInfo({required this.title, required this.amount});
+  const _BalanceInfo({
+    required this.title,
+    required this.amount,
+    required this.accentColor,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -88,11 +96,18 @@ class _BalanceInfo extends StatelessWidget {
       children: [
         Text(title, style: const TextStyle(color: Colors.white70)),
         const SizedBox(height: 4),
-        Text(
-          amount,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            amount,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

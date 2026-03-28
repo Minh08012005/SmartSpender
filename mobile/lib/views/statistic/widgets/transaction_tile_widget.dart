@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../data/models/transaction_model.dart';
 import '../statistic_utils.dart';
+import '../../../theme/colors.dart';
 
 class TransactionTileWidget extends StatelessWidget {
   final TransactionModel transaction;
@@ -15,23 +16,21 @@ class TransactionTileWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 18,
             backgroundColor: isIncome
-                ? const Color(0xff4CAF50).withValues(alpha: 0.12)
-                : const Color(0xffFF5252).withValues(alpha: 0.12),
+                ? AppColors.successSoft
+                : AppColors.dangerSoft,
             child: Icon(
               isIncome ? Icons.arrow_upward : Icons.arrow_downward,
               size: 18,
-              color: isIncome
-                  ? const Color(0xff4CAF50)
-                  : const Color(0xffFF5252),
+              color: isIncome ? AppColors.success : AppColors.danger,
             ),
           ),
           const SizedBox(width: 12),
@@ -46,7 +45,7 @@ class TransactionTileWidget extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
-                    color: Color(0xff333333),
+                    color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -56,7 +55,7 @@ class TransactionTileWidget extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xff999999),
+                    color: AppColors.textHint,
                   ),
                 ),
               ],
@@ -68,9 +67,7 @@ class TransactionTileWidget extends StatelessWidget {
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
-              color: isIncome
-                  ? const Color(0xff4CAF50)
-                  : const Color(0xffFF5252),
+              color: isIncome ? AppColors.success : AppColors.danger,
             ),
           ),
         ],

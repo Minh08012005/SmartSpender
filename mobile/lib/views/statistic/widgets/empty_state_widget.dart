@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../theme/colors.dart';
 
 class EmptyStateWidget extends StatelessWidget {
   final String message;
@@ -16,21 +17,21 @@ class EmptyStateWidget extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
+        border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: Colors.grey.shade300),
+          Icon(icon, size: 48, color: AppColors.textHint),
           const SizedBox(height: 12),
           Text(
             message,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 13,
-              color: Color(0xff999999),
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -58,7 +59,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -67,7 +68,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(50),
             ),
           ),
@@ -80,7 +81,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
                   width: 80,
                   height: 12,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -89,7 +90,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
                   width: 120,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    color: AppColors.surfaceBorder,
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -100,7 +101,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
             width: 60,
             height: 12,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -113,7 +114,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -123,7 +124,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
             width: 100,
             height: 12,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(4),
             ),
           ),
@@ -132,7 +133,7 @@ class LoadingSkeletonWidget extends StatelessWidget {
             width: double.infinity,
             height: 8,
             decoration: BoxDecoration(
-              color: Colors.grey.shade200,
+              color: AppColors.surfaceBorder,
               borderRadius: BorderRadius.circular(4),
             ),
           ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/models/transaction_model.dart';
+import '../../../theme/colors.dart';
 
 class TransactionItem extends StatelessWidget {
   final TransactionModel transaction;
@@ -20,40 +21,64 @@ class TransactionItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: AppColors.surfaceBorder),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x12000000),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // LEFT
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // TITLE (main)
-                  Text(
-                    transaction.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // CATEGORY + DATE (sub)
-                  Text(
-                    '${transaction.categoryForUi} • ${DateFormat('dd/MM/yyyy').format(transaction.date)}',
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-
-                  // NOTE (optional)
-                  if (transaction.note.isNotEmpty)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // TITLE (main)
                     Text(
-                      transaction.note,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
+                      transaction.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                ],
+                    const SizedBox(height: 4),
+
+                    // CATEGORY + DATE (sub)
+                    Text(
+                      '${transaction.categoryForUi} • ${DateFormat('dd/MM/yyyy').format(transaction.date)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+
+                    // NOTE (optional)
+                    if (transaction.note.isNotEmpty)
+                      Text(
+                        transaction.note,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                  ],
+                ),
               ),
+
+              const SizedBox(width: 12),
 
               // RIGHT
               Text(
@@ -61,7 +86,7 @@ class TransactionItem extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
-                  color: isIncome ? Colors.green : Colors.red,
+                  color: isIncome ? AppColors.success : AppColors.danger,
                 ),
               ),
             ],

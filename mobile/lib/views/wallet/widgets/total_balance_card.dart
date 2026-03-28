@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/strings.dart';
+import '../../../theme/colors.dart';
 
 class TotalBalanceCard extends StatelessWidget {
   final int totalBalance;
@@ -17,7 +18,7 @@ class TotalBalanceCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xff3E8E89), Color(0xff2A7C76)],
+          colors: [Color(0xff3E8E89), AppColors.primary],
         ),
         boxShadow: const [
           BoxShadow(
@@ -45,6 +46,40 @@ class TotalBalanceCard extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.16),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.account_balance_wallet,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Wallet Overview',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -53,6 +88,6 @@ class TotalBalanceCard extends StatelessWidget {
   /// Format số tiền sang dạng tiền tệ VND
   String _formatCurrency(int amount) {
     final formatter = NumberFormat('#,###', 'vi_VN');
-    return '${formatter.format(amount)} VND';
+    return '${formatter.format(amount)} ₫';
   }
 }
