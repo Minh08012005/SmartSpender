@@ -1,172 +1,137 @@
-# 💰 SmartSpender - Quản lý chi tiêu thông minh
+# SmartSpender - Ứng dụng quản lý chi tiêu thông minh
 
-Dự án phát triển ứng dụng quản lý tài chính cá nhân dành cho nhóm 2 - **Sprint 2: Core Features & Integration**
+SmartSpender là dự án quản lý tài chính cá nhân theo mô hình monorepo, gồm:
 
-> 🚀 **Trạng thái:** Sprint 2 đang triển khai (10/02 - 20/02/2026)
+- Backend API: Node.js + Express + MongoDB.
+- Mobile App: Flutter + Provider.
 
----
+Tài liệu này phản ánh trạng thái thực tế của dự án tại thời điểm chuẩn bị đóng gói.
 
-## 👥 Thành viên nhóm
+## 1. Trạng thái hiện tại
 
-| Vai trò        | Thành viên         | Nhiệm vụ Sprint 2                             |
-| -------------- | ------------------ | --------------------------------------------- |
-| **👨‍💼 Leader**  | Mai Huy Minh       | State Management, Base Code, Code Review 100% |
-| **🧑‍💻 Backend** | Nguyễn Văn Duy     | API Filter & Statistics                       |
-| **🧑‍💻 Backend** | Vũ Nguyễn Ngọc Bảo | CRUD APIs, Swagger Docs, Unit Tests           |
-| **📱 Mobile**  | Trịnh Thái Sơn     | Home Screen Integration, API Connection       |
-| **📱 Mobile**  | Lê Đức Anh         | Form Add/Edit Transaction, Validation         |
+- Nhánh triển khai chính: `dev`.
+- Mức sẵn sàng: có thể đóng gói bản nội bộ/UAT.
+- Luồng nghiệp vụ cốt lõi đã hoàn thiện: xác thực, giao dịch, thống kê, ví, chuyển tiền giữa ví.
+- Dữ liệu ví đã đồng bộ theo giao dịch (bao gồm cơ chế đối soát lại số dư từ lịch sử giao dịch).
 
----
+## 2. Thành viên nhóm
 
-## 📂 Cấu trúc thư mục
+- Leader: Mai Huy Minh.
+- Mobile: Trịnh Thái Sơn, Lê Đức Anh.
+- Backend: Nguyễn Văn Duy, Vũ Nguyễn Ngọc Bảo.
 
-Dự án được tổ chức theo mô hình **Monorepo + Clean Architecture**:
+## 3. Kiến trúc và cấu trúc thư mục
 
-```
+```text
 SmartSpender/
-├── backend/              # Node.js API Server
-│   ├── controllers/      # Request handlers
-│   ├── models/          # MongoDB schemas
-│   ├── routes/          # API endpoints
-│   ├── middleware/      # Auth, validation, error handling
-│   └── services/        # Business logic
-│
-├── mobile/              # Flutter App
-│   ├── lib/
-│   │   ├── core/        # Config, constants, services (API, storage)
-│   │   ├── data/        # Models, providers (state management)
-│   │   ├── features/    # Feature modules (auth, transaction)
-│   │   └── views/       # UI screens & widgets
-│   └── test/            # Unit tests
-│
-└── docs/                # Documentation
+|- backend/                    # API server
+|  |- controllers/             # Xử lý request/response
+|  |- middleware/              # Auth, validate, error handler, rate limit
+|  |- models/                  # Schema MongoDB
+|  |- routes/                  # Khai báo endpoint
+|  |- services/                # Business logic
+|  |- validators/              # Joi + express-validator
+|  |- tests/                   # Unit + Integration tests
+|  |- config/                  # Cấu hình DB và các cấu hình khác
+|  |- app.js                   # Khởi tạo app Express
+|  |- server.js                # Entry point server
+|  \- swagger.yaml             # API contract chính
+|
+|- mobile/                     # Ứng dụng Flutter
+|  |- lib/
+|  |  |- core/                 # Config, hằng số, service dùng chung
+|  |  |- data/                 # Model + Provider
+|  |  |- features/             # Module theo tính năng
+|  |  |- screens/              # Màn hình chức năng
+|  |  |- views/                # Các tab chính + widget theo view
+|  |  \- navigation/           # Điều hướng chính
+|  |- test/                    # Widget/unit test phía mobile
+|  \- pubspec.yaml
+|
+|- tests/                      # Một số test cấp root (nếu có)
+\- *.md                        # Tài liệu hướng dẫn, checklist
 ```
 
----
+## 4. Tính năng đã có (chi tiết)
 
-## 📅 Lộ trình phát triển (Roadmap)
+### 4.1 Xác thực và phiên đăng nhập
 
-### ✅ Sprint 1 (26/01 - 08/02) - Hoàn thành
+- Đăng ký tài khoản.
+- Đăng nhập nhận JWT.
+- Lưu token cục bộ trên mobile.
+- Cơ chế xử lý token cũ/token khác nguồn backend để tránh lỗi phiên.
 
-- [x] Khởi tạo dự án & chia folder
-- [x] Thiết kế cơ sở dữ liệu (MongoDB)
-- [x] API Đăng ký/Đăng nhập (JWT Authentication)
-- [x] UI màn hình Login/Register (Flutter)
-- [x] Setup Git Flow & Code Review process
+### 4.2 Quản lý giao dịch
 
-**Thành tựu:**
+- Tạo giao dịch thu/chi.
+- Cập nhật giao dịch.
+- Xóa giao dịch.
+- Lọc theo tháng-năm hoặc theo khoảng ngày (`from` - `to`).
+- Lọc theo loại giao dịch, danh mục; hỗ trợ tìm kiếm, sắp xếp, phân trang.
+- Validate đầu vào và chuẩn hóa phản hồi lỗi từ backend.
 
-- ✅ Backend API hoạt động ổn định
-- ✅ Mobile UI/UX đẹp, smooth animations
-- ✅ Authentication flow hoàn chỉnh
+### 4.3 Thống kê
 
----
+- API tổng thu, tổng chi, số dư theo tháng.
+- Mobile hiển thị thống kê theo bộ lọc thời gian.
 
-### 🔥 Sprint 2 (10/02 - 20/02) - Đang thực hiện
+### 4.4 Quản lý ví
 
-**🎯 Mục tiêu:** Integration (Kết nối) + Core Logic + State Management
+- Lấy danh sách ví của người dùng.
+- Lấy chi tiết ví theo ID.
+- Cập nhật thông tin ví (tên/mô tả).
+- Khởi tạo ví mặc định cho user khi chưa có dữ liệu ví.
 
-#### Giai đoạn 1: TẬP TRUNG CAO ĐỘ (10/02 - 16/02)
+### 4.5 Chuyển tiền giữa ví
 
-**Backend:**
+- Chuyển tiền từ ví nguồn sang ví đích.
+- Kiểm tra điều kiện số dư trước khi chuyển.
+- Có xử lý timeout/trạng thái submit để tránh cảm giác “treo” trên mobile.
 
-- [ ] 🔍 API Filter Transaction nâng cao (Ngày, Loại, Category)
-- [ ] 📊 API Statistics (Aggregation) tính tổng thu/chi
-- [ ] ✏️ API CRUD Transaction (Create/Update/Delete)
-- [ ] 📚 Swagger API Documentation
-- [ ] ✅ Unit Tests cho các API
+### 4.6 Đồng bộ số dư Home - Wallet - Transaction
 
-**Mobile:**
+- Tổng số dư hiển thị trên Home dựa trên dữ liệu ví.
+- Khi tạo/sửa/xóa giao dịch, số dư ví tương ứng được cập nhật theo `walletType`.
+- Có cơ chế reconcile số dư ví từ lịch sử giao dịch để giảm lệch dữ liệu legacy.
 
-- [ ] 🏠 Integration Home Screen với API thật (thay Dummy Data)
-- [ ] 🔄 UI States: Loading, Empty, Error
-- [ ] ↻ Pull-to-refresh transactions
-- [ ] 📝 Form Thêm/Sửa Transaction
-- [ ] ✔️ Validation chi tiết (số tiền, ngày, category)
-- [ ] 🎨 State Management (Provider/Riverpod)
+### 4.7 UI/UX hiện tại
 
-#### Giai đoạn 2: NHẸ NHÀNG (16/02 - 20/02)
+- Tab Wallet đã đồng bộ theme với toàn ứng dụng.
+- Trạng thái loading/empty/error rõ ràng hơn.
+- Luồng modal chuyển tiền đã cải thiện validate và xử lý trạng thái.
 
-- [ ] 🧪 Unit Tests (Backend + Mobile)
-- [ ] 📖 Viết Documentation
-- [ ] 🎨 Polish UI/UX
-- [ ] 🎬 Prepare Demo
+## 5. API chính đang sử dụng
 
----
+- Auth:
+	- `POST /api/auth/register`
+	- `POST /api/auth/login`
+- Transactions:
+	- `GET /api/transactions`
+	- `POST /api/transactions`
+	- `PUT /api/transactions/:id`
+	- `DELETE /api/transactions/:id`
+- Statistics:
+	- `GET /api/statistics/summary`
+- Wallets:
+	- `GET /api/wallets`
+	- `GET /api/wallets/:id`
+	- `PATCH /api/wallets/:id`
+	- `POST /api/wallets/transfer`
+- API Docs (Swagger UI): `http://localhost:3000/api-docs`
 
-### 🔜 Sprint 3 (Dự kiến: 21/02+)
+## 6. Hướng dẫn chạy dự án
 
-- [ ] 💼 Budget management features
-- [ ] 📈 Chart/Statistics screen với biểu đồ
-- [ ] 🔔 Push Notifications
-- [ ] 🌙 Dark mode
-
----
-
-## 🛠 Quy định chung & Quy trình làm việc
-
-### 1. Phân chia khu vực làm việc
-
-- **Team Backend:** Thao tác trong `/backend` only
-- **Team Mobile:** Thao tác trong `/mobile` only
-- **Leader:** Quản lý root, review & merge PR
-
-### 2. Quy trình Git (Git Flow)
-
-```bash
-# Bắt đầu task mới
-git checkout dev
-git pull origin dev
-git checkout -b feat/your-feature-name
-
-# Code xong, commit & push
-git add .
-git commit -m "feat(scope): description"
-git push origin feat/your-feature-name
-
-# Tạo Pull Request trên GitHub vào nhánh dev
-```
-
-**⚠️ QUY TẮC VÀNG:**
-
-- ❌ KHÔNG code trực tiếp trên `main` hoặc `dev`
-- ✅ MỌI task phải qua Pull Request
-- ✅ Cần ít nhất 1 người review & approve
-
-### 3. Commit Message Standard
-
-```bash
-# ✅ ĐÚNG
-feat(auth): add persistent login
-fix(ui): fix button alignment
-docs: update README for Sprint 2
-
-# ❌ SAI
-update
-fix bug
-changes
-```
-
-### 4. Pull Request & Code Review
-
-- Mọi PR cần **ít nhất 1 approval** trước khi merge
-- Title PR: `[Sprint 2] feat(scope): Description`
-- Nội dung: Mô tả rõ thay đổi + checklist
-
----
-
-## 💻 Hướng dẫn chạy code
-
-### Backend
+### 6.1 Chạy Backend
 
 ```bash
 cd backend
 npm install
-npm start        # Development mode
-# Server chạy tại http://localhost:3000
+npm start
 ```
 
-**Environment Variables:**
+Backend mặc định chạy tại: `http://localhost:3000`
+
+Biến môi trường tối thiểu:
 
 ```env
 PORT=3000
@@ -174,52 +139,75 @@ MONGODB_URI=mongodb://localhost:27017/smartspender
 JWT_SECRET=your_secret_key
 ```
 
-### Mobile
+### 6.2 Chạy Mobile
 
 ```bash
 cd mobile
 flutter pub get
-flutter run      # Chọn device (Android/iOS)
+flutter run
 ```
 
-**Lưu ý:**
+Lưu ý kết nối API theo môi trường thiết bị:
 
-- Android Emulator: API tự động dùng `10.0.2.2:3000`
-- iOS Simulator: API tự động dùng `localhost:3000`
-- Physical Device: Đổi `localNetworkIP` trong `app_config.dart`
+- Android Emulator: dùng `10.0.2.2` cho localhost backend.
+- iOS Simulator: dùng `localhost`.
+- Thiết bị thật: cấu hình IP LAN trong app config.
+
+## 7. Kiểm thử và chất lượng
+
+### 7.1 Backend
+
+```bash
+cd backend
+npm test
+```
+
+### 7.2 Mobile
+
+```bash
+cd mobile
+flutter analyze
+flutter test
+```
+
+Kết quả xác minh gần nhất (28/03/2026):
+
+- Backend: `13/13` test suites pass, `149/149` tests pass.
+- Mobile: `flutter analyze` không có lỗi.
+- Mobile: `flutter test` pass toàn bộ.
+
+## 8. Quy trình làm việc đề xuất
+
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feat/ten-tinh-nang
+
+# code + test
+git add .
+git commit -m "feat(scope): mo-ta-ngan"
+git push origin feat/ten-tinh-nang
+```
+
+Sau đó tạo Pull Request vào `dev` để review trước khi merge.
+
+## 9. Tài liệu liên quan
+
+- `CONTRIBUTING.md`
+- `DEVELOPMENT_GUIDE.md`
+- `SETUP_GUIDE.md`
+- `MOBILE_E2E_TEST_CHECKLIST.md`
+- `MOBILE_SPRINT3_UI_CHECKLIST.md`
+
+## 10. Ghi chú phát hành
+
+- Bản hiện tại phù hợp để đóng gói bản nội bộ/UAT.
+- Các hạng mục dự kiến nâng cấp tiếp theo:
+	- Budget planning.
+	- Biểu đồ/thống kê nâng cao.
+	- Push notification.
+	- Dark mode.
 
 ---
 
-## 📚 Tài liệu tham khảo
-
-- **[DEVELOPMENT_GUIDE.md](DEVELOPMENT_GUIDE.md):** Hướng dẫn code từng task theo Clean Architecture
-- **[CONTRIBUTING.md](CONTRIBUTING.md):** Quy định code, commit, PR chi tiết
-- **[SETUP_GUIDE.md](SETUP_GUIDE.md):** Hướng dẫn setup môi trường dev
-- **API Docs:** `http://localhost:3000/api-docs` (Swagger)
-
----
-
-## 🎯 Sprint 2 Progress
-
-| Task                     | Assigned      | Status         | Note                        |
-| ------------------------ | ------------- | -------------- | --------------------------- |
-| Persistent Login         | Leader        | ✅ Done        | Đã merge vào dev            |
-| Clean Architecture Setup | Leader        | ✅ Done        | ApiService, Providers ready |
-| API Filter               | Backend (Duy) | 🔄 In Progress | -                           |
-| API CRUD                 | Backend (Bảo) | 🔄 In Progress | -                           |
-| Home Integration         | Mobile (Sơn)  | 🔄 In Progress | -                           |
-| Form Transaction         | Mobile (Anh)  | 🔄 In Progress | -                           |
-
----
-
-**📞 Liên hệ & Hỗ trợ:**
-
-- Có vấn đề? Hỏi trong group chat team
-- Cần review? Tag @MaiHuyMinh trong PR
-- Gặp lỗi? Tạo Issue trên GitHub với label `bug`
-
----
-
-_Sprint 2 - Let's build something awesome! 🚀🔥_
-
-**Cập nhật lần cuối:** 10/02/2026
+Cập nhật lần cuối: 28/03/2026
