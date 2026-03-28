@@ -38,7 +38,7 @@ graph TD
     A & B ---->|HTTPS / REST API| C
     C --> D
     D --> E
-    E ---->|Mongoose ODM| F.
+    E ---->|Mongoose ODM| F
 
     %% Định dạng màu sắc bổ sung cho trực quan
     style Presentation_Layer fill:#f0f4ff,stroke:#3f51b5,stroke-width:2px
