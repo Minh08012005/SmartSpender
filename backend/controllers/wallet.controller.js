@@ -4,6 +4,7 @@
  */
 
 const Wallet = require('../models/wallet.model');
+const WalletTransfer = require('../models/wallet_transfer.model');
 const AppError = require('../utils/appError');
 const {
   initializeWalletsForUser,
@@ -115,6 +116,15 @@ exports.transferBetweenWallets = async (req, res, next) => {
 
     await Promise.all([fromWallet.save(), toWallet.save()]);
 
+    const transferRecord = await WalletTransfer.create({
+      userId,
+      fromWalletType: fromWallet.walletType,
+      toWalletType: toWallet.walletType,
+      amount,
+      note: (note || '').trim(),
+      date: new Date(),
+    });
+
     res.status(200).json({
       success: true,
       message: 'Điều chuyển tiền thành công',
@@ -123,6 +133,7 @@ exports.transferBetweenWallets = async (req, res, next) => {
         toWallet,
         amount,
         note: note || '',
+        transferId: transferRecord._id,
       },
     });
   } catch (error) {

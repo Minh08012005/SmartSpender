@@ -105,26 +105,22 @@ class WalletProvider extends ChangeNotifier {
         _updateWalletFromApi(response.data.fromWallet);
         _updateWalletFromApi(response.data.toWallet);
       } else {
-        _wallets[fromIndex] = _wallets[fromIndex].copyWith(
-          balance: _wallets[fromIndex].balance - amount,
-        );
-        _wallets[toIndex] = _wallets[toIndex].copyWith(
-          balance: _wallets[toIndex].balance + amount,
-        );
+        _errorMessage = response.message.isNotEmpty
+            ? response.message
+            : AppStrings.failedToLoadTransactions;
+        notifyListeners();
+        return false;
       }
 
       await _saveToCache();
       return true;
     } catch (e) {
-      // Fallback local transfer để UX mượt khi backend lỗi tạm thời.
-      _wallets[fromIndex] = _wallets[fromIndex].copyWith(
-        balance: _wallets[fromIndex].balance - amount,
-      );
-      _wallets[toIndex] = _wallets[toIndex].copyWith(
-        balance: _wallets[toIndex].balance + amount,
-      );
-      await _saveToCache();
-      return true;
+      final message = e.toString().replaceFirst('Exception: ', '').trim();
+      _errorMessage = message.isNotEmpty
+          ? message
+          : AppStrings.failedToLoadTransactions;
+      notifyListeners();
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

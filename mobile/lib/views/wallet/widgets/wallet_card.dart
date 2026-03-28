@@ -13,23 +13,22 @@ class WalletCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        shadowColor: const Color(0x14000000),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
           child: Row(
             children: [
-              // Icon với background color
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: wallet.color.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Icon(wallet.icon, color: wallet.color, size: 28),
               ),
               const SizedBox(width: 16),
-              // Wallet name + balance
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,21 +36,25 @@ class WalletCard extends StatelessWidget {
                     Text(
                       wallet.name,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                     Text(
                       _formatCurrency(wallet.balance),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              // Arrow icon
-              Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey[400]),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 28,
+                color: Colors.grey[400],
+              ),
             ],
           ),
         ),

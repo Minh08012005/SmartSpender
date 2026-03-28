@@ -12,11 +12,11 @@ const {
   updateWallet,
 } = require('../controllers/wallet.controller');
 const authenticate = require('../middleware/auth.middleware');
-const validate = require('../middleware/validate.middleware');
 const {
   validateTransfer,
   validateUpdateWallet,
   validateGetWalletById,
+  validateRequest,
 } = require('../validators/wallet.validator');
 
 /**
@@ -62,7 +62,7 @@ router.get(
   '/:id',
   authenticate,
   validateGetWalletById,
-  validate,
+  validateRequest,
   getWalletById
 );
 
@@ -101,7 +101,7 @@ router.patch(
   '/:id',
   authenticate,
   validateUpdateWallet,
-  validate,
+  validateRequest,
   updateWallet
 );
 
@@ -147,7 +147,7 @@ router.post(
   '/transfer',
   authenticate,
   validateTransfer,
-  validate,
+  validateRequest,
   transferBetweenWallets
 );
 

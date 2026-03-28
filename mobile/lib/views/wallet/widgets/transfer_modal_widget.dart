@@ -40,6 +40,8 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
   Widget build(BuildContext context) {
     return Consumer<WalletProvider>(
       builder: (context, walletProvider, _) {
+        const teal = Color(0xff2A7C76);
+
         return SingleChildScrollView(
           child: Container(
             padding: EdgeInsets.only(
@@ -52,7 +54,18 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ===== TITLE =====
+                Center(
+                  child: Container(
+                    width: 48,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[350],
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
                 Center(
                   child: Text(
                     AppStrings.walletTransferModalTitle,
@@ -107,7 +120,7 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    prefixIcon: const Icon(Icons.money),
+                    prefixIcon: const Icon(Icons.money, color: teal),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -123,7 +136,7 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    prefixIcon: const Icon(Icons.note),
+                    prefixIcon: const Icon(Icons.note, color: teal),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -140,6 +153,7 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     AppStrings.walletConfirmCheckboxLabel,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
+                  activeColor: teal,
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.zero,
                 ),
@@ -169,6 +183,14 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     // Cancel Button
                     Expanded(
                       child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.black87,
+                          side: BorderSide(color: Colors.grey.shade400),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
                         onPressed: _isProcessing
                             ? null
                             : () => Navigator.pop(context),
@@ -179,6 +201,14 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                     // Confirm Button
                     Expanded(
                       child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: teal,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
                         onPressed: _isProcessing || !_canSubmit
                             ? null
                             : () => _handleTransfer(walletProvider),
@@ -311,9 +341,9 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
       note: _noteController.text.trim(),
     );
 
-    setState(() => _isProcessing = false);
-
     if (!mounted) return;
+
+    setState(() => _isProcessing = false);
 
     if (success) {
       // Show success snackbar

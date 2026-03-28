@@ -61,11 +61,11 @@ describe("POST /api/transactions", () => {
       .post("/api/transactions")
       .set("Authorization", `Bearer ${ownerToken}`)
       .send({
-        title: "Lunch",
+        title: "Salary",
         amount: 45000,
-        category: "FOOD",
-        type: "EXPENSE",
-        note: "team lunch",
+        category: "SALARY",
+        type: "INCOME",
+        note: "monthly salary",
       });
 
     expect(res.statusCode).toBe(201);
@@ -73,11 +73,29 @@ describe("POST /api/transactions", () => {
     expect(res.body.statusCode).toBe(201);
     expect(res.body.message).toBe("Transaction created successfully");
     expect(res.body.data).toBeDefined();
-    expect(res.body.data.title).toBe("Lunch");
+    expect(res.body.data.title).toBe("Salary");
     expect(res.body.data.amount).toBe(45000);
-    expect(res.body.data.category).toBe("food");
-    expect(res.body.data.type).toBe("expense");
+    expect(res.body.data.category).toBe("salary");
+    expect(res.body.data.type).toBe("income");
     expect(res.body.data.userId.toString()).toBe(owner._id.toString());
+  });
+
+  it("should return 400 when expense exceeds wallet balance", async () => {
+    const res = await request(app)
+      .post("/api/transactions")
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({
+        title: "Big purchase",
+        amount: 200000,
+        category: "shopping",
+        type: "expense",
+        walletType: "cash",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Insufficient balance in cash wallet");
   });
 
   it("should allow amount = 0", async () => {

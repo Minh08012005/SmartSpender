@@ -181,7 +181,7 @@ void main() {
 
         expect(result, isFalse);
         expect(provider.transactions.first.amount, 200.0);
-        expect(provider.error, contains('Failed to update transaction'));
+        expect(provider.error, contains('Cập nhật giao dịch thất bại'));
       },
     );
 
@@ -220,7 +220,7 @@ void main() {
 
       expect(result, isFalse);
       expect(provider.transactions.first.amount, 80.0);
-      expect(provider.error, contains('Invalid update transaction response'));
+      expect(provider.error, contains('Phản hồi cập nhật giao dịch không hợp lệ'));
     });
 
     test('api title error: rolls back and shows backend message', () async {

@@ -24,6 +24,7 @@ afterAll(async () => {
 const app = require("../../app");
 const User = require("../../models/users.model");
 const Transaction = require("../../models/transaction_schema");
+const Wallet = require("../../models/wallet.model");
 
 const makeToken = async (userId, expiresAt) => {
   const secret = new TextEncoder().encode(process.env.JWT_SECRET);
@@ -63,6 +64,30 @@ describe("PUT /api/transactions/:id", () => {
     ownerToken = await makeToken(owner._id);
     otherToken = await makeToken(otherUser._id);
 
+    await Wallet.insertMany([
+      {
+        userId: owner._id,
+        walletType: "cash",
+        name: "Tiền mặt",
+        description: "cash",
+        balance: 100,
+      },
+      {
+        userId: owner._id,
+        walletType: "bank",
+        name: "Ngân hàng",
+        description: "bank",
+        balance: 0,
+      },
+      {
+        userId: owner._id,
+        walletType: "ewallet",
+        name: "Ví điện tử",
+        description: "ewallet",
+        balance: 0,
+      },
+    ]);
+
     transaction = await Transaction.create({
       userId: owner._id,
       title: "Old Title",
@@ -75,6 +100,7 @@ describe("PUT /api/transactions/:id", () => {
 
   afterEach(async () => {
     await Transaction.deleteMany();
+    await Wallet.deleteMany();
     await User.deleteMany();
   });
 
@@ -122,7 +148,7 @@ describe("PUT /api/transactions/:id", () => {
       .set("Authorization", `Bearer ${ownerToken}`)
       .send({
         title: "Updated",
-        amount: 500,
+        amount: 0,
         category: "food",
         type: "expense",
         note: "some details",
@@ -133,6 +159,7 @@ describe("PUT /api/transactions/:id", () => {
     expect(res.body.statusCode).toBe(200);
     expect(res.body.message).toBe("Transaction updated successfully");
     expect(res.body.data.title).toBe("Updated");
+    expect(res.body.data.amount).toBe(0);
     expect(res.body.data.type).toBe("expense");
     expect(res.body.data.note).toBe("some details");
   });
@@ -246,5 +273,21 @@ describe("PUT /api/transactions/:id", () => {
     expect(res.body.success).toBe(false);
     expect(res.body.statusCode).toBe(404);
     expect(res.body.message).toBe("Transaction not found");
+  });
+
+  it("should return 400 when update causes insufficient wallet balance", async () => {
+    const res = await request(app)
+      .put(`/api/transactions/${transaction._id}`)
+      .set("Authorization", `Bearer ${ownerToken}`)
+      .send({
+        type: "expense",
+        amount: 200,
+        category: "food",
+      });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.statusCode).toBe(400);
+    expect(res.body.message).toBe("Insufficient balance in cash wallet");
   });
 });

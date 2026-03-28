@@ -33,8 +33,13 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    const teal = Color(0xff2A7C76);
+
     return Scaffold(
+      backgroundColor: const Color(0xffF6F6F6),
       appBar: AppBar(
+        backgroundColor: teal,
+        foregroundColor: Colors.white,
         title: const Text(AppStrings.walletTitle),
         centerTitle: true,
         elevation: 0,
@@ -44,14 +49,17 @@ class _WalletScreenState extends State<WalletScreen> {
           final wallets = walletProvider.wallets;
 
           if (walletProvider.isLoading && wallets.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator(color: teal));
           }
 
           if (wallets.isEmpty) {
             return Center(
               child: Text(
                 'Không có ví nào',
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Colors.black54,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             );
           }
@@ -88,6 +96,15 @@ class _WalletScreenState extends State<WalletScreen> {
                   children: [
                     Expanded(
                       child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: teal,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
                         onPressed: () => _showTransferModal(context, wallets),
                         icon: const Icon(Icons.swap_horiz),
                         label: const Text(AppStrings.walletTransferButtonLabel),
@@ -96,6 +113,14 @@ class _WalletScreenState extends State<WalletScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: teal,
+                          side: const BorderSide(color: teal),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(

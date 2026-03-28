@@ -5,6 +5,7 @@
 
 const Wallet = require('../models/wallet.model');
 const Transaction = require('../models/transaction_schema');
+const WalletTransfer = require('../models/wallet_transfer.model');
 
 const SUPPORTED_WALLET_TYPES = ['cash', 'bank', 'ewallet'];
 
@@ -64,9 +65,12 @@ const initializeWalletsForUser = async (userId) => {
 const reconcileWalletBalancesForUser = async (userId) => {
   await initializeWalletsForUser(userId);
 
-  const [wallets, transactions] = await Promise.all([
+  const [wallets, transactions, transfers] = await Promise.all([
     Wallet.find({ userId }),
     Transaction.find({ userId }).select('amount type walletType').lean(),
+    WalletTransfer.find({ userId })
+      .select('amount fromWalletType toWalletType')
+      .lean(),
   ]);
 
   const nextBalances = {
@@ -80,6 +84,15 @@ const reconcileWalletBalancesForUser = async (userId) => {
     const amount = Number(tx.amount) || 0;
     const delta = tx.type === 'income' ? amount : -amount;
     nextBalances[walletType] += delta;
+  }
+
+  for (const transfer of transfers) {
+    const fromWalletType = normalizeWalletType(transfer.fromWalletType);
+    const toWalletType = normalizeWalletType(transfer.toWalletType);
+    const amount = Number(transfer.amount) || 0;
+
+    nextBalances[fromWalletType] -= amount;
+    nextBalances[toWalletType] += amount;
   }
 
   for (const wallet of wallets) {

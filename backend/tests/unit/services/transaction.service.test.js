@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 
 jest.mock("../../../models/transaction_schema", () => ({
   find: jest.fn(),
+  findOne: jest.fn(),
   countDocuments: jest.fn(),
   aggregate: jest.fn(),
   create: jest.fn(),
@@ -19,8 +20,25 @@ jest.mock("../../../models/transaction_schema", () => ({
   findOneAndUpdate: jest.fn(),
 }));
 
+jest.mock("../../../models/wallet.model", () => ({
+  find: jest.fn(),
+}));
+
+jest.mock("../../../services/wallet.service", () => ({
+  initializeWalletsForUser: jest.fn().mockResolvedValue(),
+}));
+
 const Transaction = require("../../../models/transaction_schema");
+const Wallet = require("../../../models/wallet.model");
+const { initializeWalletsForUser } = require("../../../services/wallet.service");
 const transactionService = require("../../../services/transaction.service");
+
+const makeWallet = (walletType, balance = 100000) => ({
+  walletType,
+  balance,
+  lastUpdated: null,
+  save: jest.fn().mockResolvedValue(true),
+});
 
 // Bộ test này tập trung vào việc kiểm tra hàm getFilteredTransactions trong service xử lý giao dịch. Chúng ta sẽ mock Transaction.find, countDocuments và aggregate để trả về dữ liệu giả và kiểm tra xem hàm có trả về dữ liệu đúng theo filter và phân trang không, cũng như xử lý logic category dạng CSV và search với regex. Ngoài ra, chúng ta cũng sẽ kiểm tra các trường hợp lỗi như thiếu date filter.
 describe("Transaction Service - getFilteredTransactions", () => {
@@ -247,6 +265,12 @@ describe("Transaction Service - createTransaction", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    initializeWalletsForUser.mockResolvedValue();
+    Wallet.find.mockResolvedValue([
+      makeWallet("cash", 500000),
+      makeWallet("bank", 500000),
+      makeWallet("ewallet", 500000),
+    ]);
   });
 
   it("should create transaction successfully", async () => {
@@ -380,6 +404,12 @@ describe("Transaction Service - updateTransaction", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    initializeWalletsForUser.mockResolvedValue();
+    Wallet.find.mockResolvedValue([
+      makeWallet("cash", 500000),
+      makeWallet("bank", 500000),
+      makeWallet("ewallet", 500000),
+    ]);
   });
 
   // Bảo vệ khỏi BSONTypeError nếu JWT bị craft với userId không hợp lệ
@@ -407,40 +437,68 @@ describe("Transaction Service - updateTransaction", () => {
     ).rejects.toThrow("Invalid date format");
   });
 
-  // findOneAndUpdate trả về null khi điều kiện _id + userId không khớp (không tìm thấy hoặc không sở hữu)
   it("should throw AppError 404 if transaction not found or not owned", async () => {
-    Transaction.findOneAndUpdate.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(null),
-    });
+    Transaction.findOne.mockResolvedValue(null);
     await expect(
       transactionService.updateTransaction(userId, id, { title: "x" })
     ).rejects.toThrow(AppError);
   });
 
   it("should normalize category and type to lowercase before writing to DB", async () => {
-    const updatedDoc = { _id: id, userId, title: "Test", amount: 100, category: "food", type: "expense" };
-    Transaction.findOneAndUpdate.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(updatedDoc),
-    });
+    const existing = {
+      _id: id,
+      userId,
+      title: "Test",
+      amount: 100,
+      category: "salary",
+      type: "income",
+      walletType: "cash",
+      save: jest.fn().mockResolvedValue(true),
+      toObject: jest.fn().mockReturnValue({
+        _id: id,
+        userId,
+        title: "Test",
+        amount: 100,
+        category: "food",
+        type: "expense",
+        walletType: "cash",
+      }),
+    };
+    Transaction.findOne.mockResolvedValue(existing);
 
     await transactionService.updateTransaction(userId, id, { category: "FOOD", type: "EXPENSE" });
 
-    // Kiểm tra dữ liệu được lưu với giá trị được normalize
-    const callArg = Transaction.findOneAndUpdate.mock.calls[0][1];
-    expect(callArg.$set.category).toBe("food");
-    expect(callArg.$set.type).toBe("expense");
+    expect(existing.category).toBe("food");
+    expect(existing.type).toBe("expense");
+    expect(existing.save).toHaveBeenCalledTimes(1);
   });
 
   it("should return updated document on success", async () => {
-    const updatedDoc = { _id: id, userId, title: "updated title", amount: 200 };
-    Transaction.findOneAndUpdate.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(updatedDoc),
-    });
+    const existing = {
+      _id: id,
+      userId,
+      title: "old title",
+      amount: 200,
+      category: "salary",
+      type: "income",
+      walletType: "cash",
+      save: jest.fn().mockResolvedValue(true),
+      toObject: jest.fn().mockReturnValue({
+        _id: id,
+        userId,
+        title: "updated title",
+        amount: 200,
+        category: "salary",
+        type: "income",
+        walletType: "cash",
+      }),
+    };
+    Transaction.findOne.mockResolvedValue(existing);
 
     const result = await transactionService.updateTransaction(userId, id, { title: "updated title" });
 
-    expect(result).toEqual(updatedDoc);
-    expect(Transaction.findOneAndUpdate).toHaveBeenCalledTimes(1);
+    expect(result.title).toBe("updated title");
+    expect(existing.save).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -454,6 +512,12 @@ describe("Transaction Service - deleteTransaction", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    initializeWalletsForUser.mockResolvedValue();
+    Wallet.find.mockResolvedValue([
+      makeWallet("cash", 500000),
+      makeWallet("bank", 500000),
+      makeWallet("ewallet", 500000),
+    ]);
   });
 
   // Bảo vệ khỏi BSONTypeError nếu JWT bị craft với userId không hợp lệ
@@ -469,26 +533,36 @@ describe("Transaction Service - deleteTransaction", () => {
     ).rejects.toThrow("Invalid transaction id");
   });
 
-  // findOneAndDelete trả về null khi không tìm thấy hoặc user không sở hữu document
   it("should throw AppError 404 if transaction not found or not owned", async () => {
-    Transaction.findOneAndDelete.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(null),
-    });
+    Transaction.findOne.mockResolvedValue(null);
     await expect(
       transactionService.deleteTransaction(userId, id)
     ).rejects.toThrow(AppError);
   });
 
   it("should return deleted document on success", async () => {
-    const deletedDoc = { _id: id, userId, title: "to be deleted", amount: 150 };
-    Transaction.findOneAndDelete.mockReturnValue({
-      lean: jest.fn().mockResolvedValue(deletedDoc),
-    });
+    const deletedDoc = {
+      _id: id,
+      userId,
+      title: "to be deleted",
+      amount: 150,
+      type: "expense",
+      walletType: "cash",
+      deleteOne: jest.fn().mockResolvedValue(true),
+      toObject: jest.fn().mockReturnValue({
+        _id: id,
+        userId,
+        title: "to be deleted",
+        amount: 150,
+        type: "expense",
+        walletType: "cash",
+      }),
+    };
+    Transaction.findOne.mockResolvedValue(deletedDoc);
 
     const result = await transactionService.deleteTransaction(userId, id);
 
-    // quan trọng: phải trả về đúng deleted doc để controller có dữ liệu trả về client
-    expect(result).toEqual(deletedDoc);
-    expect(Transaction.findOneAndDelete).toHaveBeenCalledTimes(1);
+    expect(result.title).toBe("to be deleted");
+    expect(deletedDoc.deleteOne).toHaveBeenCalledTimes(1);
   });
 });

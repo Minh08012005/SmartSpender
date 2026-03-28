@@ -5,6 +5,23 @@
 
 const { body, param, validationResult } = require('express-validator');
 
+const validateRequest = (req, res, next) => {
+  const errors = validationResult(req);
+  if (errors.isEmpty()) {
+    return next();
+  }
+
+  return res.status(400).json({
+    success: false,
+    statusCode: 400,
+    message: 'Validation failed',
+    errors: errors.array().map((error) => ({
+      field: error.path,
+      message: error.msg,
+    })),
+  });
+};
+
 // Transfer validation schema
 const validateTransfer = [
   body('fromWalletId')
@@ -60,4 +77,5 @@ module.exports = {
   validateTransfer,
   validateUpdateWallet,
   validateGetWalletById,
+  validateRequest,
 };
