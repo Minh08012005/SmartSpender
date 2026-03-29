@@ -111,7 +111,7 @@ class AppConfig {
   static const String stagingUrl = 'https://staging-api.smartspender.com';
 
   /// Production server URL
-  static const String productionUrl = 'https://api.smartspender.com';
+  static const String productionUrl = 'https://smartspender-x1fl.onrender.com';
 
   // =========================================================
 
