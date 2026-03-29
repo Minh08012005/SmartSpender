@@ -1,0 +1,116 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:intl/intl.dart';
+import 'package:mobile/data/providers/transaction_provider.dart';
+import 'package:mobile/data/providers/wallet_provider.dart';
+import '../../../core/strings.dart';
+import '../../../theme/colors.dart';
+
+class BalanceCard extends StatelessWidget {
+  const BalanceCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final transactionProvider = context.watch<TransactionProvider>();
+    final walletProvider = context.watch<WalletProvider>();
+    final formatter = NumberFormat('#,###', 'vi_VN');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 40, 16, 32),
+      decoration: const BoxDecoration(
+        color: Color(0xff2A7C76),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(28),
+          bottomRight: Radius.circular(28),
+        ),
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xff3E8E89), Color(0xff2A7C76)],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              AppStrings.totalBalance,
+              style: TextStyle(color: Colors.white70),
+            ),
+            const SizedBox(height: 8),
+
+            Text(
+              '${formatter.format(walletProvider.totalBalance)} ₫',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _BalanceInfo(
+                  title: AppStrings.totalIncome,
+                  amount:
+                      '${formatter.format(transactionProvider.totalIncome)} ₫',
+                  accentColor: AppColors.success,
+                ),
+                _BalanceInfo(
+                  title: AppStrings.totalExpense,
+                  amount:
+                      '${formatter.format(transactionProvider.totalExpense)} ₫',
+                  accentColor: AppColors.danger,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _BalanceInfo extends StatelessWidget {
+  final String title;
+  final String amount;
+  final Color accentColor;
+
+  const _BalanceInfo({
+    required this.title,
+    required this.amount,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: const TextStyle(color: Colors.white70)),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.16),
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Text(
+            amount,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}

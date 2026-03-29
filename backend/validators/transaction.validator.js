@@ -1,0 +1,218 @@
+/**
+ * Validator for transaction-related endpoints.
+ * Mục tiêu:
+ *   - Validate input parameters cho endpoint lấy danh sách giao dịch với nhiều tùy chọn lọc và phân trang.
+ *   - Sử dụng Joi để đảm bảo dữ liệu đầu vào đúng định dạng, hợp lệ và an toàn.
+ *   - Hỗ trợ 2 mode lọc: theo khoảng thời gian (from-to) hoặc theo tháng-năm (month-year).
+ *   - Cho phép lọc theo loại giao dịch (income/expense), danh mục, và tìm kiếm theo mô tả.
+ *   - Cung cấp các thông báo lỗi chi tiết khi validation thất bại.
+ *   - Đảm bảo tính linh hoạt và dễ sử dụng cho client khi tương tác với API.
+ *   - Hỗ trợ phân trang và sắp xếp kết quả trả về.
+ */
+const Joi = require('joi');
+const { VALID_CATEGORIES, VALID_WALLET_TYPES } = require('./constants');
+
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+const ISO_DATE_TIME_REGEX =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{3})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+const isoDateString = (fieldName) =>
+  Joi.string()
+    .trim()
+    .custom((value, helpers) => {
+      const normalizedValue = value.trim();
+
+      if (
+        !DATE_ONLY_REGEX.test(normalizedValue) &&
+        !ISO_DATE_TIME_REGEX.test(normalizedValue)
+      ) {
+        return helpers.message(`${fieldName} must be a valid ISO date`);
+      }
+
+      const parsedDate = new Date(normalizedValue);
+      if (Number.isNaN(parsedDate.getTime())) {
+        return helpers.message(`${fieldName} must be a valid ISO date`);
+      }
+
+      return normalizedValue;
+    }, `${fieldName} ISO validation`);
+
+const parseComparableDate = (value, { endOfDayIfDateOnly = false } = {}) => {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalizedValue = value.trim();
+  if (DATE_ONLY_REGEX.test(normalizedValue)) {
+    const [yearPart, monthPart, dayPart] = normalizedValue
+      .split('-')
+      .map(Number);
+    return new Date(
+      Date.UTC(
+        yearPart,
+        monthPart - 1,
+        dayPart,
+        endOfDayIfDateOnly ? 23 : 0,
+        endOfDayIfDateOnly ? 59 : 0,
+        endOfDayIfDateOnly ? 59 : 0,
+        endOfDayIfDateOnly ? 999 : 0
+      )
+    );
+  }
+
+  return new Date(normalizedValue);
+};
+
+const getTransactionsSchema = Joi.object({
+  // Date Range Mode
+  from: isoDateString('from'),
+  to: isoDateString('to'),
+
+  // Monthly Mode
+  month: Joi.number().integer().min(1).max(12),
+  year: Joi.number().integer().min(2000),
+
+  // Filters
+  // Normalize ngay tại boundary để route không reject input khác hoa/thường.
+  type: Joi.string().trim().lowercase().valid('income', 'expense'),
+  category: Joi.string()
+    .trim()
+    .custom((value, helpers) => {
+      const normalizedCategories = value
+        .split(',')
+        .map((c) => c.trim().toLowerCase());
+
+      if (normalizedCategories.some((cat) => !cat)) {
+        return helpers.message('category not allowed');
+      }
+
+      for (const cat of normalizedCategories) {
+        if (!VALID_CATEGORIES.includes(cat)) {
+          return helpers.message('category not allowed');
+        }
+      }
+
+      // Trả về CSV đã normalize để service nhận dữ liệu đồng nhất.
+      return normalizedCategories.join(',');
+    }, 'Category validation'),
+  search: Joi.string().max(100).allow(''),
+
+  // Pagination & Sorting
+  page: Joi.number().integer().min(1).default(1),
+  limit: Joi.number().integer().min(1).max(100).default(20),
+  sortBy: Joi.string()
+    .valid('date', 'amount', 'category', 'createdAt')
+    .default('date'),
+  order: Joi.string().valid('asc', 'desc').default('desc'),
+})
+
+  // Giữ from/to ở dạng string để service còn phân biệt được bare date cho end-of-day semantics.
+  .custom((value, helpers) => {
+    if (value.from !== undefined && value.to !== undefined) {
+      const fromDate = parseComparableDate(value.from);
+      const toDate = parseComparableDate(value.to, {
+        endOfDayIfDateOnly: true,
+      });
+
+      if (
+        !fromDate ||
+        Number.isNaN(fromDate.getTime()) ||
+        !toDate ||
+        Number.isNaN(toDate.getTime())
+      ) {
+        return helpers.message('from/to must be valid ISO dates');
+      }
+
+      if (toDate < fromDate) {
+        return helpers.message('to date must be after from date');
+      }
+    }
+
+    return value;
+  }, 'Date range validation')
+
+  // ❗ Không được dùng đồng thời 2 mode
+  .xor('from', 'month')
+
+  // Nếu có from → phải có to
+  .with('from', 'to')
+
+  // Nếu có month → phải có year
+  .with('month', 'year');
+
+/**
+ * Validate body cho API tạo giao dịch
+ */
+const createTransactionSchema = Joi.object({
+  title: Joi.string().trim().min(2).max(100).required(),
+  // amount cho phép 0 để đồng bộ với service (service đã kiểm tra >=0)
+  amount: Joi.number().min(0).required(),
+  // Normalize lowercase để API chấp nhận input hoa/thường từ client.
+  type: Joi.string().trim().lowercase().valid('income', 'expense').required(),
+  // Normalize lowercase để khớp enum category trong DB.
+  category: Joi.string()
+    .trim()
+    .lowercase()
+    .valid(...VALID_CATEGORIES)
+    .required(),
+  walletType: Joi.string()
+    .trim()
+    .lowercase()
+    .valid(...VALID_WALLET_TYPES)
+    .optional(),
+  // Cho phép cả YYYY-MM-DD và full ISO datetime.
+  date: Joi.date().iso().optional(),
+  note: Joi.string().allow('').optional(),
+});
+
+/**
+ * Validate body cho API cập nhật giao dịch
+ */
+const updateTransactionSchema = Joi.object({
+  title: Joi.string().trim().min(2).max(100).optional(),
+  // allow zero so update can set amount to 0 if desired
+  amount: Joi.number().min(0).optional(),
+  // Normalize lowercase để đồng nhất contract với POST.
+  // Client có thể gửi "EXPENSE" – sẽ được normalize thành "expense".
+  type: Joi.string().trim().lowercase().valid('income', 'expense').optional(),
+  // Normalize lowercase để khớp enum trong DB và đồng nhất với POST.
+  category: Joi.string()
+    .trim()
+    .lowercase()
+    .valid(...VALID_CATEGORIES)
+    .optional(),
+  walletType: Joi.string()
+    .trim()
+    .lowercase()
+    .valid(...VALID_WALLET_TYPES)
+    .optional(),
+  // Strict ISO 8601 để đồng nhất với POST – từ chối "March 16, 2026" hay "03/16/2026".
+  date: Joi.date().iso().optional(),
+  note: Joi.string().allow('').optional(),
+})
+  // Ít nhất một field phải được cung cấp – reject empty body sớm tại validator layer,
+  // không để lọt xuống service mới bắt (fail fast principle).
+  .custom((value, helpers) => {
+    if (Object.keys(value).length === 0) {
+      return helpers.error('object.empty');
+    }
+    return value;
+  })
+  .messages({
+    'object.empty': 'At least one field must be provided for update',
+  });
+
+// generic schema for endpoints accepting a single Mongo object id param
+const objectIdParamSchema = Joi.object({
+  id: Joi.string().length(24).hex().required().messages({
+    'string.length': 'id must be a 24‑character hex string',
+    'string.hex': 'id must be a valid hex string',
+  }),
+});
+
+module.exports = {
+  getTransactionsSchema,
+  createTransactionSchema,
+  updateTransactionSchema,
+  objectIdParamSchema,
+};

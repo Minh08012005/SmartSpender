@@ -1,0 +1,8 @@
+{
+  "id": "T001",
+  "amount": 120000,
+  "category": "Food",
+  "date": "2026-01-30",
+  "note": "Lunch with friends",
+  "type": "expense"
+}

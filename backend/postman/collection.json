@@ -1,0 +1,637 @@
+{
+  "info": {
+    "_postman_id": "smartspender-filter-statistic-v1",
+    "name": "SmartSpender – Filter & Statistic",
+    "description": "Postman collection for Duy: testing GET /api/transactions (filter, pagination, sorting) and GET /api/statistics/summary endpoints.\n\nPre-requisite: run POST /auth/login first to auto-set {{authToken}}.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api","auth","register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Duy Test\",\n  \"email\": \"duy.test@example.com\",\n  \"password\": \"Test@12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Register 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api","auth","login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"duy.test@example.com\",\n  \"password\": \"Test@12345\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Login 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.token) {",
+                  "  pm.environment.set('authToken', body.data.token);",
+                  "  pm.collectionVariables.set('authToken', body.data.token);",
+                  "  console.log('Token set:', body.data.token.substring(0,30) + '...');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transactions – Happy Path",
+      "item": [
+        {
+          "name": "TC-T01 | GET transactions – empty list (new user)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=1&year=2000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "1" },
+                { "key": "year", "value": "2000" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T01: Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-T01: success=true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('TC-T01: transactions is array', () => pm.expect(body.data.transactions).to.be.an('array'));",
+                  "pm.test('TC-T01: totalCount=0 for empty month', () => pm.expect(body.data.totalCount).to.equal(0));",
+                  "pm.test('TC-T01: has pagination fields', () => {",
+                  "  pm.expect(body.data).to.have.property('page');",
+                  "  pm.expect(body.data).to.have.property('limit');",
+                  "  pm.expect(body.data).to.have.property('totalCount');",
+                  "});",
+                  "pm.test('TC-T01: no meta field', () => pm.expect(body.data.meta).to.be.undefined);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T02 | GET transactions – month/year with data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T02: Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-T02: success=true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('TC-T02: data.transactions exists', () => pm.expect(body.data.transactions).to.be.an('array'));",
+                  "pm.test('TC-T02: stats block present', () => {",
+                  "  pm.expect(body.data.stats).to.be.an('object');",
+                  "  pm.expect(body.data.stats).to.have.property('totalIncome');",
+                  "  pm.expect(body.data.stats).to.have.property('totalExpense');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T03 | GET transactions – date-range mode (from/to)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?from=2026-03-01&to=2026-03-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "from", "value": "2026-03-01" },
+                { "key": "to", "value": "2026-03-31" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T03: Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('TC-T03: transactions array', () => pm.expect(pm.response.json().data.transactions).to.be.an('array'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T04 | GET transactions – filter by type=expense",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}&type=expense",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" },
+                { "key": "type", "value": "expense" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T04: Status 200', () => pm.response.to.have.status(200));",
+                  "const txns = pm.response.json().data.transactions;",
+                  "pm.test('TC-T04: all results are expense', () => {",
+                  "  txns.forEach(t => pm.expect(t.type).to.equal('expense'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T05 | GET transactions – filter by category=food",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}&category=food",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" },
+                { "key": "category", "value": "food" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T05: Status 200', () => pm.response.to.have.status(200));",
+                  "const txns = pm.response.json().data.transactions;",
+                  "pm.test('TC-T05: all results category=food', () => {",
+                  "  txns.forEach(t => pm.expect(t.category).to.equal('food'));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T06 | GET transactions – search keyword",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}&search=lunch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" },
+                { "key": "search", "value": "lunch" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T06: Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('TC-T06: search results exist', () => {",
+                  "  pm.expect(pm.response.json().data.transactions).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T07 | GET transactions – pagination page=2 limit=5",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}&page=2&limit=5",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" },
+                { "key": "page", "value": "2" },
+                { "key": "limit", "value": "5" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T07: Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-T07: page=2 reflected', () => pm.expect(body.data.page).to.equal(2));",
+                  "pm.test('TC-T07: limit=5 reflected', () => pm.expect(body.data.limit).to.equal(5));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-T08 | GET transactions – sort by amount asc",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month={{testMonth}}&year={{testYear}}&sortBy=amount&order=asc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" },
+                { "key": "sortBy", "value": "amount" },
+                { "key": "order", "value": "asc" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-T08: Status 200', () => pm.response.to.have.status(200));",
+                  "const txns = pm.response.json().data.transactions;",
+                  "pm.test('TC-T08: ascending order', () => {",
+                  "  for (let i = 1; i < txns.length; i++) {",
+                  "    pm.expect(txns[i].amount).to.be.at.least(txns[i-1].amount);",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transactions – Validation Errors",
+      "item": [
+        {
+          "name": "TC-V01 | GET transactions – missing year (month only) → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [{ "key": "month", "value": "3" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-V01: Status 400', () => pm.response.to.have.status(400));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-V01: success=false', () => pm.expect(body.success).to.be.false);",
+                  "pm.test('TC-V01: message=Validation failed', () => pm.expect(body.message).to.equal('Validation failed'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-V02 | GET transactions – invalid month=13 → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=13&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "13" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-V02: Status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('TC-V02: success=false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-V03 | GET transactions – month AND from/to together → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=3&year=2026&from=2026-03-01&to=2026-03-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "3" },
+                { "key": "year", "value": "2026" },
+                { "key": "from", "value": "2026-03-01" },
+                { "key": "to", "value": "2026-03-31" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-V03: Status 400 – cannot use both modes', () => pm.response.to.have.status(400));",
+                  "pm.test('TC-V03: success=false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-V04 | GET transactions – no params at all → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": { "raw": "{{baseUrl}}/api/transactions", "host": ["{{baseUrl}}"], "path": ["api","transactions"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-V04: Status 400 – no date filter', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Transactions – Auth Errors",
+      "item": [
+        {
+          "name": "TC-A01 | GET transactions – no token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=3&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "3" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-A01: Status 401 – no token', () => pm.response.to.have.status(401));",
+                  "pm.test('TC-A01: success=false', () => pm.expect(pm.response.json().success).to.be.false);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-A02 | GET transactions – invalid token → 401",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer invalidtoken.abc.xyz" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/transactions?month=3&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","transactions"],
+              "query": [
+                { "key": "month", "value": "3" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-A02: Status 401 – invalid token', () => pm.response.to.have.status(401));",
+                  "pm.test('TC-A02: message contains invalid', () => pm.expect(pm.response.json().message.toLowerCase()).to.include('invalid'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-A03 | GET statistics – no token → 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/statistics/summary?month=3&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","statistics","summary"],
+              "query": [
+                { "key": "month", "value": "3" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-A03: Status 401', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Statistics",
+      "item": [
+        {
+          "name": "TC-S01 | GET statistics – month with data",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/statistics/summary?month={{testMonth}}&year={{testYear}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","statistics","summary"],
+              "query": [
+                { "key": "month", "value": "{{testMonth}}" },
+                { "key": "year", "value": "{{testYear}}" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-S01: Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-S01: success=true', () => pm.expect(body.success).to.be.true);",
+                  "pm.test('TC-S01: data.totalIncome is number', () => pm.expect(body.data.totalIncome).to.be.a('number'));",
+                  "pm.test('TC-S01: data.totalExpense is number', () => pm.expect(body.data.totalExpense).to.be.a('number'));",
+                  "pm.test('TC-S01: data.balance is number', () => pm.expect(body.data.balance).to.be.a('number'));",
+                  "pm.test('TC-S01: balance = income - expense', () => {",
+                  "  const d = body.data;",
+                  "  pm.expect(d.balance).to.equal(d.totalIncome - d.totalExpense);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-S02 | GET statistics – month with no data (balance=0)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/statistics/summary?month=1&year=2000",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","statistics","summary"],
+              "query": [
+                { "key": "month", "value": "1" },
+                { "key": "year", "value": "2000" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-S02: Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('TC-S02: totalIncome=0', () => pm.expect(body.data.totalIncome).to.equal(0));",
+                  "pm.test('TC-S02: totalExpense=0', () => pm.expect(body.data.totalExpense).to.equal(0));",
+                  "pm.test('TC-S02: balance=0', () => pm.expect(body.data.balance).to.equal(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-S03 | GET statistics – missing year → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/statistics/summary?month=3",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","statistics","summary"],
+              "query": [{ "key": "month", "value": "3" }]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-S03: Status 400 – missing year', () => pm.response.to.have.status(400));",
+                  "pm.test('TC-S03: message=Validation failed', () => pm.expect(pm.response.json().message).to.equal('Validation failed'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-S04 | GET statistics – invalid month=0 → 400",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{authToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/statistics/summary?month=0&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["api","statistics","summary"],
+              "query": [
+                { "key": "month", "value": "0" },
+                { "key": "year", "value": "2026" }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-S04: Status 400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
