@@ -18,6 +18,9 @@ class AppConfig {
   // Force production for demo builds (set to true for demo, false for development)
   static const bool forceProductionForDemo = true;
 
+  // Force localhost for VM testing (set to true when testing on VM with local backend)
+  static const bool forceLocalhostForVM = false;
+
   static Environment _environment = _resolveEnvironment();
 
   static Environment _resolveEnvironment() {
@@ -50,6 +53,11 @@ class AppConfig {
   static String get apiBaseUrl {
     if (_apiBaseUrlOverride.trim().isNotEmpty) {
       return _normalizeBaseUrl(_apiBaseUrlOverride);
+    }
+
+    // Force localhost for VM testing
+    if (forceLocalhostForVM) {
+      return _developmentUrl;
     }
 
     // Force production for demo builds
