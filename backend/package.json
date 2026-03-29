@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "keep-alive": "node -e \"setInterval(() => require('https').get('https://smartspender-x1fl.onrender.com/health'), 600000); console.log('Keep-alive started...')\"",
     "test": "jest --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --forceExit"

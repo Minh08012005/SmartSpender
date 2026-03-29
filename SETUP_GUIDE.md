@@ -179,3 +179,50 @@ Trên backend host (Render), đảm bảo có:
 - `CORS_ALLOWED_ORIGINS` (tùy chọn): thêm custom domain nếu có.
 
 Lưu ý: backend đã cho phép sẵn origin `https://*.vercel.app`.
+
+---
+
+## 🔄 Giải pháp tránh manual trigger backend mỗi lần
+
+### Giải pháp 1: Setup Keep-Alive Service (Miễn phí)
+
+**Bước 1:** Tạo service keep-alive trên Render
+
+1. Vào [Render Dashboard](https://dashboard.render.com)
+2. Click "New" → "Background Worker"
+3. Connect GitHub repo
+4. Cấu hình:
+   - **Name:** `smartspender-keep-alive`
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm run keep-alive`
+
+**Bước 2:** Set environment variable
+
+- `NODE_ENV=production`
+
+Service này sẽ ping `/health` endpoint mỗi 10 phút để giữ backend luôn thức.
+
+### Giải pháp 2: Upgrade Render Plan (Trả phí)
+
+- Upgrade lên **Starter Plan** ($7/tháng)
+- Service sẽ luôn chạy, không ngủ
+- Phù hợp cho production app
+
+### Giải pháp 3: Sử dụng UptimeRobot (Miễn phí)
+
+1. Đăng ký [UptimeRobot](https://uptimerobot.com/)
+2. Thêm monitor cho URL: `https://smartspender-x1fl.onrender.com/health`
+3. Set ping interval: 5 phút
+4. Chọn alert khi down
+
+### Giải pháp 4: Setup Cron Job Local (Tạm thời)
+
+Nếu test local nhiều, chạy:
+
+```bash
+cd backend
+npm run keep-alive
+```
+
+Để script chạy ngầm và ping backend mỗi 10 phút.
