@@ -15,6 +15,9 @@ class AppConfig {
     defaultValue: 'development',
   );
 
+  // Force production for demo builds (set to true for demo, false for development)
+  static const bool forceProductionForDemo = true;
+
   static Environment _environment = _resolveEnvironment();
 
   static Environment _resolveEnvironment() {
@@ -47,6 +50,11 @@ class AppConfig {
   static String get apiBaseUrl {
     if (_apiBaseUrlOverride.trim().isNotEmpty) {
       return _normalizeBaseUrl(_apiBaseUrlOverride);
+    }
+
+    // Force production for demo builds
+    if (forceProductionForDemo) {
+      return productionUrl;
     }
 
     // In release builds, default to production API to avoid accidental
