@@ -26,12 +26,15 @@ jobs:
             ${{ runner.os }}-pub-
 
       - name: Install dependencies
-        run: flutter pub get
+        run: |
+          cd mobile
+          flutter pub get
 
       - name: Build Flutter web (production)
         env:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: |
+          cd mobile
           flutter build web --release --pwa-strategy=none \
             --dart-define=APP_ENV=production \
             --dart-define=API_BASE_URL=${API_BASE_URL}
