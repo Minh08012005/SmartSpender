@@ -49,6 +49,12 @@ class AppConfig {
       return _normalizeBaseUrl(_apiBaseUrlOverride);
     }
 
+    // In release builds, default to production API to avoid accidental
+    // localhost calls when APP_ENV/API_BASE_URL are not provided by CI/CD.
+    if (kReleaseMode) {
+      return productionUrl;
+    }
+
     switch (_environment) {
       case Environment.development:
         return _developmentUrl;

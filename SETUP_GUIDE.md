@@ -134,3 +134,48 @@ Password: Test@123456
 ## ❓ Cần hỗ trợ?
 
 Liên hệ: Minh(Leader) hoặc tạo issue trên GitHub
+
+---
+
+## 🌐 Chuẩn hóa Deploy Link Test Công Khai (Vercel)
+
+Mục tiêu: ai mở link Vercel cũng test được, không còn lỗi gọi nhầm localhost.
+
+### 1) Build web production chuẩn
+
+Chạy từ thư mục `mobile`:
+
+```bash
+flutter pub get
+flutter build web --release --pwa-strategy=none --dart-define=APP_ENV=production --dart-define=API_BASE_URL=https://smartspender-x1fl.onrender.com
+```
+
+Ý nghĩa:
+
+- `APP_ENV=production`: ép app chạy config production.
+- `API_BASE_URL=...onrender.com`: khóa API backend thật, không rơi về localhost.
+- `--pwa-strategy=none`: tránh cache service worker cũ gây lệch bản build khi test.
+
+### 2) Deploy trực tiếp artifact web lên Vercel
+
+Chạy từ thư mục root repo:
+
+```bash
+npx vercel deploy --prod mobile/build/web
+```
+
+Nếu chưa login Vercel, CLI sẽ yêu cầu đăng nhập một lần.
+
+### 3) Kiểm tra sau deploy (bắt buộc)
+
+- Mở link Vercel trên điện thoại (4G và WiFi).
+- Test `Đăng ký` và `Đăng nhập`.
+- Nếu backend vừa ngủ (Render free tier), chờ 20-60 giây rồi thử lại.
+
+### 4) Biến môi trường backend cần có
+
+Trên backend host (Render), đảm bảo có:
+
+- `CORS_ALLOWED_ORIGINS` (tùy chọn): thêm custom domain nếu có.
+
+Lưu ý: backend đã cho phép sẵn origin `https://*.vercel.app`.

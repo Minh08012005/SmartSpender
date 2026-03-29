@@ -105,20 +105,20 @@ SmartSpender/
 - API base URL chính thức (Render): `https://smartspender-x1fl.onrender.com/api/v1`
 
 - Auth:
-	- `POST /api/auth/register`
-	- `POST /api/auth/login`
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
 - Transactions:
-	- `GET /api/transactions`
-	- `POST /api/transactions`
-	- `PUT /api/transactions/:id`
-	- `DELETE /api/transactions/:id`
+  - `GET /api/transactions`
+  - `POST /api/transactions`
+  - `PUT /api/transactions/:id`
+  - `DELETE /api/transactions/:id`
 - Statistics:
-	- `GET /api/statistics/summary`
+  - `GET /api/statistics/summary`
 - Wallets:
-	- `GET /api/wallets`
-	- `GET /api/wallets/:id`
-	- `PATCH /api/wallets/:id`
-	- `POST /api/wallets/transfer`
+  - `GET /api/wallets`
+  - `GET /api/wallets/:id`
+  - `PATCH /api/wallets/:id`
+  - `POST /api/wallets/transfer`
 - API Docs (Swagger UI): `http://localhost:3000/api-docs`
 
 ## 6. Hướng dẫn chạy dự án
@@ -204,11 +204,31 @@ Sau đó tạo Pull Request vào `dev` để review trước khi merge.
 ## 10. Ghi chú phát hành
 
 - Bản hiện tại phù hợp để đóng gói bản nội bộ/UAT.
+- Luồng deploy web công khai đã chuẩn hóa để test qua link Vercel ổn định.
 - Các hạng mục dự kiến nâng cấp tiếp theo:
-	- Budget planning.
-	- Biểu đồ/thống kê nâng cao.
-	- Push notification.
-	- Dark mode.
+  - Budget planning.
+  - Biểu đồ/thống kê nâng cao.
+  - Push notification.
+  - Dark mode.
+
+## 11. Quy trình deploy web production (Vercel)
+
+Thực hiện từ local để đảm bảo build Flutter đúng cấu hình production:
+
+```bash
+cd mobile
+flutter pub get
+flutter build web --release --pwa-strategy=none --dart-define=APP_ENV=production --dart-define=API_BASE_URL=https://smartspender-x1fl.onrender.com
+
+cd ..
+npx vercel deploy --prod mobile/build/web
+```
+
+Checklist nhanh sau deploy:
+
+- Mở link Vercel trên điện thoại.
+- Test đăng ký/đăng nhập.
+- Nếu gặp timeout lần đầu, đợi backend Render warm-up rồi thử lại.
 
 ---
 

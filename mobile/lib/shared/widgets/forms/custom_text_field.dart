@@ -44,46 +44,55 @@ class _CustomTextFieldState extends State<CustomTextField> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border, width: 1),
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: TextFormField(
-        controller: widget.controller,
-        keyboardType: widget.keyboardType,
-        validator: _showValidation ? widget.validator : null,
-        enabled: widget.enabled,
-        obscureText: widget.obscureText,
-        autovalidateMode: _showValidation
-            ? AutovalidateMode.onUserInteraction
-            : AutovalidateMode.disabled,
-        onChanged: (value) {
-          if (!_hasStartedTyping) {
-            setState(() {
-              _hasStartedTyping = true;
-            });
-          }
-        },
-        onTapOutside: (_) {
-          if (_hasStartedTyping) {
-            setState(() {
-              _showValidation = true;
-            });
-          }
-        },
-        decoration: InputDecoration(
-          hintText: widget.hintText,
-          hintStyle: AppTextStyle.hint,
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 12,
-          ),
-          errorStyle: AppTextStyle.subtitle.copyWith(color: AppColors.textLink),
-          suffixIcon: widget.suffixIcon,
+    return TextFormField(
+      controller: widget.controller,
+      keyboardType: widget.keyboardType,
+      validator: _showValidation ? widget.validator : null,
+      enabled: widget.enabled,
+      obscureText: widget.obscureText,
+      autovalidateMode: _showValidation
+          ? AutovalidateMode.onUserInteraction
+          : AutovalidateMode.disabled,
+      onChanged: (value) {
+        if (!_hasStartedTyping) {
+          setState(() {
+            _hasStartedTyping = true;
+          });
+        }
+      },
+      onTapOutside: (_) {
+        if (_hasStartedTyping) {
+          setState(() {
+            _showValidation = true;
+          });
+        }
+      },
+      decoration: InputDecoration(
+        hintText: widget.hintText,
+        hintStyle: AppTextStyle.hint,
+        isDense: true,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 12,
         ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.border, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.textLink, width: 1),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(15),
+          borderSide: const BorderSide(color: AppColors.textLink, width: 1.2),
+        ),
+        errorStyle: AppTextStyle.subtitle.copyWith(color: AppColors.textLink),
+        suffixIcon: widget.suffixIcon,
       ),
     );
   }

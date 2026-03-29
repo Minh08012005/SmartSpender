@@ -41,6 +41,7 @@ app.use(
 
 // CORS cho Flutter Web/dev browsers
 const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+const vercelOriginPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
 const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -53,6 +54,7 @@ app.use(
       if (
         !origin ||
         localOriginPattern.test(origin) ||
+        vercelOriginPattern.test(origin) ||
         extraAllowedOrigins.includes(origin)
       ) {
         return callback(null, true);
