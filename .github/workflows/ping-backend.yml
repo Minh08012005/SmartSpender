@@ -1,0 +1,22 @@
+name: Keep Render Awake (ping backend)
+
+on:
+  schedule:
+    # every 5 minutes
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health
+        env:
+          BACKEND_URL: ${{ secrets.PING_BACKEND_URL }}
+        run: |
+          if [ -z "${BACKEND_URL}" ]; then
+            echo "PING_BACKEND_URL secret not set — aborting"
+            exit 1
+          fi
+          echo "Pinging ${BACKEND_URL}/health"
+          curl -s -o /dev/null -w "%{http_code}\n" "${BACKEND_URL}/health" || true
