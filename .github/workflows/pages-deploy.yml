@@ -41,12 +41,30 @@ jobs:
           API_BASE_URL: ${{ secrets.API_BASE_URL }}
         run: |
           cd mobile
+          # fallback to known backend Render URL when secret not provided
+          if [ -z "${API_BASE_URL}" ]; then
+            API_BASE_URL="https://smartspender-x1fl.onrender.com"
+            echo "API_BASE_URL not set in secrets — using fallback: ${API_BASE_URL}"
+          else
+            echo "Using API_BASE_URL from secrets"
+          fi
           flutter build web --release --pwa-strategy=none \
             --dart-define=APP_ENV=production \
             --dart-define=API_BASE_URL=${API_BASE_URL}
 
       - name: Install wrangler
         run: npm install -g wrangler
+
+      - name: Debug: wrangler whoami (verify token in runner)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          node --version || true
+          npm --version || true
+          npm i -g wrangler
+          echo "--- wrangler whoami ---"
+          npx wrangler whoami || true
+          echo "--- end whoami ---"
 
       - name: Publish to Cloudflare Pages
         env:
