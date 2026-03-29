@@ -50,6 +50,7 @@ jobs:
 
       - name: Publish to Cloudflare Pages
         env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          # wrangler expects CLOUDFLARE_API_TOKEN in non-interactive environments
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
-          wrangler pages publish build/web --project-name=smartspender-pages
+          wrangler pages deploy build/web --project-name=smartspender-pages
