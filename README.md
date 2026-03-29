@@ -102,6 +102,8 @@ SmartSpender/
 
 ## 5. API chính đang sử dụng
 
+- API base URL chính thức (Render): `https://smartspender-x1fl.onrender.com/api/v1`
+
 - Auth:
 	- `POST /api/auth/register`
 	- `POST /api/auth/login`
