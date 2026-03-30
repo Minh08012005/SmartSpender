@@ -94965,15 +94965,15 @@ break
 case 3:b.kn(A.uA(p,null,a.a,o,null,a.c))
 return A.I(null,r)}})
 return A.J($async$o7,r)},
-adl(a){var s="Cannot connect to server. Please check your network or backend and try again.",r=a.b,q=this.acy(r==null?null:r.a)
-switch(a.c.a){case 0:return"Connection timed out. Please try again."
-case 6:return s
-case 1:return"Request timed out while sending data."
-case 2:return"Server took too long to respond."
-case 4:return q==null?"Server returned an error.":q
-case 5:return"Request was cancelled."
-case 7:return s
-default:return q==null?"Something went wrong. Please try again.":q}},
+adl(a){var s="K\u1ebft n\u1ed1i qu\xe1 th\u1eddi gian, vui l\xf2ng th\u1eed l\u1ea1i",r="Kh\xf4ng th\u1ec3 k\u1ebft n\u1ed1i \u0111\u1ebfn m\xe1y ch\u1ee7",q=a.b,p=this.acy(q==null?null:q.a)
+switch(a.c.a){case 0:return s
+case 6:return r
+case 1:return s
+case 2:return"L\u1ed7i k\u1ebft n\u1ed1i m\xe1y ch\u1ee7"
+case 4:return p==null?"L\u1ed7i m\xe1y ch\u1ee7":p
+case 5:return"Y\xeau c\u1ea7u \u0111\xe3 b\u1ecb h\u1ee7y"
+case 7:return r
+default:return p==null?"\u0110\xe3 x\u1ea3y ra l\u1ed7i kh\xf4ng mong mu\u1ed1n":p}},
 acy(a){var s,r,q
 if(t.P.b(a)){s=a.h(0,"message")
 r=s==null?null:B.c.ba(J.cc(s))
