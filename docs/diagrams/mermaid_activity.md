@@ -1,32 +1,32 @@
 ```mermaid
 flowchart TD
-  A[User mở màn hình Statistics] --> B[App gọi API mặc định]
-  B --> C[GET /api/statistics/summary (month, year, JWT)]
-  C --> D{JWT hợp lệ?}
-  D -- No --> E[Hiển thị lỗi 401 / yêu cầu Login]
-  D -- Yes --> F[Backend xử lý dữ liệu]
-  F --> G[Return JSON 200]
-  G --> H[Render Pie Chart]
-  H --> I[Render Bar Chart]
-  I --> J[User chọn filter thời gian]
-  J --> K{Kiểu lọc}
-  K -->|From-To| L[Nhập fromDate và toDate]
-  K -->|Month-Year| M[Chọn month và year]
-  L --> N[Tạo query from-to]
-  M --> O[Tạo query month-year]
-  N --> P[Validate input]
+  A[User_mo_man_hinh_Statistics] --> B[App_goi_API_mac_dinh]
+  B --> C["GET /api/statistics/summary<br/>month, year, JWT"]
+  C --> D{JWT_hop_le}
+  D -- No --> E[Hien_thi_loi_401_va_YC_Login]
+  D -- Yes --> F[Backend_xu_ly_du_lieu]
+  F --> G[Return_JSON_200]
+  G --> H[Render_Pie_Chart]
+  H --> I[Render_Bar_Chart]
+  I --> J[User_chon_filter_thoi_gian]
+  J --> K{Kieu_loc}
+  K -->|From-To| L[Nhap_fromDate_va_toDate]
+  K -->|Month-Year| M[Chon_month_va_year]
+  L --> N[Tao_query_from_to]
+  M --> O[Tao_query_month_year]
+  N --> P[Validate_input]
   O --> P
-  P --> Q{Hợp lệ?}
-  Q -- No --> R[Hiển thị lỗi input]
-  Q -- Yes --> S[Gọi API summary (JWT)]
-  S --> T{Response 200?}
-  T -- No --> U[Hiển thị lỗi từ server]
-  T -- Yes --> V[Backend trả dữ liệu]
-  V --> W[Render lại chart]
+  P --> Q{Hop_le}
+  Q -- No --> R[Hien_thi_loi_input]
+  Q -- Yes --> S[Goi_API_summary_JWT]
+  S --> T{Response_200}
+  T -- No --> U[Hien_thi_loi_tu_server]
+  T -- Yes --> V[Backend_tra_du_lieu]
+  V --> W[Render_lai_chart]
 
   %% Extra note
   classDef note fill:#fff7c0,stroke:#e6c200
-  Z[Note: Nếu gửi to as YYYY-MM-DD, server nâng to thành end-of-day và dùng $lte]:::note
+  Z[Note: neu gui to as YYYY-MM-DD server nang to thanh end-of-day va dung $lte]:::note
   W --> Z
 
 ```
