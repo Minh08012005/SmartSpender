@@ -50,7 +50,7 @@ jobs:
             API_BASE_URL="https://smartspender-vd33.onrender.com"
             echo "API_BASE_URL not set — using fallback $API_BASE_URL"
           fi
-          flutter build web --release --pwa-strategy=none \
+          flutter build web --release --pwa-strategy=none --base-href /SmartSpender/ \
             --dart-define=APP_ENV=production \
             --dart-define=API_BASE_URL=${API_BASE_URL}
 
