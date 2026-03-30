@@ -151,6 +151,7 @@ class AppStrings {
   static const String serverErrorPrefix = 'Lỗi máy chủ';
   static const String invalidServerResponse =
       'Phản hồi từ máy chủ không hợp lệ';
+  static const String requestCancelled = 'Yêu cầu đã bị hủy';
   static const String loginFailed = 'Đăng nhập thất bại';
   static const String loginSuccess = 'Đăng nhập thành công';
   static const String registerSuccess = 'Đăng ký thành công';

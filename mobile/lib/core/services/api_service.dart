@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/api_constants.dart';
 import '../../services/auth_service.dart';
 import '../../screens/login.dart';
+import '../strings.dart';
 
 /// Centralized API Service
 ///
@@ -192,21 +193,21 @@ class _ErrorInterceptor extends Interceptor {
 
     switch (err.type) {
       case DioExceptionType.connectionTimeout:
-        return 'Connection timed out. Please try again.';
+        return AppStrings.timeoutTryAgain;
       case DioExceptionType.connectionError:
-        return 'Cannot connect to server. Please check your network or backend and try again.';
+        return AppStrings.cannotConnectServer;
       case DioExceptionType.sendTimeout:
-        return 'Request timed out while sending data.';
+        return AppStrings.timeoutTryAgain;
       case DioExceptionType.receiveTimeout:
-        return 'Server took too long to respond.';
+        return AppStrings.serverConnectionError;
       case DioExceptionType.badResponse:
-        return serverMessage ?? 'Server returned an error.';
+        return serverMessage ?? AppStrings.serverErrorPrefix;
       case DioExceptionType.cancel:
-        return 'Request was cancelled.';
+        return AppStrings.requestCancelled;
       case DioExceptionType.unknown:
-        return 'Cannot connect to server. Please check your network or backend and try again.';
+        return AppStrings.cannotConnectServer;
       default:
-        return serverMessage ?? 'Something went wrong. Please try again.';
+        return serverMessage ?? AppStrings.unexpectedErrorOccurred;
     }
   }
 
