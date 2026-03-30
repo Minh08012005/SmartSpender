@@ -10,11 +10,11 @@ Cụ thể, khi người dùng thực hiện các thao tác như thêm, sửa ho
 
 Kiến trúc tương tác giữa các thành phần trong hệ thống được mô tả theo mô hình phân lớp như sau:
 
-* **Presentation Layer (UI)**: Bao gồm các Widget Flutter, chịu trách nhiệm hiển thị dữ liệu và nhận input từ người dùng.  
-* **State Management Layer (Provider)**: Quản lý trạng thái ứng dụng, xử lý logic phía client.  
-* **Service Layer**: Thực hiện các lời gọi HTTP đến Backend API.  
-* **Backend Layer**: Xử lý logic nghiệp vụ, xác thực người dùng và truy xuất cơ sở dữ liệu.  
-* **Database Layer**: Lưu trữ dữ liệu giao dịch.
+- **Presentation Layer (UI)**: Bao gồm các Widget Flutter, chịu trách nhiệm hiển thị dữ liệu và nhận input từ người dùng.
+- **State Management Layer (Provider)**: Quản lý trạng thái ứng dụng, xử lý logic phía client.
+- **Service Layer**: Thực hiện các lời gọi HTTP đến Backend API.
+- **Backend Layer**: Xử lý logic nghiệp vụ, xác thực người dùng và truy xuất cơ sở dữ liệu.
+- **Database Layer**: Lưu trữ dữ liệu giao dịch.
 
 Mô hình này giúp đảm bảo tính tách biệt trách nhiệm (Separation of Concerns), nâng cao khả năng bảo trì và mở rộng hệ thống.
 
@@ -37,9 +37,9 @@ Quy trình xử lý được mô tả qua các bước sau:
 **Bước 3: Xử lý tại Provider**  
  Provider thực hiện các nhiệm vụ sau:
 
-* Cập nhật trạng thái loading (`isLoading = true`)  
-* Gọi Service Layer để gửi request đến Backend  
-* Chờ phản hồi từ server
+- Cập nhật trạng thái loading (`isLoading = true`)
+- Gọi Service Layer để gửi request đến Backend
+- Chờ phản hồi từ server
 
 **Bước 4: Gọi API từ Service Layer**  
  Service Layer gửi yêu cầu HTTP POST đến endpoint `/transactions`, kèm theo JWT Token trong header để xác thực người dùng.
@@ -47,22 +47,22 @@ Quy trình xử lý được mô tả qua các bước sau:
 **Bước 5: Xử lý tại Backend**  
  Backend thực hiện các bước:
 
-* Xác thực JWT Token  
-* Kiểm tra tính hợp lệ của dữ liệu đầu vào  
-* Lưu thông tin giao dịch vào cơ sở dữ liệu  
-* Trả về kết quả cho client
+- Xác thực JWT Token
+- Kiểm tra tính hợp lệ của dữ liệu đầu vào
+- Lưu thông tin giao dịch vào cơ sở dữ liệu
+- Trả về kết quả cho client
 
 **Bước 6: Nhận phản hồi từ Backend**
 
-* Trường hợp thành công (HTTP 200): trả về dữ liệu giao dịch vừa tạo  
-* Trường hợp lỗi (HTTP 400): trả về thông báo lỗi
+- Trường hợp thành công (HTTP 200): trả về dữ liệu giao dịch vừa tạo
+- Trường hợp lỗi (HTTP 400): trả về thông báo lỗi
 
 **Bước 7: Cập nhật trạng thái tại Provider**
 
-* Nếu thành công: thêm giao dịch mới vào danh sách nội bộ  
-* Nếu thất bại: cập nhật thông tin lỗi  
-* Cập nhật lại trạng thái loading  
-* Gọi `notifyListeners()` để thông báo thay đổi
+- Nếu thành công: thêm giao dịch mới vào danh sách nội bộ
+- Nếu thất bại: cập nhật thông tin lỗi
+- Cập nhật lại trạng thái loading
+- Gọi `notifyListeners()` để thông báo thay đổi
 
 **Bước 8: Cập nhật giao diện người dùng**  
  Các Widget lắng nghe Provider sẽ tự động được render lại, hiển thị danh sách giao dịch mới nhất.
@@ -71,9 +71,9 @@ Quy trình xử lý được mô tả qua các bước sau:
 
 Quy trình cập nhật giao dịch tương tự như thao tác tạo mới, với sự khác biệt chính là:
 
-* Phương thức HTTP sử dụng là PUT hoặc PATCH  
-* Backend thực hiện cập nhật bản ghi dựa trên `transactionId`  
-* Provider cập nhật lại phần tử tương ứng trong danh sách nội bộ
+- Phương thức HTTP sử dụng là PUT hoặc PATCH
+- Backend thực hiện cập nhật bản ghi dựa trên `transactionId`
+- Provider cập nhật lại phần tử tương ứng trong danh sách nội bộ
 
 Việc cập nhật được thực hiện theo nguyên tắc đồng bộ dữ liệu giữa client và server nhằm đảm bảo tính nhất quán.
 
@@ -85,12 +85,12 @@ Người dùng có thể xóa một giao dịch đã tồn tại khỏi hệ th�
 
 ### **X.5.2. Luồng xử lý**
 
-* UI gửi yêu cầu xóa đến Provider  
-* Provider gọi API DELETE `/transactions/{id}`  
-* Backend xác thực quyền sở hữu giao dịch  
-* Xóa bản ghi khỏi cơ sở dữ liệu  
-* Provider cập nhật lại danh sách bằng cách loại bỏ phần tử tương ứng  
-* Giao diện được cập nhật lại
+- UI gửi yêu cầu xóa đến Provider
+- Provider gọi API DELETE `/transactions/{id}`
+- Backend xác thực quyền sở hữu giao dịch
+- Xóa bản ghi khỏi cơ sở dữ liệu
+- Provider cập nhật lại danh sách bằng cách loại bỏ phần tử tương ứng
+- Giao diện được cập nhật lại
 
 ## **X.6. Cơ chế xác thực và bảo mật**
 
@@ -98,9 +98,9 @@ Hệ thống sử dụng cơ chế xác thực dựa trên **JSON Web Token (JWT
 
 Backend sử dụng middleware để:
 
-* Giải mã token  
-* Xác định danh tính người dùng  
-* Gán thông tin người dùng vào request để phục vụ xử lý nghiệp vụ
+- Giải mã token
+- Xác định danh tính người dùng
+- Gán thông tin người dùng vào request để phục vụ xử lý nghiệp vụ
 
 Cơ chế này đảm bảo rằng chỉ những người dùng hợp lệ mới có quyền truy cập và thao tác trên dữ liệu của mình.
 
@@ -118,13 +118,34 @@ Hệ thống sử dụng phương pháp cập nhật cục bộ (local state upd
 
 ### **Ưu điểm**
 
-* Đơn giản, dễ triển khai  
-* Tách biệt rõ ràng giữa UI và logic  
-* Hỗ trợ cơ chế reactive giúp giao diện tự động cập nhật
+- Đơn giản, dễ triển khai
+- Tách biệt rõ ràng giữa UI và logic
+- Hỗ trợ cơ chế reactive giúp giao diện tự động cập nhật
 
 ### **Hạn chế**
 
-* Khó mở rộng đối với hệ thống lớn  
-* Có thể gây dư thừa render nếu không tối ưu  
-* Không phù hợp với các ứng dụng có state phức tạp
+- Khó mở rộng đối với hệ thống lớn
+- Có thể gây dư thừa render nếu không tối ưu
+- Không phù hợp với các ứng dụng có state phức tạp
 
+## **X.9. Các cập nhật đề xuất cho sơ đồ (Review notes)**
+
+Để các biểu đồ dùng làm báo cáo môn học/kiến trúc hệ thống rõ ràng và chính xác hơn, đề xuất các thay đổi sau (đã được bổ sung trong thư mục `docs/diagrams`):
+
+- Thêm bước **Client normalizes input** (trim `title`, `category.toLowerCase()`, đảm bảo `amount` là number) ngay trước khi `Provider` gọi service. Backend vẫn giữ defensive checks.
+- Trong sequence diagram: hiển thị rõ bước **Update Wallet Balance** (hoặc rollback) sau khi transaction được ghi vào DB. Điều này phản ánh logic hiện có trong `backend/services/transaction.service.js` (applyWalletDelta, rollback).
+- Chỉnh lại response của POST create transaction thành **201 Created** trên sơ đồ (code hiện trả 201).
+- Thêm nhánh xử lý **Token expired** trong activity diagram để mobile có cách xử lý riêng (chuyển về màn hình đăng nhập hoặc refresh token).
+- Tiêu chuẩn hoá cách xử lý `to` date: khi client gửi `YYYY-MM-DD` cho `to`, backend nâng `to` lên cuối ngày và dùng `$lte`.
+
+Những thay đổi trên đã được minh hoạ bằng hai file Mermaid (`mermaid_sequence.md`, `mermaid_activity.md`) và file ví dụ request/response (`examples.md`) trong cùng thư mục để dễ chèn vào slide/báo cáo.
+
+## **X.10. Ghi chú nhanh cho Mobile (Đức Anh)**
+
+- Khi gọi `POST /api/transactions` nhớ gửi header `Authorization: Bearer <JWT>`; server trả `201` khi tạo thành công.
+- Chuẩn hoá payload: `title.trim()`, `category.toLowerCase()`, `amount` là number, `date` ở dạng ISO hoặc `YYYY-MM-DD` (server nâng `to` lên cuối ngày nếu cần).
+- Khi nhận `401` với `errorCode: TOKEN_EXPIRED`, điều hướng người dùng tới màn hình đăng nhập (hoặc flow refresh token nếu có thiết kế).
+
+---
+
+Tiếp theo xem các file Mermaid và ví dụ trong cùng thư mục để lấy nội dung đã cập nhật.
