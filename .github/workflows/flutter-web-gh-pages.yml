@@ -15,13 +15,13 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-            flutter-version: "3.10.7"
+          flutter-version: "3.10.7"
 
-        - name: Upgrade Flutter to latest stable
-          run: |
-            cd mobile || exit 0
-            flutter upgrade --force || true
-            flutter --version
+      - name: Upgrade Flutter to latest stable
+        run: |
+          cd mobile || exit 0
+          flutter upgrade --force || true
+          flutter --version
 
       - name: Install dependencies
         run: |
