@@ -137,9 +137,9 @@ Liên hệ: Minh(Leader) hoặc tạo issue trên GitHub
 
 ---
 
-## 🌐 Chuẩn hóa Deploy Link Test Công Khai (Vercel)
+## 🌐 Chuẩn hóa Deploy Link Test Công Khai (GitHub Pages)
 
-Mục tiêu: ai mở link Vercel cũng test được, không còn lỗi gọi nhầm localhost.
+Mục tiêu: ai mở link công khai (GitHub Pages) cũng test được, không còn lỗi gọi nhầm localhost.
 
 ### 1) Build web production chuẩn
 
@@ -150,25 +150,15 @@ flutter pub get
 flutter build web --release --pwa-strategy=none --dart-define=APP_ENV=production --dart-define=API_BASE_URL=https://smartspender-x1fl.onrender.com
 ```
 
-Ý nghĩa:
+### 2) Publish lên GitHub Pages (đã có workflow)
 
-- `APP_ENV=production`: ép app chạy config production.
-- `API_BASE_URL=...onrender.com`: khóa API backend thật, không rơi về localhost.
-- `--pwa-strategy=none`: tránh cache service worker cũ gây lệch bản build khi test.
+Repository đã có workflow Actions để build và publish `mobile/build/web` lên `gh-pages` khi có push lên `main`.
 
-### 2) Deploy trực tiếp artifact web lên Vercel
+Nếu muốn publish thủ công, có thể dùng `gh-pages` package hoặc `peaceiris/actions-gh-pages` locally, nhưng khuyến nghị dùng workflow đã sẵn sàng.
 
-Chạy từ thư mục root repo:
+### 3) Kiểm tra sau publish (bắt buộc)
 
-```bash
-npx vercel deploy --prod mobile/build/web
-```
-
-Nếu chưa login Vercel, CLI sẽ yêu cầu đăng nhập một lần.
-
-### 3) Kiểm tra sau deploy (bắt buộc)
-
-- Mở link Vercel trên điện thoại (4G và WiFi).
+- Mở link Pages trên điện thoại (ví dụ `https://<username>.github.io/SmartSpender/`).
 - Test `Đăng ký` và `Đăng nhập`.
 - Nếu backend vừa ngủ (Render free tier), chờ 20-60 giây rồi thử lại.
 
@@ -176,9 +166,9 @@ Nếu chưa login Vercel, CLI sẽ yêu cầu đăng nhập một lần.
 
 Trên backend host (Render), đảm bảo có:
 
-- `CORS_ALLOWED_ORIGINS` (tùy chọn): thêm custom domain nếu có.
+- `CORS_ALLOWED_ORIGINS` (tùy chọn): thêm custom domain nếu có (ví dụ `https://<username>.github.io`).
 
-Lưu ý: backend đã cho phép sẵn origin `https://*.vercel.app`.
+Lưu ý: backend đã được cập nhật để cho phép `https://*.github.io` và `https://*.onrender.com`.
 
 ---
 

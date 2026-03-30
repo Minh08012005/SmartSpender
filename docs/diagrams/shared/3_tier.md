@@ -20,7 +20,7 @@
 
 graph TD
     subgraph Presentation_Layer ["Presentation Layer (Client)"]
-        A[Flutter Web App - Vercel]
+        A[Flutter Web App - GitHub Pages]
         B[Flutter Mobile App - APK/iOS]
     end
 

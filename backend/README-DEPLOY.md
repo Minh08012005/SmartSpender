@@ -10,7 +10,7 @@ This file contains step-by-step actions to make the backend reachable from the p
      - `MONGO_URI` — production MongoDB connection string
      - `JWT_SECRET` — secure secret for JWT
    - Recommended for CORS:
-     - `CORS_ALLOWED_ORIGINS` — comma-separated list of allowed frontend origins (example: `https://smartspender-x1fl.onrender.com,https://smartspender-nhom2.vercel.app`)
+     - `CORS_ALLOWED_ORIGINS` — comma-separated list of allowed frontend origins (example: `https://smartspender-x1fl.onrender.com,https://<username>.github.io`)
      - Or for quick debugging only: `CORS_ALLOW_ALL=true` then redeploy, test, and set it back to `false`
 
 3. Redeploy backend on your host
