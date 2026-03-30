@@ -42,6 +42,9 @@ app.use(
 // CORS cho Flutter Web/dev browsers
 const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
 const vercelOriginPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+const pagesOriginPattern = /^https:\/\/[a-z0-9-]+\.pages\.dev$/i;
+const renderOriginPattern = /^https:\/\/[a-z0-9-]+\.onrender\.com$/i;
+const githubPagesPattern = /^https:\/\/[a-z0-9-]+\.github\.io$/i;
 const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -50,15 +53,27 @@ const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
 app.use(
   cors({
     origin(origin, callback) {
+      // Allow forcing open CORS for quick testing (set CORS_ALLOW_ALL=true in env)
+      if (process.env.CORS_ALLOW_ALL === 'true') {
+        return callback(null, true);
+      }
+
       // Allow non-browser requests (curl/postman) and configured browser origins
       if (
         !origin ||
         localOriginPattern.test(origin) ||
         vercelOriginPattern.test(origin) ||
+        pagesOriginPattern.test(origin) ||
+        githubPagesPattern.test(origin) ||
+        renderOriginPattern.test(origin) ||
         extraAllowedOrigins.includes(origin)
       ) {
         return callback(null, true);
       }
+
+      // Log blocked origin for easier debugging in production logs
+      console.warn('Blocked CORS origin:', origin);
+
       const corsError = new Error(
         'CORS origin blocked: this mobile/web origin is not allowed. Contact backend team to whitelist it via CORS_ALLOWED_ORIGINS.'
       );
@@ -69,6 +84,7 @@ app.use(
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
+      'Origin',
       'Content-Type',
       'Authorization',
       'ngrok-skip-browser-warning',
@@ -132,6 +148,15 @@ app.get('/health', (req, res) => {
     message: 'Server is healthy',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Root endpoint: return a simple status page to avoid 404 from monitors
+app.get('/', (req, res) => {
+  res
+    .status(200)
+    .send(
+      `<!doctype html><html><head><meta charset="utf-8"><title>SmartSpender API</title></head><body><h1>SmartSpender Backend</h1><p><a href="/health">Health</a> | <a href="/api-docs">API Docs</a></p></body></html>`
+    );
 });
 
 // Global error handling middleware
