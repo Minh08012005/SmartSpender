@@ -1,7 +1,14 @@
 # Biểu đồ Kiến trúc hệ thống 3 lớp (3-Tier)
 
-> **⚠️ Lưu ý:** File này là biểu đồ **đơn giản hóa (Simplified)**  
-> Để xem **biểu đồ chi tiết toàn bộ kiến trúc với data flow** (bằng tiếng Việt), xem: [COMPREHENSIVE_ARCHITECTURE_VI.md](./COMPREHENSIVE_ARCHITECTURE_VI.md)
+> **📌 Chọn phiên bản phù hợp với nhu cầu của bạn:**
+>
+> | Phiên bản                | Mục đích                 | Kích thước  | Link                                                                   |
+> | ------------------------ | ------------------------ | ----------- | ---------------------------------------------------------------------- |
+> | 📊 **SLIDE**             | Trình bày slide, báo cáo | Vừa 1 trang | [ARCHITECTURE_SLIDE.md](./ARCHITECTURE_SLIDE.md) ⭐                    |
+> | 📌 **3-TIER** (File này) | Tổng quan cơ bản         | 1 trang     | Xem bên dưới                                                           |
+> | 📚 **CHI TIẾT**          | Tài liệu báo cáo đầy đủ  | 5+ trang    | [COMPREHENSIVE_ARCHITECTURE_VI.md](./COMPREHENSIVE_ARCHITECTURE_VI.md) |
+>
+> **💡 Khuyến nghị:** Dùng **ARCHITECTURE_SLIDE.md** cho slide vì vừa vặn & rõ ràng nhất!
 
 ## Tổng quan nhanh (Quick Overview)
 
