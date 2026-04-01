@@ -10,10 +10,10 @@ sequenceDiagram
     participant Auth as Auth Middleware
     participant DB as Database
 
-    User->>UI: Nhâm / Sửa / Xóa giao dịch
+    User->>UI: Thêm / Sửa / Xóa giao dịch
     UI->>API: POST /api/wallets/transfer<br/>(Authorization: Bearer JWT)
     API->>Auth: Verify JWT
-    
+
     alt JWT valid
         Auth->>API: ✓ Authorized
         API->>DB: Fetch wallets + validate
@@ -37,14 +37,14 @@ sequenceDiagram
 
 ## Flow Overview
 
-| Step | Action | Status |
-|------|--------|--------|
-| 1 | User submits transfer request | UI ← User |
-| 2 | Send HTTP request with JWT | API ← UI |
-| 3 | Verify authentication token | Auth Middleware |
-| 4 | Validate inputs + check balance | Database Query |
-| 5 | Update wallets + create transfer record | Database Update |
-| 6 | Return success/error response | UI ← API |
+| Step | Action                                  | Status          |
+| ---- | --------------------------------------- | --------------- |
+| 1    | User submits transfer request           | UI ← User       |
+| 2    | Send HTTP request with JWT              | API ← UI        |
+| 3    | Verify authentication token             | Auth Middleware |
+| 4    | Validate inputs + check balance         | Database Query  |
+| 5    | Update wallets + create transfer record | Database Update |
+| 6    | Return success/error response           | UI ← API        |
 
 ## Key Points
 
