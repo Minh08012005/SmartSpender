@@ -72,6 +72,11 @@ class ApiService {
     return _dio.put(path, data: data, options: options);
   }
 
+  /// PATCH request
+  Future<Response> patch(String path, {dynamic data, Options? options}) async {
+    return _dio.patch(path, data: data, options: options);
+  }
+
   /// DELETE request
   Future<Response> delete(String path, {Options? options}) async {
     return _dio.delete(path, options: options);

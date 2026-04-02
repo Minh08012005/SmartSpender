@@ -21,9 +21,11 @@ const errorHandler = require('./middleware/errorHandler.middleware');
 // Import routes
 const registerRoute = require('./routes/auth/register.route'); // Routes cho registration
 const loginRoute = require('./routes/auth/login.route'); // Routes cho login
+const changePasswordRoute = require('./routes/auth/change_password.route'); // Routes cho change password
 const transactionRoutes = require('./routes/transaction_routes'); // Routes cho transactions
 const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
 const walletRoutes = require('./routes/wallet_routes'); // Routes cho wallets
+const notificationRoutes = require('./routes/notification.routes'); // Routes cho notifications
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -136,9 +138,11 @@ const apiPrefixes = ['/api', '/api/v1'];
 apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/auth`, registerRoute);
   app.use(`${prefix}/auth`, loginRoute);
+  app.use(`${prefix}/auth`, changePasswordRoute);
   app.use(`${prefix}/transactions`, transactionRoutes);
   app.use(`${prefix}/statistics`, statisticRoutes);
   app.use(`${prefix}/wallets`, walletRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
 });
 
 // Health check endpoint

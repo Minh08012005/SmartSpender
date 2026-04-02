@@ -9,6 +9,7 @@ import 'core/config/app_config.dart';
 import 'core/services/api_service.dart';
 import 'core/constants/api_constants.dart';
 import 'data/providers/transaction_provider.dart';
+import 'data/providers/notifications_provider.dart';
 import 'data/providers/statistic_provider.dart';
 import 'core/strings.dart';
 import 'data/providers/wallet_provider.dart';
@@ -222,14 +223,24 @@ class _MyAppState extends State<MyApp> {
     // Wrap app với MultiProvider để inject providers
     return MultiProvider(
       providers: [
-        // Transaction Provider
-        ChangeNotifierProvider(create: (_) => TransactionProvider()),
+        // Notifications provider (create first)
+        ChangeNotifierProvider(create: (_) => NotificationsProvider()),
 
-        // Statistic Provider
-        ChangeNotifierProvider(create: (_) => StatisticProvider()),
+        // Transaction Provider - inject NotificationsProvider using ProxyProvider
+        ChangeNotifierProxyProvider<NotificationsProvider, TransactionProvider>(
+          create: (_) => TransactionProvider(),
+          update: (_, notifications, txProvider) {
+            txProvider ??= TransactionProvider();
+            txProvider.setNotificationsProvider(notifications);
+            return txProvider;
+          },
+        ),
 
-        // Wallet Provider
-        ChangeNotifierProvider(create: (_) => WalletProvider()),
+      // Statistic Provider
+      ChangeNotifierProvider(create: (_) => StatisticProvider()),
+
+      // Wallet Provider
+      ChangeNotifierProvider(create: (_) => WalletProvider()),
 
         // TODO: Thêm các providers khác ở đây
         // ChangeNotifierProvider(create: (_) => AuthProvider()),

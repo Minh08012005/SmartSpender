@@ -1,6 +1,10 @@
 ﻿import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+import '../../views/profile/widgets/notification_widgets.dart';
+import 'notifications_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/strings.dart';
@@ -12,6 +16,12 @@ import '../dummy_transactions.dart';
 /// Quản lý state của transactions và giao tiếp với API
 /// Sử dụng ChangeNotifier để notify UI khi data thay đổi
 class TransactionProvider extends ChangeNotifier {
+
+  NotificationsProvider? _notificationsProvider;
+
+  void setNotificationsProvider(NotificationsProvider? p) {
+    _notificationsProvider = p;
+  }
   // ============== PRIVATE STATE ==============
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
@@ -190,6 +200,35 @@ class TransactionProvider extends ChangeNotifier {
           throw Exception('Phản hồi tạo giao dịch không hợp lệ');
         }
         _transactions.insert(0, createdTransaction);
+        // Create a local in-app notification so Notifications UI updates
+        final newNotif = AppNotification(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          title: 'Giao dịch mới',
+          message:
+              '${createdTransaction.title} • ${createdTransaction.amount.toString()}',
+          timestamp: DateTime.now(),
+          type: 'transaction',
+          isRead: false,
+        );
+
+        try {
+          // If NotificationsProvider exists, use it to insert and notify
+          if (NotificationsProvider.instance == null) {
+            debugPrint('⚠️ NotificationsProvider.instance is NULL when adding notif');
+          } else {
+            debugPrint('ℹ️ TransactionProvider: adding notif via provider');
+          }
+          NotificationsProvider.instance?.addLocalNotification(newNotif);
+        } catch (_) {
+          // fallback: write directly to prefs
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            final raw = prefs.getString('app_notifications') ?? '[]';
+            final decoded = (jsonDecode(raw) as List<dynamic>);
+            decoded.insert(0, newNotif.toJson());
+            await prefs.setString('app_notifications', jsonEncode(decoded));
+          } catch (_) {}
+        }
         _remoteTotalIncome = null;
         _remoteTotalExpense = null;
         notifyListeners();
