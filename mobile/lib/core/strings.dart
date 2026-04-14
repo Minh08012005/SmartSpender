@@ -151,6 +151,7 @@ class AppStrings {
   static const String serverErrorPrefix = 'Lỗi máy chủ';
   static const String invalidServerResponse =
       'Phản hồi từ máy chủ không hợp lệ';
+  static const String requestCancelled = 'Yêu cầu đã bị hủy';
   static const String loginFailed = 'Đăng nhập thất bại';
   static const String loginSuccess = 'Đăng nhập thành công';
   static const String registerSuccess = 'Đăng ký thành công';
@@ -191,4 +192,55 @@ class AppStrings {
   static const String walletNameCash = 'Tiền mặt';
   static const String walletNameBank = 'Ngân hàng';
   static const String walletNameEwallet = 'Ví điện tử';
+
+  // Phase 4: Security Settings
+  static const String securityChangePassword = 'Đổi mật khẩu';
+  static const String securityCurrentPassword = 'Mật khẩu hiện tại';
+  static const String securityNewPassword = 'Mật khẩu mới';
+  static const String securityConfirmNewPassword = 'Xác nhận mật khẩu mới';
+  static const String securityTwoFactorAuth = 'Xác thực hai yếu tố (2FA)';
+  static const String securityTwoFactorAuthDesc = 'Bảo vệ tài khoản bằng 2FA';
+  static const String securityTwoFactorEnabled = 'Đã bật';
+  static const String securityTwoFactorDisabled = 'Chưa bật';
+  static const String securityActiveSessions = 'Phiên đang hoạt động';
+  static const String securityCurrentDevice = 'Thiết bị hiện tại';
+  static const String securityLogoutOtherSessions = 'Đăng xuất các phiên khác';
+  static const String securityLogoutOtherSessionsDesc =
+      'Đăng xuất mọi phiên đăng nhập khác';
+  static const String securityChangePasswordSuccess = 'Đổi mật khẩu thành công';
+  static const String securityChangePasswordFailed = 'Đổi mật khẩu thất bại';
+  static const String securityInvalidCurrentPassword =
+      'Mật khẩu hiện tại không đúng';
+  static const String securityPasswordChangedAt = 'Lần cuối thay đổi: ';
+  static const String securityLoginActivity = 'Lịch sử đăng nhập';
+  static const String securityLastLogin = 'Lần đăng nhập cuối: ';
+  static const String securityLocation = 'Vị trí: ';
+  static const String securityDevice = 'Thiết bị: ';
+
+  // Phase 5: Notifications Settings
+  static const String notificationsTitle = 'Thông báo';
+  static const String notificationsInAppNotifications =
+      'Thông báo trong ứng dụng';
+  static const String notificationsEmailNotifications = 'Thông báo qua email';
+  static const String notificationsTransactions = 'Thông báo giao dịch';
+  static const String notificationsTransactionsDesc =
+      'Nhận thông báo khi có giao dịch mới';
+  static const String notificationsSecurityAlerts = 'Cảnh báo bảo mật';
+  static const String notificationsSecurityAlertsDesc =
+      'Thông báo khi có hoạt động không bình thường';
+  static const String notificationsBudgetAlerts = 'Cảnh báo ngân sách';
+  static const String notificationsBudgetAlertsDesc =
+      'Thông báo khi gần vượt ngân sách';
+  static const String notificationsReminders = 'Nhắc nhở';
+  static const String notificationsRemindersDesc = 'Nhắc nhở quản lý chi tiêu';
+  static const String notificationsPromotions = 'Khuyến mãi và cập nhật';
+  static const String notificationsPromotionsDesc =
+      'Nhận thông báo về khuyến mãi mới';
+  static const String notificationsNoNotifications = 'Không có thông báo nào';
+  static const String notificationsMarkAllAsRead = 'Đánh dấu tất cả đã đọc';
+  static const String notificationsNotificationCenter = 'Trung tâm thông báo';
+  static const String notificationsPreferences = 'Tùy chỉnh thông báo';
+  static const String notificationsSavePreferences = 'Lưu tùy chỉnh';
+  static const String notificationsPreferencesSaved = 'Tùy chỉnh đã được lưu';
+  static const String notificationsPreferencesFailed = 'Lưu tùy chỉnh thất bại';
 }

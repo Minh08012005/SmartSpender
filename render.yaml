@@ -1,0 +1,9 @@
+services:
+  - type: web_service
+    name: SmartSpender-backend
+    env: node
+    branch: main
+    root: backend
+    buildCommand: npm install
+    startCommand: npm start
+    plan: free

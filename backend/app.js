@@ -21,9 +21,11 @@ const errorHandler = require('./middleware/errorHandler.middleware');
 // Import routes
 const registerRoute = require('./routes/auth/register.route'); // Routes cho registration
 const loginRoute = require('./routes/auth/login.route'); // Routes cho login
+const changePasswordRoute = require('./routes/auth/change_password.route'); // Routes cho change password
 const transactionRoutes = require('./routes/transaction_routes'); // Routes cho transactions
 const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
 const walletRoutes = require('./routes/wallet_routes'); // Routes cho wallets
+const notificationRoutes = require('./routes/notification.routes'); // Routes cho notifications
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -41,6 +43,10 @@ app.use(
 
 // CORS cho Flutter Web/dev browsers
 const localOriginPattern = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i;
+const vercelOriginPattern = /^https:\/\/[a-z0-9-]+\.vercel\.app$/i;
+const pagesOriginPattern = /^https:\/\/[a-z0-9-]+\.pages\.dev$/i;
+const renderOriginPattern = /^https:\/\/[a-z0-9-]+\.onrender\.com$/i;
+const githubPagesPattern = /^https:\/\/[a-z0-9-]+\.github\.io$/i;
 const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
   .split(',')
   .map((origin) => origin.trim())
@@ -49,14 +55,27 @@ const extraAllowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
 app.use(
   cors({
     origin(origin, callback) {
+      // Allow forcing open CORS for quick testing (set CORS_ALLOW_ALL=true in env)
+      if (process.env.CORS_ALLOW_ALL === 'true') {
+        return callback(null, true);
+      }
+
       // Allow non-browser requests (curl/postman) and configured browser origins
       if (
         !origin ||
         localOriginPattern.test(origin) ||
+        vercelOriginPattern.test(origin) ||
+        pagesOriginPattern.test(origin) ||
+        githubPagesPattern.test(origin) ||
+        renderOriginPattern.test(origin) ||
         extraAllowedOrigins.includes(origin)
       ) {
         return callback(null, true);
       }
+
+      // Log blocked origin for easier debugging in production logs
+      console.warn('Blocked CORS origin:', origin);
+
       const corsError = new Error(
         'CORS origin blocked: this mobile/web origin is not allowed. Contact backend team to whitelist it via CORS_ALLOWED_ORIGINS.'
       );
@@ -67,6 +86,7 @@ app.use(
     },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
+      'Origin',
       'Content-Type',
       'Authorization',
       'ngrok-skip-browser-warning',
@@ -118,9 +138,11 @@ const apiPrefixes = ['/api', '/api/v1'];
 apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/auth`, registerRoute);
   app.use(`${prefix}/auth`, loginRoute);
+  app.use(`${prefix}/auth`, changePasswordRoute);
   app.use(`${prefix}/transactions`, transactionRoutes);
   app.use(`${prefix}/statistics`, statisticRoutes);
   app.use(`${prefix}/wallets`, walletRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
 });
 
 // Health check endpoint
@@ -130,6 +152,15 @@ app.get('/health', (req, res) => {
     message: 'Server is healthy',
     timestamp: new Date().toISOString(),
   });
+});
+
+// Root endpoint: return a simple status page to avoid 404 from monitors
+app.get('/', (req, res) => {
+  res
+    .status(200)
+    .send(
+      `<!doctype html><html><head><meta charset="utf-8"><title>SmartSpender API</title></head><body><h1>SmartSpender Backend</h1><p><a href="/health">Health</a> | <a href="/api-docs">API Docs</a></p></body></html>`
+    );
 });
 
 // Global error handling middleware

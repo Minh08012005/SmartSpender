@@ -12,18 +12,25 @@ const connectDB = require('./config/db'); // Hàm kết nối MongoDB
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
-  try {
-    // Kết nối đến MongoDB
-    await connectDB();
-
-    // Khởi động server sau khi kết nối database thành công
-    app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
-});
-  } catch (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1); // Thoát ứng dụng nếu không kết nối được database
-  }
+  // Try to connect to DB but do not block server start for debugging/debug-friendly behavior.
+  connectDB()
+    .then(() => {
+      console.log('Database connected successfully');
+    })
+    .catch((err) => {
+      console.error(
+        'MongoDB connection failed (continuing without DB):',
+        err.message || err
+      );
+    })
+    .finally(() => {
+      // Start server regardless of DB connection outcome so health endpoints respond.
+      app.listen(PORT, () => {
+        console.log(
+          `Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`
+        );
+      });
+    });
 };
 
 // Gọi hàm khởi động server

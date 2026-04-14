@@ -1,0 +1,74 @@
+name: Build & Deploy Flutter Web → Cloudflare Pages
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.10.6"
+          cache: true
+
+      - name: Upgrade Flutter to latest stable
+        run: |
+          cd mobile
+          flutter upgrade
+          flutter --version
+
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Build Flutter web (production)
+        env:
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: |
+          cd mobile
+          # fallback to known backend Render URL when secret not provided
+          if [ -z "${API_BASE_URL}" ]; then
+            API_BASE_URL="https://smartspender-x1fl.onrender.com"
+            echo "API_BASE_URL not set in secrets — using fallback: ${API_BASE_URL}"
+          else
+            echo "Using API_BASE_URL from secrets"
+          fi
+          flutter build web --release --pwa-strategy=none \
+            --dart-define=APP_ENV=production \
+            --dart-define=API_BASE_URL=${API_BASE_URL}
+
+      - name: Install wrangler
+        run: npm install -g wrangler
+
+      - name: Debug: wrangler whoami (verify token in runner)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          node --version || true
+          npm --version || true
+          npm i -g wrangler
+          echo "--- wrangler whoami ---"
+          npx wrangler whoami || true
+          echo "--- end whoami ---"
+
+      - name: Publish to Cloudflare Pages
+        env:
+          # wrangler expects CLOUDFLARE_API_TOKEN in non-interactive environments
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          wrangler pages deploy build/web --project-name=smartspender-pages
