@@ -26,6 +26,7 @@ const transactionRoutes = require('./routes/transaction_routes'); // Routes cho 
 const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
 const walletRoutes = require('./routes/wallet_routes'); // Routes cho wallets
 const notificationRoutes = require('./routes/notification.routes'); // Routes cho notifications
+const groupRoutes = require('./routes/group_routes'); // Routes cho groups (minimal)
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -142,6 +143,7 @@ apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/transactions`, transactionRoutes);
   app.use(`${prefix}/statistics`, statisticRoutes);
   app.use(`${prefix}/wallets`, walletRoutes);
+  app.use(`${prefix}/groups`, groupRoutes);
   app.use(`${prefix}/notifications`, notificationRoutes);
 });
 

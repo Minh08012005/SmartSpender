@@ -14,6 +14,7 @@
 
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+const bcrypt = require('bcrypt');
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,32 @@ const connectDB = async () => {
 const seedGroupData = async () => {
   try {
     console.log('\n🌱 STARTING GROUP DATA SEEDING...\n');
+
+    // ------- STEP 0: Create Test User -------
+    console.log('👤 Creating test user...');
+
+    const testEmail = 'test@example.com';
+    const testPassword = await bcrypt.hash('password123', 10);
+
+    const testUser = {
+      email: testEmail,
+      password: testPassword,
+      fullName: 'Test User',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    // Delete old test user if exists
+    await mongoose.connection
+      .collection('users')
+      .deleteOne({ email: testEmail });
+
+    const userResult = await mongoose.connection
+      .collection('users')
+      .insertOne(testUser);
+
+    const testUserId = userResult.insertedId;
+    console.log(`✅ Test user created: ${testEmail} (ID: ${testUserId})\n`);
 
     // Get reference users (giả sử đã có users trong database)
     // ⚠️ IMPORTANT: Thay đổi những ObjectId này thành real user IDs từ database của bạn
