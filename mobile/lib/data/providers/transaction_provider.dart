@@ -16,12 +16,12 @@ import '../dummy_transactions.dart';
 /// Quản lý state của transactions và giao tiếp với API
 /// Sử dụng ChangeNotifier để notify UI khi data thay đổi
 class TransactionProvider extends ChangeNotifier {
-
   NotificationsProvider? _notificationsProvider;
 
   void setNotificationsProvider(NotificationsProvider? p) {
     _notificationsProvider = p;
   }
+
   // ============== PRIVATE STATE ==============
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
@@ -214,7 +214,9 @@ class TransactionProvider extends ChangeNotifier {
         try {
           // If NotificationsProvider exists, use it to insert and notify
           if (NotificationsProvider.instance == null) {
-            debugPrint('⚠️ NotificationsProvider.instance is NULL when adding notif');
+            debugPrint(
+              '⚠️ NotificationsProvider.instance is NULL when adding notif',
+            );
           } else {
             debugPrint('ℹ️ TransactionProvider: adding notif via provider');
           }

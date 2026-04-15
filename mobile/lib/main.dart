@@ -13,6 +13,10 @@ import 'data/providers/notifications_provider.dart';
 import 'data/providers/statistic_provider.dart';
 import 'core/strings.dart';
 import 'data/providers/wallet_provider.dart';
+import 'data/providers/group_provider.dart';
+import 'screens/groups_list_screen.dart';
+import 'screens/members_management_screen.dart';
+import 'data/models/group_model.dart';
 import 'theme/colors.dart';
 
 void main() async {
@@ -236,11 +240,16 @@ class _MyAppState extends State<MyApp> {
           },
         ),
 
-      // Statistic Provider
-      ChangeNotifierProvider(create: (_) => StatisticProvider()),
+        // Statistic Provider
+        ChangeNotifierProvider(create: (_) => StatisticProvider()),
 
-      // Wallet Provider
-      ChangeNotifierProvider(create: (_) => WalletProvider()),
+        // Wallet Provider
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
+
+        // Group Provider (NEW - for Phase 1.5)
+        ChangeNotifierProvider(
+          create: (_) => GroupProvider(useMock: true), // Mock data by default
+        ),
 
         // TODO: Thêm các providers khác ở đây
         // ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -251,6 +260,33 @@ class _MyAppState extends State<MyApp> {
         title: 'SmartSpender',
         navigatorKey: ApiService.navigatorKey,
         theme: _buildAppTheme(),
+
+        // ===== NAMED ROUTES =====
+        onGenerateRoute: (settings) {
+          // Định tuyến có tham số
+          if (settings.name == '/members-management') {
+            final group = settings.arguments as GroupModel?;
+            return MaterialPageRoute(
+              builder: (context) => MembersManagementScreen(
+                group:
+                    group ??
+                    GroupModel(
+                      id: '',
+                      name: 'Unknown',
+                      createdBy: '',
+                      members: [],
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    ),
+              ),
+            );
+          }
+
+          // Default route
+          return null;
+        },
+
+        routes: {'/groups-list': (context) => const GroupsListScreen()},
 
         // ===== AUTO-LOGIN LOGIC =====
         home: FutureBuilder<_LaunchTarget>(
