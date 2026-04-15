@@ -3,22 +3,41 @@
  * Chức năng: Thiết lập và quản lý kết nối đến cơ sở dữ liệu MongoDB sử dụng Mongoose.
  */
 
-const mongoose = require("mongoose"); // ODM cho MongoDB
+const mongoose = require('mongoose'); // ODM cho MongoDB
 
 /**
  * Hàm kết nối đến MongoDB.
  * Sử dụng URI từ biến môi trường MONGO_URI.
- * Nếu kết nối thất bại, thoát ứng dụng với mã lỗi 1.
+ * Cấu hình pool tối ưu cho development local.
  */
 const connectDB = async () => {
   try {
-    // Kết nối đến MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log("MongoDB connected"); // Thông báo thành công
+    const mongoURL =
+      process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/smartspender';
+
+    // Cấu hình cho Mongoose development:
+    // - maxPoolSize: 5 (đủ cho dev local, không tiêu tốn resources)
+    // - minPoolSize: 2 (luôn có 2 connections sẵn sàng)
+    // - connectTimeoutMS: 10s (fail fast nếu MongoDB không sẵn sàng)
+    // - socketTimeoutMS: 45s (prevent hanging queries)
+    await mongoose.connect(mongoURL, {
+      maxPoolSize: 5,
+      minPoolSize: 2,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
+      retryWrites: true,
+      retryReads: true,
+    });
+
+    console.log('✅ MongoDB connected successfully');
+    return true;
   } catch (error) {
-    // Xử lý lỗi kết nối
-    console.error("MongoDB connection failed:", error);
-    process.exit(1); // Thoát ứng dụng nếu không kết nối được
+    console.error('❌ MongoDB connection failed:', {
+      message: error.message,
+      code: error.code,
+      URI: process.env.MONGO_URI,
+    });
+    throw error; // Throw để server.js xử lý
   }
 };
 
