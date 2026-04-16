@@ -23,7 +23,7 @@ dotenv.config();
 const connectDB = async () => {
   try {
     await mongoose.connect(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/smartspender'
+      process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/smartspender'
     );
     console.log('✅ Connected to MongoDB');
   } catch (error) {
