@@ -1,20 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const groupController = require('../controllers/group.controller');
+const authenticate = require('../middleware/auth.middleware'); 
 
-// GET /groups - return paginated list of groups
-router.get('/', async (req, res, next) => {
-  try {
-    const skip = parseInt(req.query.skip, 10) || 0;
-    const limit = Math.min(parseInt(req.query.limit, 10) || 10, 100);
+// Áp dụng middleware kiểm tra Token cho TOÀN BỘ routes của file này
+router.use(authenticate);
 
-    const conn = require('mongoose').connection;
-    const groupsColl = conn.collection('groups');
-    const groups = await groupsColl.find({}).skip(skip).limit(limit).toArray();
-
-    return res.status(200).json({ success: true, data: groups });
-  } catch (err) {
-    return next(err);
-  }
-});
+// Gắn các đường dẫn vào hàm tương ứng
+router.post('/', groupController.createGroup);          // 1️⃣ Tạo nhóm
+router.get('/', groupController.getGroups);             // 2️⃣ Danh sách nhóm
+router.get('/:groupId', groupController.getGroupById);  // 3️⃣ Chi tiết nhóm
+router.patch('/:groupId', groupController.updateGroup); // 4️⃣ Cập nhật nhóm
+router.delete('/:groupId', groupController.deleteGroup);// 5️⃣ Xóa nhóm
 
 module.exports = router;
