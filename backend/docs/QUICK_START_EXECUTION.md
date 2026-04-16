@@ -23,113 +23,76 @@ Bạn sẽ:
 
 ## 📋 STEP-BY-STEP EXECUTION
 
-### **PHASE 1A: MongoDB Setup (15 phút)**
+### **PHASE 1A: MongoDB Setup (5 phút)**
 
-**Bước 1: Mở MongoDB Shell**
+**Bước 1: Tạo `.env` file**
 
 ```bash
-# Nếu dùng mongosh (v5.0+)
-mongosh
-
-# Nếu dùng mongo (v4.x)
-mongo
+cd backend
+cp .env.example .env
 ```
 
-**Bước 2: Chọn database**
+**Bước 2: Kiểm tra MongoDB đang chạy**
 
-```javascript
-use smartspender
+```bash
+# Check MongoDB listening trên port 27017
+mongosh smartspender --eval "db.adminCommand('ping')"
 ```
 
-**Bước 3: Copy-paste MongoDB setup script**
+**Bước 3: Chạy setup script**
 
-Mở file: `backend/mongodb-setup.js`
-Copy **tất cả code** (từ dòng 1 -> cuối)
-Dán vào MongoDB shell
+```bash
+node mongodb-setup.js
+```
 
 **Kết quả mong đợi:**
 
 ```
+📡 Connecting to MongoDB...
+✅ Connected to MongoDB
+
+🔧 SETTING UP GROUP FEATURE COLLECTIONS...
+
+1️⃣ Creating collection: groups
 ✅ Collection "groups" created with indexes
+
+2️⃣ Creating collection: group_members
 ✅ Collection "group_members" created with indexes
+
+3️⃣ Creating collection: group_wallets
 ✅ Collection "group_wallets" created with indexes
+
+4️⃣ Updating collection: transactions (adding groupId field)
 ✅ Collection "transactions" updated
+
 📊 VERIFICATION:
    groups: 0 documents
    group_members: 0 documents
    group_wallets: 0 documents
+
 ✅ MONGODB SETUP COMPLETED!
+✅ MongoDB connection closed
 ```
 
 ---
 
-### **PHASE 1B: Lấy User IDs (5 phút)**
+### **PHASE 1B: Tạo Mock Data (5 phút)**
 
-**Bước 1: Vẫn ở MongoDB Shell, chạy query này:**
-
-```javascript
-// Lấy 10 user IDs từ database
-db.users.find({}, { _id: 1, email: 1 }).limit(10);
-```
-
-**Bước 2: Copy 10 cái ObjectId này**
-
-Ví dụ output:
-
-```
-{ _id: ObjectId("65a1b2c3d4e5f6g7h8i9j0k1"), email: "user1@example.com" }
-{ _id: ObjectId("65a1b2c3d4e5f6g7h8i9j0k2"), email: "user2@example.com" }
-...
-```
-
-**Bước 3: Mở file `backend/seeds/group-seed.js`**
-
-Tìm dòng ~20:
-
-```javascript
-const SAMPLE_USER_IDS = [
-  '507f1f77bcf86cd799439010',
-  '507f1f77bcf86cd799439011',
-  ...
-];
-```
-
-**Bước 4: THAY BẬT CÁC SAMPLE IDs bằng REAL IDs từ MongoDB**
-
-Ví dụ:
-
-```javascript
-const SAMPLE_USER_IDS = [
-  '65a1b2c3d4e5f6g7h8i9j0k1',  // User 1 - Minh
-  '65a1b2c3d4e5f6g7h8i9j0k2',  // User 2 - Nam
-  '65a1b2c3d4e5f6g7h8i9j0k3',  // User 3 - Ngọc Anh
-  ...
-];
-```
-
-✅ **Lưu file**
-
----
-
-### **PHASE 1C: Chạy Seeding Script (5 phút)**
-
-**Bước 1: Mở terminal, navigate to backend folder**
+**Bước 1: Chạy seeding script**
 
 ```bash
-cd backend
+node backend/seeds/group-seed.js
 ```
 
-**Bước 2: Chạy seeding script**
-
-```bash
-node seeds/group-seed.js
-```
-
-**Bước 3: Xác nhận output tương tự**
+**Kết quả mong đợi:**
 
 ```
 ✅ Connected to MongoDB
+
 🌱 STARTING GROUP DATA SEEDING...
+
+👤 Creating test user...
+✅ Test user created: test@example.com
 
 🏢 Creating 3 groups...
 ✅ Created 3 groups:
@@ -147,7 +110,16 @@ node seeds/group-seed.js
    ...
 
 💰 Creating 15 sample transactions...
-✅ Created 15 transactions
+✅ Created 14 transactions
+
+📊 SEEDING SUMMARY:
+   Groups created: 3
+   Members created: 10
+   Wallets created: 5
+   Transactions created: 14
+
+🎉 SEEDING COMPLETED SUCCESSFULLY!
+```
 
 📊 SEEDING SUMMARY:
 ✅ Groups created: 3
@@ -158,16 +130,17 @@ node seeds/group-seed.js
 🎉 SEEDING COMPLETED SUCCESSFULLY!
 
 📌 GROUP IDs (use for testing):
-   Group 1: 65d1a2b3c4d5e6f7g8h9i0j1
-   Group 2: 65d1a2b3c4d5e6f7g8h9i0j2
-   Group 3: 65d1a2b3c4d5e6f7g8h9i0j3
+Group 1: 65d1a2b3c4d5e6f7g8h9i0j1
+Group 2: 65d1a2b3c4d5e6f7g8h9i0j2
+Group 3: 65d1a2b3c4d5e6f7g8h9i0j3
 
 📌 WALLET IDs (use for testing):
-   Wallet 1: 65d1a2b3c4d5e6f7g8h9i0j4
-   Wallet 2: 65d1a2b3c4d5e6f7g8h9i0j5
-   ...
+Wallet 1: 65d1a2b3c4d5e6f7g8h9i0j4
+Wallet 2: 65d1a2b3c4d5e6f7g8h9i0j5
+...
 
 ✅ Disconnected from MongoDB
+
 ```
 
 **📝 IMPORTANT:** Copy những IDs này (Group IDs, Wallet IDs) để dùng ở Postman step tiếp
@@ -181,8 +154,10 @@ node seeds/group-seed.js
 **Bước 2: Import Collection**
 
 ```
+
 Click "Import" → Chọn file:
 backend/postman/group-api.postman_collection.json
+
 ```
 
 **Bước 3: Setup Environment Variables**
@@ -202,11 +177,13 @@ Trong Postman, tìm phần **Variables**:
 **Bước 4: Test 1 endpoint (GET Groups)**
 
 ```
+
 1. Click folder "GROUP APIs"
 2. Click request "GET - Danh sách nhóm của user"
 3. Click "Send"
 4. Xem response (nên thấy 3 groups từ seeding)
-```
+
+````
 
 ✅ **Nếu thấy 3 groups -> OK!**
 
@@ -224,7 +201,7 @@ db.groups.countDocuments()  # Should be 3
 db.group_members.countDocuments()  # Should be 10
 db.group_wallets.countDocuments()  # Should be 5
 db.transactions.find({ groupId: { $ne: null } }).count()  # Should be 15
-```
+````
 
 **Postman verification:**
 
