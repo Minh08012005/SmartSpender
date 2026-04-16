@@ -105,45 +105,47 @@ void main() {
     expect(find.textContaining('₫'), findsWidgets);
   });
 
-  testWidgets('WalletScreen opens transfer modal when tapping transfer button',
-      (tester) async {
-    final provider = WalletProvider(
-      apiService: FakeWalletApiService(
-        GetWalletsResponse(
-          success: true,
-          data: [
-            walletData(
-              id: 'cash-id',
-              walletType: 'cash',
-              balance: 300000,
-              name: 'Tiền mặt',
-            ),
-            walletData(
-              id: 'bank-id',
-              walletType: 'bank',
-              balance: 90000,
-              name: 'Ngân hàng',
-            ),
-          ],
-          totalBalance: 390000,
+  testWidgets(
+    'WalletScreen opens transfer modal when tapping transfer button',
+    (tester) async {
+      final provider = WalletProvider(
+        apiService: FakeWalletApiService(
+          GetWalletsResponse(
+            success: true,
+            data: [
+              walletData(
+                id: 'cash-id',
+                walletType: 'cash',
+                balance: 300000,
+                name: 'Tiền mặt',
+              ),
+              walletData(
+                id: 'bank-id',
+                walletType: 'bank',
+                balance: 90000,
+                name: 'Ngân hàng',
+              ),
+            ],
+            totalBalance: 390000,
+          ),
         ),
-      ),
-    );
+      );
 
-    await tester.pumpWidget(
-      ChangeNotifierProvider<WalletProvider>.value(
-        value: provider,
-        child: const MaterialApp(home: WalletScreen()),
-      ),
-    );
+      await tester.pumpWidget(
+        ChangeNotifierProvider<WalletProvider>.value(
+          value: provider,
+          child: const MaterialApp(home: WalletScreen()),
+        ),
+      );
 
-    await tester.pumpAndSettle();
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Điều chuyển'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.text('Điều chuyển'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Điều chuyển tiền'), findsOneWidget);
-    expect(find.text('Từ ví'), findsOneWidget);
-    expect(find.text('Đến ví'), findsOneWidget);
-  });
+      expect(find.text('Điều chuyển tiền'), findsOneWidget);
+      expect(find.text('Từ ví'), findsOneWidget);
+      expect(find.text('Đến ví'), findsOneWidget);
+    },
+  );
 }

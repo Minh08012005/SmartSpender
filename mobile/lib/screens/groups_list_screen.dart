@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../data/models/group_model.dart';
 import '../../data/providers/group_provider.dart';
 import '../../theme/colors.dart';
 
@@ -75,7 +74,14 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                   subtitle: Text('${group.members.length} thành viên'),
                   trailing: PopupMenuButton<String>(
                     onSelected: (val) {
-                      if (val == 'members') {
+                      if (val == 'dashboard') {
+                        groupProvider.selectGroup(group.id);
+                        Navigator.pushNamed(
+                          context,
+                          '/group-dashboard',
+                          arguments: group,
+                        );
+                      } else if (val == 'members') {
                         groupProvider.selectGroup(group.id);
                         Navigator.pushNamed(
                           context,
@@ -88,6 +94,10 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                     },
                     itemBuilder: (BuildContext context) => [
                       const PopupMenuItem(
+                        value: 'dashboard',
+                        child: Text('Xem Dashboard'),
+                      ),
+                      const PopupMenuItem(
                         value: 'members',
                         child: Text('Quản Lý Thành Viên'),
                       ),
@@ -98,7 +108,7 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
                     groupProvider.selectGroup(group.id);
                     Navigator.pushNamed(
                       context,
-                      '/members-management',
+                      '/group-dashboard',
                       arguments: group,
                     );
                   },

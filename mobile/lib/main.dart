@@ -16,6 +16,8 @@ import 'data/providers/wallet_provider.dart';
 import 'data/providers/group_provider.dart';
 import 'screens/groups_list_screen.dart';
 import 'screens/members_management_screen.dart';
+import 'screens/group_dashboard_screen.dart';
+import 'screens/group_transactions_screen.dart';
 import 'data/models/group_model.dart';
 import 'theme/colors.dart';
 
@@ -279,6 +281,38 @@ class _MyAppState extends State<MyApp> {
                       updatedAt: DateTime.now(),
                     ),
               ),
+            );
+          }
+
+          // Group Dashboard Route
+          if (settings.name == '/group-dashboard') {
+            final group = settings.arguments as GroupModel?;
+            if (group == null) {
+              return MaterialPageRoute(
+                builder: (context) => Scaffold(
+                  appBar: AppBar(title: const Text('Lỗi')),
+                  body: const Center(child: Text('Không tìm thấy nhóm')),
+                ),
+              );
+            }
+            return MaterialPageRoute(
+              builder: (context) => GroupDashboardScreen(group: group),
+            );
+          }
+
+          // Group Transactions Route
+          if (settings.name == '/group-transactions') {
+            final group = settings.arguments as GroupModel?;
+            if (group == null) {
+              return MaterialPageRoute(
+                builder: (context) => Scaffold(
+                  appBar: AppBar(title: const Text('Lỗi')),
+                  body: const Center(child: Text('Không tìm thấy nhóm')),
+                ),
+              );
+            }
+            return MaterialPageRoute(
+              builder: (context) => GroupTransactionsScreen(group: group),
             );
           }
 

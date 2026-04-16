@@ -8,7 +8,9 @@ import '../data/models/transaction_model.dart';
 import '../data/providers/transaction_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final String? groupId;
+
+  const AddTransactionScreen({this.groupId, super.key});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();

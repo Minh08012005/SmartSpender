@@ -126,12 +126,14 @@ class AppStrings {
   static const String statisticSelectMonth = 'Chọn tháng';
 
   // Profile
+  static const String profileTitle = 'Hồ sơ';
   static const String profilePersonalInfo = 'Thông tin cá nhân';
   static const String profileLoginSecurity = 'Đăng nhập và bảo mật';
   static const String profileNotifications = 'Thông báo';
   static const String profilePrivacy = 'Quyền riêng tư';
   static const String profileLogout = 'Đăng xuất';
   static const String profileEdit = 'Chỉnh sửa';
+  static const String profileGroupManagement = 'Quản Lý Nhóm';
   static const String profileAvatarFallback = 'U';
   static const String profileLogoutConfirmMessage =
       'Bạn có chắc muốn đăng xuất không?';
@@ -139,6 +141,7 @@ class AppStrings {
       'Không thể đăng xuất lúc này, vui lòng thử lại.';
   static const String profileDisplayName = 'Người dùng SmartSpender';
   static const String profileUsername = '@nguoi_dung';
+  static const String profileEditInfo = 'Chỉnh sửa thông tin';
 
   // Onboarding
   static const String onboardingTitle = 'Chi tiêu thông minh\nTiết kiệm hơn';
@@ -165,8 +168,10 @@ class AppStrings {
   // Wallet screen
   static const String walletTitle = 'Ví của tôi';
   static const String walletListLabel = 'Danh sách ví';
+  static const String walletSelectWallet = 'Chọn ví';
   static const String walletTransferButtonLabel = 'Điều chuyển';
   static const String walletAddButtonLabel = 'Thêm ví';
+  static const String walletFeatureComingSoon = 'Tính năng sẽ được cập nhật';
 
   static const String walletTransferModalTitle = 'Điều chuyển tiền';
   static const String walletFromLabel = 'Từ ví';

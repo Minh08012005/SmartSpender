@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../../views/profile/widgets/notification_widgets.dart';
 import 'notifications_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
@@ -371,6 +370,76 @@ class TransactionProvider extends ChangeNotifier {
       debugPrint('❌ Giao dịch từ API không hợp lệ: $e');
       debugPrint('👉 Dữ liệu: $payload');
       return null;
+    }
+  }
+
+  // ============== GROUP TRANSACTIONS LOAD ==============
+  /// Tải transactions cho một group cụ thể
+  Future<void> loadGroupTransactions(String groupId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final response = await _apiService.get(
+        '/api/groups/$groupId/transactions',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is Map<String, dynamic> && data['success'] == true) {
+          final payload = data['data'];
+
+          List<dynamic>? transactionsData;
+
+          if (payload is List) {
+            transactionsData = payload as List<dynamic>?;
+          } else if (payload is Map<String, dynamic>) {
+            transactionsData =
+                (payload['transactions'] as List<dynamic>?) ??
+                (payload['data'] as List<dynamic>?);
+
+            final stats = payload['stats'] as Map<String, dynamic>?;
+            if (stats != null) {
+              _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+              _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+            }
+          }
+
+          if (transactionsData != null) {
+            final List<TransactionModel> parsedList = [];
+            for (final json in transactionsData) {
+              try {
+                final tx = TransactionModel.fromJson(json);
+                parsedList.add(tx);
+              } catch (e) {
+                debugPrint('❌ Bỏ qua giao dịch không hợp lệ: $e');
+              }
+            }
+
+            _transactions = parsedList;
+            debugPrint('✅ Đã tải ${_transactions.length} giao dịch cho group');
+          } else {
+            _transactions = [];
+          }
+        } else {
+          throw Exception('Định dạng phản hồi không hợp lệ');
+        }
+      } else {
+        throw Exception('Không thể tải giao dịch nhóm');
+      }
+    } on DioException catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
+      _setError(_extractApiErrorMessage(e, 'Không thể tải giao dịch nhóm'));
+      debugPrint('❌ Tải giao dịch nhóm thất bại: ${e.message}');
+    } catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
+      _setError(e.toString());
+      debugPrint('❌ Lỗi không mong muốn: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 

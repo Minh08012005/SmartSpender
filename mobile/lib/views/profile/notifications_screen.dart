@@ -37,8 +37,10 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     _tabController = TabController(length: 2, vsync: this);
     _loadNotificationSettings();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<NotificationsProvider>(context, listen: false)
-          .loadNotifications();
+      Provider.of<NotificationsProvider>(
+        context,
+        listen: false,
+      ).loadNotifications();
     });
   }
 

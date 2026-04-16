@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Hồ sơ',
+          AppStrings.profileTitle,
           style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
         actions: [
@@ -229,6 +229,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             builder: (_) => const NotificationsScreen(),
                           ),
                         );
+                      },
+                    ),
+                    ProfileItem(
+                      icon: Icons.groups,
+                      title: AppStrings.profileGroupManagement,
+                      onTap: () {
+                        Navigator.pushNamed(context, '/groups-list');
                       },
                     ),
                     // Privacy menu removed: no backend endpoints implemented yet.

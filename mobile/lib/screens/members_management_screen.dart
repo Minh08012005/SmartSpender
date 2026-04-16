@@ -30,7 +30,7 @@ class _MembersManagementScreenState extends State<MembersManagementScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                color: AppColors.primary.withOpacity(0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -81,7 +81,7 @@ class _MembersManagementScreenState extends State<MembersManagementScreen> {
                                     decoration: BoxDecoration(
                                       color: _getRoleColor(
                                         member.role,
-                                      ).withOpacity(0.2),
+                                      ).withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(

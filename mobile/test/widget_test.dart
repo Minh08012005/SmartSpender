@@ -17,8 +17,9 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('Smoke test - app builds without crash',
-      (WidgetTester tester) async {
+  testWidgets('Smoke test - app builds without crash', (
+    WidgetTester tester,
+  ) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 3.0;
     addTearDown(() {
