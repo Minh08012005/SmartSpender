@@ -9,6 +9,7 @@ import '../../core/constants/api_constants.dart';
 import '../../core/strings.dart';
 import '../models/transaction_model.dart';
 import '../dummy_transactions.dart';
+import '../../views/profile/widgets/notification_widgets.dart';
 
 /// Transaction Provider
 ///
@@ -212,14 +213,12 @@ class TransactionProvider extends ChangeNotifier {
 
         try {
           // If NotificationsProvider exists, use it to insert and notify
-          if (NotificationsProvider.instance == null) {
-            debugPrint(
-              '⚠️ NotificationsProvider.instance is NULL when adding notif',
-            );
+          if (_notificationsProvider == null) {
+            debugPrint('⚠️ NotificationsProvider is NULL when adding notif');
           } else {
             debugPrint('ℹ️ TransactionProvider: adding notif via provider');
           }
-          NotificationsProvider.instance?.addLocalNotification(newNotif);
+          _notificationsProvider?.addLocalNotification(newNotif);
         } catch (_) {
           // fallback: write directly to prefs
           try {
