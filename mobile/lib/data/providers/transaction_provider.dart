@@ -8,6 +8,7 @@ import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/strings.dart';
 import '../models/transaction_model.dart';
+import '../../views/profile/widgets/notification_widgets.dart';
 import '../dummy_transactions.dart';
 
 /// Transaction Provider
@@ -17,8 +18,8 @@ import '../dummy_transactions.dart';
 class TransactionProvider extends ChangeNotifier {
   NotificationsProvider? _notificationsProvider;
 
-  void setNotificationsProvider(NotificationsProvider? p) {
-    _notificationsProvider = p;
+  void setNotificationsProvider(NotificationsProvider? provider) {
+    _notificationsProvider = provider;
   }
 
   // ============== PRIVATE STATE ==============
