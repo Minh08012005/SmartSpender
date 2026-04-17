@@ -23,94 +23,35 @@ Kiến trúc hệ thống thông tin là **tập hợp các quyết định cơ 
 
 ## 1.2 Ba Nguyên Tắc Kiến Trúc Cơ Bản
 
-### Nguyên tắc 1: Separation of Concerns (Tách biệt Trách nhiệm)
+Ba nguyên tắc dưới đây là cơ sở để đánh giá một kiến trúc có được tổ chức hợp lý hay không. Đối với SmartSpender, các nguyên tắc này được thể hiện trực tiếp trong cách phân tách các lớp và module chức năng.
 
-**Định nghĩa:** Mỗi thành phần/module chỉ nên chịu trách nhiệm cho **một** điều.
+### 1.2.1. Separation of Concerns (Tách biệt trách nhiệm)
 
-**Ví dụ SmartSpender:**
+Nguyên tắc này yêu cầu mỗi thành phần chỉ đảm nhiệm một nhóm trách nhiệm rõ ràng. Việc tách biệt đúng giúp hệ thống tránh tình trạng trộn lẫn giữa xử lý giao diện, xử lý nghiệp vụ và xử lý dữ liệu.
 
-- **Controller** chỉ nhận HTTP request và gọi Service (không xử lý logic kinh doanh).
-- **Service** chỉ xử lý logic kinh doanh (không biết về HTTP, không query database trực tiếp).
-- **Model** chỉ định nghĩa schema dữ liệu (không chứa logic business).
+Trong SmartSpender, lớp controller chủ yếu tiếp nhận request và trả response; lớp service xử lý quy tắc nghiệp vụ; lớp model quản lý cấu trúc và ràng buộc dữ liệu. Cách tổ chức này giúp luồng xử lý mạch lạc, dễ theo dõi khi phát sinh lỗi.
 
-**Lợi ích:**
+Ý nghĩa thực tiễn của nguyên tắc này là tăng khả năng bảo trì và kiểm thử. Khi cần thay đổi logic nghiệp vụ, nhóm có thể tập trung sửa tại service mà không ảnh hưởng mạnh tới các lớp còn lại.
 
-- Dễ hiểu: Mỗi phần code có nhiệm vụ rõ ràng.
-- Dễ test: Có thể test từng component riêng lẻ.
-- Dễ maintain: Thay đổi một phần không ảnh hưởng toàn bộ.
+### 1.2.2. Loose Coupling (Liên kết lỏng)
 
-**Ví dụ ngược (SAI):**
+Nguyên tắc liên kết lỏng nhấn mạnh việc giảm phụ thuộc trực tiếp giữa các thành phần. Các tầng nên giao tiếp thông qua hợp đồng rõ ràng để có thể thay đổi nội bộ mà không làm đứt gãy toàn hệ thống.
 
-```
-TransactionController xử lý lại tất cả:
-- Validate dữ liệu
-- Ghi vào database trực tiếp
-- Cập nhật wallet balance
-- Gửi email notification
-→ Code dài, khó bảo trì, khó test
-```
+Trong SmartSpender, frontend Flutter giao tiếp với backend thông qua REST API và dữ liệu JSON. Điều này giúp phần giao diện không phụ thuộc vào cách backend tổ chức database, đồng thời backend cũng không phụ thuộc vào công nghệ hiển thị ở phía client.
 
----
+Nhờ đó, hệ thống có tính linh hoạt cao hơn khi mở rộng nền tảng hoặc thay đổi công nghệ ở từng tầng. Đây cũng là tiền đề quan trọng để nâng cấp kiến trúc ở các giai đoạn sau.
 
-### Nguyên tắc 2: Loose Coupling (Liên Kết Lỏng)
+### 1.2.3. High Cohesion (Gắn kết cao)
 
-**Định nghĩa:** Các thành phần nên **độc lập nhất có thể**, giảm phụ thuộc lẫn nhau.
+Nguyên tắc gắn kết cao yêu cầu mỗi module tập trung vào một miền chức năng thống nhất. Các hàm trong cùng module cần liên quan chặt chẽ với nhau để bảo đảm tính mạch lạc của mã nguồn.
 
-**Ví dụ SmartSpender:**
+Trong SmartSpender, các nghiệp vụ liên quan giao dịch được gom trong TransactionService; các nghiệp vụ ví được gom trong WalletService; các xử lý thống kê được tập trung tại StatisticService. Cách tổ chức này giúp xác định nhanh vị trí cần chỉnh sửa khi có yêu cầu mới.
 
-- **Frontend (Flutter)** không biết cách database được tổ chức → chỉ gọi API.
-- **Backend** không biết Frontend dùng Flutter hay React → chỉ return JSON.
-- Nếu đổi database MongoDB sang PostgreSQL, Frontend không cần thay đổi → Backend thay đổi, Frontend vẫn chạy.
+Gắn kết cao làm giảm độ phân tán của nghiệp vụ, tăng khả năng tái sử dụng module và cải thiện chất lượng kiểm thử. Đây là yếu tố quan trọng để duy trì chất lượng kiến trúc khi hệ thống mở rộng.
 
-**Cơ chế thực hiện:**
+### 1.2.4. Tiểu kết
 
-- Dùng **Interface/Contract** (ví dụ: REST API là contract giữa Client-Server).
-- Server không phải biết chi tiết client, client không phải biết chi tiết server.
-
-**Lợi ích:**
-
-- Dễ thay đổi: Đổi công nghệ một phần không ảnh hưởng phần khác.
-- Dễ scale: Có thể deploy riêng lẻ từng thành phần.
-- Dễ test: Có thể mock (giả lập) một thành phần để test thành phần khác.
-
-**Ví dụ ngược (SAI):**
-
-```
-Frontend và Backend dùng chung code → tight coupling
-Frontend biết chi tiết internal database schema → phải sửa frontend khi DB thay đổi
-```
-
----
-
-### Nguyên tắc 3: High Cohesion (Gắn Kết Cao)
-
-**Định nghĩa:** Các chức năng **liên quan chặt chẽ** nên được nhóm lại với nhau.
-
-**Ví dụ SmartSpender:**
-
-- **TransactionService** gộp tất cả logic liên quan transaction:
-  - `createTransaction()`, `getTransactions()`, `updateTransaction()`, `deleteTransaction()`
-  - Tất cả đều liên quan đến "giao dịch".
-- **WalletService** gộp tất cả logic ví:
-  - `getWallet()`, `transfer()`, `updateBalance()`.
-
-**Lợi ích:**
-
-- Dễ tìm code: Nếu cần sửa logic transaction, biết chắc nó ở TransactionService.
-- Dễ tái sử dụng: TransactionService có thể dùng ở multiple places.
-- Dễ test: Mock TransactionService một lần, dùng lại cho nhiều test case.
-
-**Ví dụ ngược (SAI):**
-
-```
-UtilService chứa tất cả:
-- validateTransaction()
-- validateWallet()
-- sendEmail()
-- logError()
-- calculateStatistics()
-→ Code rối, khó tìm, khó bảo trì
-```
+Separation of Concerns, Loose Coupling và High Cohesion là ba nguyên tắc nền tảng giúp SmartSpender giữ được cấu trúc rõ ràng, dễ phát triển và thuận lợi cho mở rộng. Trên cơ sở đó, mục tiếp theo sẽ so sánh các mô hình kiến trúc để làm rõ lựa chọn N-Tier kết hợp Client-Server cho hệ thống.
 
 ---
 
