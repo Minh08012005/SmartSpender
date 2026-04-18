@@ -327,3 +327,255 @@ Cách làm an toàn nhất là:
 - Nam, Ngọc Anh, Chúc tập trung phần code API chính.
 
 Nếu bám đúng file và timeline này, team sẽ chia task nhanh hơn, phối hợp rõ hơn, và đủ khả năng hoàn thành trong 4-5 ngày.
+
+## 13. Kịch bản người dùng chi tiết theo trạng thái
+
+### Kịch bản A: Tháng chưa có mục tiêu chi tiêu
+
+1. Người dùng vào tab Thống kê.
+2. Màn hình tải dữ liệu tháng hiện tại.
+3. Khu vực mục tiêu hiển thị trạng thái Chưa thiết lập.
+4. Người dùng bấm Thiết lập mục tiêu.
+5. Mở bottom sheet nhập mục tiêu tháng.
+6. Người dùng nhập số tiền và bấm Lưu.
+7. App gọi API lưu mục tiêu tháng.
+8. Sau khi lưu thành công, app reload budget summary và KPI tháng.
+
+### Kịch bản B: Tháng đã có mục tiêu
+
+1. Người dùng vào tab Thống kê.
+2. App hiển thị Mục tiêu, Đã chi, Còn lại.
+3. App hiển thị trạng thái: An toàn/Gần chạm/Vượt mục tiêu.
+4. Người dùng có thể bấm Chỉnh sửa mục tiêu để cập nhật.
+
+### Kịch bản C: Người dùng bấm vào ngày trong lịch
+
+1. Người dùng bấm một ô ngày.
+2. App highlight ngày được chọn.
+3. App gọi API giao dịch theo ngày đó.
+4. Nếu có giao dịch: hiển thị danh sách theo ngày và tổng thu/chi/ngày.
+5. Nếu không có giao dịch: hiển thị empty state cho ngày đã chọn.
+
+### Kịch bản D: Người dùng đổi tháng
+
+1. Người dùng đổi tháng từ bộ chọn tháng.
+2. App gọi lại đồng thời:
+   - Summary tháng.
+   - Daily stats theo tháng.
+   - Budget tháng.
+3. UI render lại lịch tháng mới.
+4. Chọn mặc định ngày đầu tiên có giao dịch, nếu không có thì ngày 1.
+
+## 14. API contract chi tiết để team backend bám theo
+
+### 14.1 API thống kê theo ngày trong tháng
+
+- Method: GET
+- URL gợi ý: /api/statistics/daily
+- Query: month, year
+
+Response mẫu:
+
+```json
+{
+  "success": true,
+  "data": {
+    "month": 4,
+    "year": 2026,
+    "days": [
+      {
+        "date": "2026-04-17",
+        "totalIncome": 10000000,
+        "totalExpense": 50000,
+        "net": 9950000,
+        "transactionCount": 2
+      },
+      {
+        "date": "2026-04-18",
+        "totalIncome": 0,
+        "totalExpense": 1000000,
+        "net": -1000000,
+        "transactionCount": 1
+      }
+    ]
+  }
+}
+```
+
+### 14.2 API mục tiêu chi tiêu tháng
+
+- Method 1: GET
+- URL gợi ý: /api/statistics/budget
+- Query: month, year
+
+Response mẫu:
+
+```json
+{
+  "success": true,
+  "data": {
+    "month": 4,
+    "year": 2026,
+    "targetAmount": 6000000,
+    "actualExpense": 1050000,
+    "remaining": 4950000,
+    "status": "safe"
+  }
+}
+```
+
+- Method 2: POST hoặc PATCH
+- URL gợi ý: /api/statistics/budget
+- Body: month, year, targetAmount
+
+Request mẫu:
+
+```json
+{
+  "month": 4,
+  "year": 2026,
+  "targetAmount": 6000000
+}
+```
+
+### 14.3 API giao dịch theo ngày
+
+- Method: GET
+- URL gợi ý: /api/transactions/by-date
+- Query: date=YYYY-MM-DD
+
+Response mẫu:
+
+```json
+{
+  "success": true,
+  "data": {
+    "date": "2026-04-18",
+    "summary": {
+      "totalIncome": 0,
+      "totalExpense": 1000000,
+      "net": -1000000
+    },
+    "transactions": [
+      {
+        "id": "tx_001",
+        "title": "Mỹ phẩm",
+        "amount": 1000000,
+        "type": "expense",
+        "category": "shopping",
+        "date": "2026-04-18T09:00:00.000Z",
+        "note": ""
+      }
+    ]
+  }
+}
+```
+
+## 15. Ma trận chỉnh sửa file chi tiết theo từng người
+
+### Minh (mobile UI-first)
+
+- [mobile/lib/views/statistic/statistic_screen.dart](mobile/lib/views/statistic/statistic_screen.dart)
+  - Thêm khối budget card.
+  - Thêm lịch tháng trong cùng màn.
+  - Thêm hành vi bấm ngày mở danh sách giao dịch theo ngày.
+
+- [mobile/lib/views/statistic/widgets/period_picker_widget.dart](mobile/lib/views/statistic/widgets/period_picker_widget.dart)
+  - Giữ logic đổi tháng, bổ sung callback nếu cần cho reload đồng bộ.
+
+- File mới đề xuất trong [mobile/lib/views/statistic/widgets/](mobile/lib/views/statistic/widgets/)
+  - month_budget_card_widget.dart
+  - month_calendar_widget.dart
+  - day_transactions_sheet.dart
+
+- [mobile/lib/data/providers/statistic_provider.dart](mobile/lib/data/providers/statistic_provider.dart)
+  - Thêm model state cho daily stats.
+  - Thêm model state cho budget summary.
+  - Hỗ trợ mode mock/api.
+
+- [mobile/lib/data/providers/transaction_provider.dart](mobile/lib/data/providers/transaction_provider.dart)
+  - Thêm fetch transactions by date.
+
+### Nam (daily stats backend)
+
+- [backend/services/statistic.service.js](backend/services/statistic.service.js)
+  - Thêm aggregate theo từng ngày.
+
+- [backend/controllers/statistic.controller.js](backend/controllers/statistic.controller.js)
+  - Thêm handler cho endpoint daily stats.
+
+- [backend/routes/statistic_routes.js](backend/routes/statistic_routes.js)
+  - Đăng ký route daily stats.
+
+### Ngọc Anh (budget backend)
+
+- [backend/services/statistic.service.js](backend/services/statistic.service.js) hoặc service riêng
+  - Thêm logic get/save budget tháng.
+
+- [backend/controllers/statistic.controller.js](backend/controllers/statistic.controller.js)
+  - Thêm handler get budget và save budget.
+
+- [backend/routes/statistic_routes.js](backend/routes/statistic_routes.js)
+  - Đăng ký route budget.
+
+### Chúc (transactions by date + kiểm thử API)
+
+- [backend/services/transaction.service.js](backend/services/transaction.service.js)
+  - Thêm query lấy giao dịch theo ngày.
+
+- [backend/controllers/transaction_controller.js](backend/controllers/transaction_controller.js)
+  - Thêm handler by-date.
+
+- [backend/routes/transaction_routes.js](backend/routes/transaction_routes.js)
+  - Đăng ký route by-date.
+
+### Xuân (test-heavy + hỗ trợ nhẹ)
+
+- Postman:
+  - Tạo request test cho daily stats.
+  - Tạo request test cho budget get/save.
+  - Tạo request test cho transactions by date.
+
+- Checklist:
+  - Ghi pass/fail từng endpoint.
+  - Ghi bug và dữ liệu tái hiện lỗi.
+
+- Code nhẹ khi cần:
+  - Validator/query schema nhỏ.
+  - Swagger comment.
+
+## 16. Quy trình tích hợp từ dummy sang API thật
+
+### Bước 1: Khóa contract
+
+- Sau khi UI mock chạy được, khóa JSON shape.
+- Không đổi field nếu chưa có thống nhất từ Minh + backend owner.
+
+### Bước 2: Ghép endpoint theo thứ tự
+
+1. Ghép daily stats.
+2. Ghép budget.
+3. Ghép transactions by date.
+
+### Bước 3: Bật chế độ thật từng phần
+
+- Nếu endpoint nào chưa xong thì giữ mock endpoint đó.
+- Endpoint nào xong thì chuyển sang API thật ngay.
+
+### Bước 4: Regression checklist mỗi ngày
+
+- Đổi tháng còn chạy đúng.
+- Bấm ngày có dữ liệu hiển thị đúng.
+- Bấm ngày không có dữ liệu hiện empty đúng.
+- Lưu mục tiêu tháng và reload đúng.
+- Không vỡ các phần KPI/danh mục/giao dịch gần đây cũ.
+
+## 17. Điều kiện chốt bản demo
+
+Bản demo được coi là chốt khi đạt đủ:
+
+1. UI lịch tháng chạy ổn với dữ liệu thật.
+2. Mục tiêu tháng lưu được và hiển thị đúng remaining.
+3. Bấm ngày hiển thị đúng giao dịch và net ngày.
+4. Luồng đổi tháng hoạt động không lỗi.
+5. Checklist test của Xuân có trạng thái pass rõ ràng cho các case chính.
