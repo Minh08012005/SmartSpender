@@ -231,13 +231,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         );
                       },
                     ),
-                    ProfileItem(
-                      icon: Icons.groups,
-                      title: AppStrings.profileGroupManagement,
-                      onTap: () {
-                        Navigator.pushNamed(context, '/groups-list');
-                      },
-                    ),
                     // Privacy menu removed: no backend endpoints implemented yet.
                     ProfileItem(
                       icon: Icons.logout,

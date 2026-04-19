@@ -212,15 +212,17 @@ class TransactionProvider extends ChangeNotifier {
         );
 
         try {
+          final notifications =
+              _notificationsProvider ?? NotificationsProvider.instance;
           // If NotificationsProvider exists, use it to insert and notify
-          if (NotificationsProvider.instance == null) {
+          if (notifications == null) {
             debugPrint(
               '⚠️ NotificationsProvider.instance is NULL when adding notif',
             );
           } else {
             debugPrint('ℹ️ TransactionProvider: adding notif via provider');
           }
-          NotificationsProvider.instance?.addLocalNotification(newNotif);
+          notifications?.addLocalNotification(newNotif);
         } catch (_) {
           // fallback: write directly to prefs
           try {

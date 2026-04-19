@@ -4,17 +4,19 @@ import '../../../theme/colors.dart';
 class EmptyStateWidget extends StatelessWidget {
   final String message;
   final IconData icon;
+  final bool compact;
 
   const EmptyStateWidget({
     required this.message,
     this.icon = Icons.info_outline,
+    this.compact = false,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(compact ? 12 : 24),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -24,13 +26,13 @@ class EmptyStateWidget extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 48, color: AppColors.textHint),
-          const SizedBox(height: 12),
+          Icon(icon, size: compact ? 28 : 48, color: AppColors.textHint),
+          SizedBox(height: compact ? 6 : 12),
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13,
+            style: TextStyle(
+              fontSize: compact ? 12 : 13,
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
