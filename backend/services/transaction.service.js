@@ -49,6 +49,74 @@ const normalizeWalletType = (value) => {
   return normalized;
 };
 
+const toDayRange = (dateStr) => {
+  const [yearPart, monthPart, dayPart] = dateStr.split('-').map(Number);
+  const start = new Date(Date.UTC(yearPart, monthPart - 1, dayPart));
+  const end = new Date(Date.UTC(yearPart, monthPart - 1, dayPart + 1));
+
+  if (
+    Number.isNaN(start.getTime()) ||
+    start.getUTCFullYear() !== yearPart ||
+    start.getUTCMonth() !== monthPart - 1 ||
+    start.getUTCDate() !== dayPart
+  ) {
+    throw new AppError('Invalid date format', 400);
+  }
+
+  return { start, end };
+};
+
+const mapTransactionByDate = (transaction) => ({
+  id: String(transaction._id || transaction.id),
+  title: transaction.title,
+  amount: Number(transaction.amount || 0),
+  type: transaction.type,
+  category: transaction.category,
+  date:
+    transaction.date instanceof Date
+      ? transaction.date.toISOString()
+      : new Date(transaction.date).toISOString(),
+  note: transaction.note || '',
+});
+
+/**
+ * Fetch transactions for a single UTC calendar date and summarize income/expense.
+ * @param {string} userId
+ * @param {string} dateStr YYYY-MM-DD
+ */
+exports.getTransactionsByDate = async (userId, dateStr) => {
+  if (!mongoose.Types.ObjectId.isValid(userId)) {
+    throw new AppError('Invalid user id', 400);
+  }
+
+  const { start, end } = toDayRange(dateStr);
+  const rows = await Transaction.find({
+    userId: new mongoose.Types.ObjectId(userId),
+    date: { $gte: start, $lt: end },
+  })
+    .sort({ date: -1 })
+    .lean();
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  for (const transaction of rows) {
+    const amount = Number(transaction.amount || 0);
+    if (transaction.type === 'income') totalIncome += amount;
+    if (transaction.type === 'expense') totalExpense += amount;
+  }
+
+  return {
+    date: dateStr,
+    summary: {
+      totalIncome,
+      totalExpense,
+      net: totalIncome - totalExpense,
+    },
+    transactions: rows.map(mapTransactionByDate),
+  };
+};
+
 /**
  * Create a transaction for user
  * @param {string} userId
