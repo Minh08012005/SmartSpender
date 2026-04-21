@@ -41,60 +41,66 @@ class _DayTransactionsSheetState extends State<DayTransactionsSheet> {
         final totalExpense = txProvider.dayTotalExpense;
         final net = totalIncome - totalExpense;
 
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${AppStrings.statisticDayTransactionsTitlePrefix} ${widget.day.day}/${widget.day.month}/${widget.day.year}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 10),
-                // Hiển thị loading
-                if (txProvider.isLoading)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: CircularProgressIndicator(),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${AppStrings.statisticDayTransactionsTitlePrefix} ${widget.day.day}/${widget.day.month}/${widget.day.year}',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 10),
+              // Hiển thị loading
+              if (txProvider.isLoading)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                )
+              // Hiển thị error
+              else if (txProvider.hasError)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      txProvider.error,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.red),
                     ),
-                  )
-                // Hiển thị error
-                else if (txProvider.hasError)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        txProvider.error,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  )
-                // Hiển thị dữ liệu
-                else
-                  Column(
+                  ),
+                )
+              // Hiển thị dữ liệu
+              else
+                Flexible(
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          _MiniChip(
-                            label: 'Thu: ${formatAmount(totalIncome)}',
-                            color: AppColors.success,
-                          ),
-                          _MiniChip(
-                            label: 'Chi: ${formatAmount(totalExpense)}',
-                            color: AppColors.danger,
-                          ),
-                          _MiniChip(
-                            label: 'Net: ${formatAmount(net)}',
-                            color: net >= 0 ? AppColors.info : AppColors.danger,
-                          ),
-                        ],
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            _MiniChip(
+                              label: 'Thu: ${formatAmount(totalIncome)}',
+                              color: AppColors.success,
+                            ),
+                            const SizedBox(width: 8),
+                            _MiniChip(
+                              label: 'Chi: ${formatAmount(totalExpense)}',
+                              color: AppColors.danger,
+                            ),
+                            const SizedBox(width: 8),
+                            _MiniChip(
+                              label: 'Net: ${formatAmount(net)}',
+                              color: net >= 0
+                                  ? AppColors.info
+                                  : AppColors.danger,
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 12),
                       if (dayTx.isEmpty)
@@ -104,10 +110,10 @@ class _DayTransactionsSheetState extends State<DayTransactionsSheet> {
                           icon: Icons.event_busy,
                         )
                       else
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxHeight: 360),
+                        Flexible(
                           child: ListView.separated(
                             shrinkWrap: true,
+                            physics: const AlwaysScrollableScrollPhysics(),
                             itemBuilder: (context, i) =>
                                 TransactionTileWidget(transaction: dayTx[i]),
                             separatorBuilder: (context, index) =>
@@ -117,8 +123,8 @@ class _DayTransactionsSheetState extends State<DayTransactionsSheet> {
                         ),
                     ],
                   ),
-              ],
-            ),
+                ),
+            ],
           ),
         );
       },

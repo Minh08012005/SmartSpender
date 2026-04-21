@@ -26,7 +26,6 @@ class StatisticScreen extends StatefulWidget {
 class _StatisticScreenState extends State<StatisticScreen> {
   bool _initialized = false;
   bool _isPeriodChanging = false;
-  bool _showAllRecent = false;
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
   DateTime? _selectedDate;
@@ -92,7 +91,6 @@ class _StatisticScreenState extends State<StatisticScreen> {
                       _selectedMonth = month;
                       _selectedYear = year;
                       _selectedDate = DateTime(year, month, 1);
-                      _showAllRecent = false;
                     });
                     await _reload();
                   },
@@ -127,6 +125,9 @@ class _StatisticScreenState extends State<StatisticScreen> {
                     showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.75,
+                      ),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(16),
@@ -182,23 +183,6 @@ class _StatisticScreenState extends State<StatisticScreen> {
               ),
 
               const SizedBox(height: 16),
-
-              // Recent Transactions Section
-              SectionReveal(
-                delayMs: 200,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: _buildTransactionSection(
-                    txProvider,
-                    transactions,
-                    key: ValueKey<String>(
-                      'tx_${_selectedMonth}_${_selectedYear}_${transactions.length}',
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -338,92 +322,6 @@ class _StatisticScreenState extends State<StatisticScreen> {
                       )
                       .toList(),
                 ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransactionSection(
-    TransactionProvider txProvider,
-    List<TransactionModel> transactions, {
-    Key? key,
-  }) {
-    return Column(
-      key: key,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.surfaceBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppStrings.statisticRecentTransactions,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                _showAllRecent
-                    ? AppStrings.statisticRecentTransactionsExpandedHint
-                    : AppStrings.statisticRecentTransactionsCompactHint,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              if (txProvider.isLoading && transactions.isEmpty)
-                Column(
-                  children: List.generate(
-                    3,
-                    (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: LoadingSkeletonWidget(type: 'row'),
-                    ),
-                  ),
-                )
-              else if (transactions.isEmpty)
-                const EmptyStateWidget(
-                  message: AppStrings.homeEmptyTransactions,
-                  icon: Icons.receipt_long,
-                  compact: true,
-                )
-              else
-                Column(
-                  children: transactions
-                      .take(_showAllRecent ? transactions.length : 3)
-                      .map(
-                        (tx) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: TransactionTileWidget(transaction: tx),
-                        ),
-                      )
-                      .toList(),
-                ),
-              if (transactions.length > 3) ...[
-                const SizedBox(height: 2),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      setState(() {
-                        _showAllRecent = !_showAllRecent;
-                      });
-                    },
-                    child: Text(
-                      _showAllRecent
-                          ? AppStrings.statisticCollapse
-                          : AppStrings.statisticSeeMore,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),

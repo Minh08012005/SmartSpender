@@ -36,13 +36,14 @@ class MonthCalendarWidget extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.surfaceBorder),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -57,6 +58,7 @@ class MonthCalendarWidget extends StatelessWidget {
                 border: Border.all(color: AppColors.surfaceBorder),
               ),
               child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Container(
                     height: 34,
@@ -82,7 +84,7 @@ class MonthCalendarWidget extends StatelessWidget {
                           crossAxisCount: 7,
                           crossAxisSpacing: 0,
                           mainAxisSpacing: 0,
-                          childAspectRatio: 1.02,
+                          childAspectRatio: 1.2,
                         ),
                     itemBuilder: (context, index) {
                       final day = days[index];
@@ -95,7 +97,7 @@ class MonthCalendarWidget extends StatelessWidget {
                       return InkWell(
                         onTap: inCurrentMonth ? () => onDaySelected(day) : null,
                         child: Container(
-                          padding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
+                          padding: const EdgeInsets.fromLTRB(4, 3, 4, 3),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? const Color(0xFFF7F4E8)
@@ -103,7 +105,9 @@ class MonthCalendarWidget extends StatelessWidget {
                             border: _buildCellBorder(index),
                           ),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
                                 '${day.day}',
@@ -118,28 +122,19 @@ class MonthCalendarWidget extends StatelessWidget {
                                           : FontWeight.w500,
                                     ),
                               ),
-                              const Spacer(),
-                              if (amount.income > 0)
-                                Text(
-                                  _compactAmount(amount.income),
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: AppColors.info,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              if (amount.expense > 0)
-                                Text(
-                                  _compactAmount(amount.expense),
-                                  style: Theme.of(context).textTheme.labelSmall
-                                      ?.copyWith(
-                                        color: AppColors.danger,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
+                              if (amount.income > 0 || amount.expense > 0)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 2),
+                                  child: Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: BoxDecoration(
+                                      color: amount.expense > 0
+                                          ? AppColors.danger
+                                          : AppColors.info,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
                                 ),
                             ],
                           ),
