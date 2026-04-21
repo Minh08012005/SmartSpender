@@ -29,7 +29,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
   DateTime? _selectedDate;
-  double _monthlyTarget = 6000000;
+  double _monthlyTarget = 0.0;
 
   @override
   void didChangeDependencies() {
@@ -42,6 +42,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
     Future.microtask(() {
       txProvider.fetchTransactions(month: _selectedMonth, year: _selectedYear);
       statProvider.fetchStatistics(month: _selectedMonth, year: _selectedYear);
+      statProvider.fetchBudget(month: _selectedMonth, year: _selectedYear);
     });
 
     _selectedDate = DateTime(_selectedYear, _selectedMonth, DateTime.now().day);
@@ -101,8 +102,10 @@ class _StatisticScreenState extends State<StatisticScreen> {
               SectionReveal(
                 delayMs: 40,
                 child: MonthBudgetCardWidget(
-                  monthlyTarget: _monthlyTarget,
-                  actualExpense: totalExpense,
+                  monthlyTarget: statProvider.monthlyTarget,
+                  actualExpense: statProvider.actualExpense,
+                  remaining: statProvider.remaining,
+                  status: statProvider.budgetStatus,
                   onEditPressed: _showBudgetEditor,
                 ),
               ),
@@ -349,6 +352,10 @@ class _StatisticScreenState extends State<StatisticScreen> {
           month: _selectedMonth,
           year: _selectedYear,
         ),
+        statProvider.fetchBudget(
+          month: _selectedMonth,
+          year: _selectedYear,
+        ),
       ]);
 
       if (_selectedDate == null ||
@@ -366,8 +373,9 @@ class _StatisticScreenState extends State<StatisticScreen> {
   }
 
   void _showBudgetEditor() {
+    final statProvider = context.read<StatisticProvider>();
     final controller = TextEditingController(
-      text: _monthlyTarget.toStringAsFixed(0),
+      text: statProvider.monthlyTarget.toStringAsFixed(0),
     );
 
     showModalBottomSheet<void>(
@@ -412,13 +420,36 @@ class _StatisticScreenState extends State<StatisticScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         final next = double.tryParse(controller.text.trim());
                         if (next == null || next <= 0) return;
-                        setState(() {
-                          _monthlyTarget = next;
-                        });
-                        Navigator.pop(context);
+                        final success = await statProvider.saveBudget(
+                          month: _selectedMonth,
+                          year: _selectedYear,
+                          targetAmount: next,
+                        );
+                        if (success) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(AppStrings.budgetSavedSuccessfully),
+                              ),
+                            );
+                          }
+                          Navigator.pop(context);
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  statProvider.error.isEmpty
+                                      ? AppStrings.failedToSaveBudget
+                                      : statProvider.error,
+                                ),
+                              ),
+                            );
+                          }
+                        }
                       },
                       child: const Text(AppStrings.save),
                     ),

@@ -22,6 +22,7 @@ class ApiConstants {
 
   // ============== STATISTICS ENDPOINTS ==============
   static const String statisticsSummary = '/api/statistics/summary';
+  static const String statisticsBudget = '/api/statistics/budget';
 
   // ============== USER ENDPOINTS ==============
   static const String userProfile = '/api/user/profile';
