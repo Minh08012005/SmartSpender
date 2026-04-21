@@ -11,11 +11,20 @@ jest.mock("../../../models/transaction_schema", () => ({
   aggregate: jest.fn(),
 }));
 
+jest.mock("../../../models/monthly_budget.model", () => ({
+  findOne: jest.fn(),
+  findOneAndUpdate: jest.fn(),
+}));
+
 const Transaction = require('../../../models/transaction_schema');
+const MonthlyBudget = require("../../../models/monthly_budget.model");
 const {
   getStatistics,
   getCategoryBreakdown,
   getMonthlyStatistics,
+  getBudgetSummary,
+  saveBudgetTarget,
+  computeBudgetStatus,
 } = require('../../../services/statistic.service');
 const mongoose = require('mongoose');
 
@@ -27,6 +36,10 @@ describe('Statistic Service - getMonthlyStatistics', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     Transaction.aggregate.mockResolvedValue([]);
+    MonthlyBudget.findOne.mockReturnValue({
+      lean: jest.fn().mockResolvedValue(null),
+    });
+    MonthlyBudget.findOneAndUpdate.mockResolvedValue(null);
   });
 
   // Test cho hàm getStatistics, chúng ta sẽ kiểm tra xem hàm có trả về tổng thu, chi và số dư đúng không khi có dữ liệu giả, cũng như khi không có dữ liệu nào.
@@ -82,6 +95,79 @@ describe('Statistic Service - getMonthlyStatistics', () => {
       Transaction.aggregate.mockResolvedValue([]);
       await getMonthlyStatistics(userId, 2, 2026);
       expect(Transaction.aggregate).toHaveBeenCalled();
+    });
+  });
+
+  describe("computeBudgetStatus", () => {
+    it("returns safe when no target budget", () => {
+      expect(computeBudgetStatus(0, 100)).toBe("safe");
+    });
+
+    it("returns over when actual is greater than target", () => {
+      expect(computeBudgetStatus(100, 101)).toBe("over");
+    });
+
+    it("returns near at 80 percent threshold", () => {
+      expect(computeBudgetStatus(100, 80)).toBe("near");
+    });
+  });
+
+  describe("getBudgetSummary", () => {
+    it("returns budget summary with default targetAmount = 0", async () => {
+      Transaction.aggregate.mockResolvedValue([{ totalIncome: 0, totalExpense: 300 }]);
+
+      const result = await getBudgetSummary(userId, 4, 2026);
+
+      expect(result).toEqual({
+        month: 4,
+        year: 2026,
+        targetAmount: 0,
+        actualExpense: 300,
+        remaining: -300,
+        status: "safe",
+      });
+      expect(MonthlyBudget.findOne).toHaveBeenCalledWith({
+        userId,
+        month: 4,
+        year: 2026,
+      });
+    });
+
+    it("returns near when ratio is between 0.8 and 1.0", async () => {
+      MonthlyBudget.findOne.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ targetAmount: 1000 }),
+      });
+      Transaction.aggregate.mockResolvedValue([{ totalIncome: 0, totalExpense: 800 }]);
+
+      const result = await getBudgetSummary(userId, 4, 2026);
+
+      expect(result.status).toBe("near");
+      expect(result.remaining).toBe(200);
+    });
+  });
+
+  describe("saveBudgetTarget", () => {
+    it("upserts monthly budget and returns summary", async () => {
+      MonthlyBudget.findOne.mockReturnValue({
+        lean: jest.fn().mockResolvedValue({ targetAmount: 900 }),
+      });
+      Transaction.aggregate.mockResolvedValue([{ totalIncome: 0, totalExpense: 200 }]);
+
+      const result = await saveBudgetTarget(userId, 5, 2026, 900);
+
+      expect(MonthlyBudget.findOneAndUpdate).toHaveBeenCalledWith(
+        { userId, month: 5, year: 2026 },
+        { $set: { targetAmount: 900 } },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+      expect(result).toEqual({
+        month: 5,
+        year: 2026,
+        targetAmount: 900,
+        actualExpense: 200,
+        remaining: 700,
+        status: "safe",
+      });
     });
   });
 });

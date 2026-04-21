@@ -6,7 +6,11 @@
  *   - Sử dụng Joi để validate và kiểm tra kết quả trả về
  */
 
-const { getSummarySchema } = require("../../../validators/statistic.validator");
+const {
+  getSummarySchema,
+  getBudgetSchema,
+  saveBudgetSchema,
+} = require("../../../validators/statistic.validator");
 
 // Test cases cho validator thống kê thu chi
 describe("Statistic Validator", () => {
@@ -17,5 +21,43 @@ describe("Statistic Validator", () => {
     });
 
     expect(result.error).toBeUndefined();
+  });
+
+  it("valid get budget input", () => {
+    const result = getBudgetSchema.validate({
+      month: 4,
+      year: 2026,
+    });
+
+    expect(result.error).toBeUndefined();
+  });
+
+  it("invalid get budget month", () => {
+    const result = getBudgetSchema.validate({
+      month: 13,
+      year: 2026,
+    });
+
+    expect(result.error).toBeDefined();
+  });
+
+  it("valid save budget input", () => {
+    const result = saveBudgetSchema.validate({
+      month: 4,
+      year: 2026,
+      targetAmount: 500000,
+    });
+
+    expect(result.error).toBeUndefined();
+  });
+
+  it("invalid save budget targetAmount <= 0", () => {
+    const result = saveBudgetSchema.validate({
+      month: 4,
+      year: 2026,
+      targetAmount: 0,
+    });
+
+    expect(result.error).toBeDefined();
   });
 });

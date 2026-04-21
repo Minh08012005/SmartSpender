@@ -7,7 +7,11 @@ const router = express.Router();
 const statisticController = require("../controllers/statistic.controller");
 const authenticate = require("../middleware/auth.middleware");
 const validate = require("../middleware/validate.middleware");
-const { getSummarySchema } = require("../validators/statistic.validator");
+const {
+	getSummarySchema,
+	getBudgetSchema,
+	saveBudgetSchema,
+} = require("../validators/statistic.validator");
 
 /**
  * @swagger
@@ -57,5 +61,23 @@ const { getSummarySchema } = require("../validators/statistic.validator");
  *         description: Unauthorized
  */
 router.get("/summary", authenticate,validate(getSummarySchema, "query"), statisticController.getSummary);
+router.get(
+	"/budget",
+	authenticate,
+	validate(getBudgetSchema, "query"),
+	statisticController.getBudget
+);
+router.post(
+	"/budget",
+	authenticate,
+	validate(saveBudgetSchema, "body"),
+	statisticController.saveBudget
+);
+router.patch(
+	"/budget",
+	authenticate,
+	validate(saveBudgetSchema, "body"),
+	statisticController.saveBudget
+);
 
 module.exports = router;

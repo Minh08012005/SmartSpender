@@ -11,6 +11,8 @@ servers:
 tags:
   - name: Transactions
     description: Transaction endpoints
+  - name: Statistics
+    description: Statistics and monthly budget endpoints
 
 paths:
   /api/transactions:
@@ -330,6 +332,150 @@ paths:
                 statusCode: 404
                 message: Transaction not found or permission denied
 
+  /api/statistics/summary:
+    get:
+      tags:
+        - Statistics
+      summary: Get monthly income and expense summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+      responses:
+        '200':
+          description: Statistics fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  statusCode:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      totalIncome:
+                        type: number
+                      totalExpense:
+                        type: number
+                      balance:
+                        type: number
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+
+  /api/statistics/budget:
+    get:
+      tags:
+        - Statistics
+      summary: Get monthly budget summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: month
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+        - in: query
+          name: year
+          required: true
+          schema:
+            type: integer
+            minimum: 2000
+      responses:
+        '200':
+          description: Budget summary fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSummarySuccess'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+    post:
+      tags:
+        - Statistics
+      summary: Save or update monthly budget target
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetSaveInput'
+      responses:
+        '200':
+          description: Budget target saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSummarySuccess'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+    patch:
+      tags:
+        - Statistics
+      summary: Patch monthly budget target
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetSaveInput'
+      responses:
+        '200':
+          description: Budget target updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BudgetSummarySuccess'
+        '400':
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '401':
+          description: Unauthorized
+
 components:
   securitySchemes:
     bearerAuth:
@@ -366,6 +512,47 @@ components:
         updatedAt:
           type: string
           format: date-time
+    BudgetSaveInput:
+      type: object
+      required: [month, year, targetAmount]
+      properties:
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        year:
+          type: integer
+          minimum: 2000
+        targetAmount:
+          type: number
+          exclusiveMinimum: 0
+    BudgetSummary:
+      type: object
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        targetAmount:
+          type: number
+        actualExpense:
+          type: number
+        remaining:
+          type: number
+        status:
+          type: string
+          enum: [safe, near, over]
+    BudgetSummarySuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+        statusCode:
+          type: integer
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/BudgetSummary'
 
     TransactionCreateInput:
       type: object
