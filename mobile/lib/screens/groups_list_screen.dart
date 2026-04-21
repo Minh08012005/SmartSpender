@@ -150,7 +150,8 @@ class _GroupsListScreenState extends State<GroupsListScreen> {
               final name = nameController.text.trim();
               if (name.isNotEmpty) {
                 await provider.createGroup(name: name, description: '');
-                if (mounted) Navigator.pop(ctx);
+                if (!context.mounted) return;
+                Navigator.of(context).pop();
               }
             },
             child: const Text('Tạo'),

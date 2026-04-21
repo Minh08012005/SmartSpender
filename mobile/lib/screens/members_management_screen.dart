@@ -247,7 +247,8 @@ class _MembersManagementScreenState extends State<MembersManagementScreen> {
                     userEmail: email,
                     role: selectedRole,
                   );
-                  if (mounted) Navigator.pop(ctx);
+                  if (!context.mounted) return;
+                  Navigator.of(context).pop();
                 }
               },
               child: const Text('Thêm'),

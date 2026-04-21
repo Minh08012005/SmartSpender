@@ -121,6 +121,33 @@ class AppStrings {
   static const String statisticRecentTransactions = 'Giao dịch gần đây';
   static const String statisticRecentTransactionsHint =
       'Tối đa 5 giao dịch mới nhất';
+  static const String statisticRecentTransactionsCompactHint =
+      'Mặc định hiển thị 3 giao dịch mới nhất';
+  static const String statisticRecentTransactionsExpandedHint =
+      'Đang hiển thị tất cả giao dịch tháng này';
+  static const String statisticSeeMore = 'Xem thêm';
+  static const String statisticCollapse = 'Thu gọn';
+  static const String statisticMonthlyCalendar = 'Lịch tháng';
+  static const String statisticDayTransactionsTitlePrefix = 'Giao dịch ngày';
+  static const String statisticNoTransactionInSelectedDay =
+      'Không có giao dịch trong ngày này';
+
+  static const String statisticMonthlyBudgetTitle = 'Mục tiêu chi tiêu tháng';
+  static const String statisticSetUpBudget = 'Thiết lập';
+  static const String statisticBudgetTargetPrefix = 'Mục tiêu';
+  static const String statisticBudgetSpentPrefix = 'Đã chi';
+  static const String statisticBudgetRemainingPrefix = 'Còn lại';
+  static const String statisticBudgetStatusPrefix = 'Trạng thái';
+  static const String statisticBudgetStatusOver = 'Vượt mục tiêu';
+  static const String statisticBudgetStatusNear = 'Gần chạm mục tiêu';
+  static const String statisticBudgetStatusSafe = 'An toàn';
+  static const String statisticSummaryIncome = 'Thu nhập';
+  static const String statisticSummaryExpense = 'Chi tiêu';
+  static const String statisticSummaryTotal = 'Tổng';
+  static const String statisticBudgetEditorTitlePrefix =
+      'Thiết lập mục tiêu tháng';
+  static const String statisticBudgetEditorAmountLabel = 'Số tiền mục tiêu';
+  static const String save = 'Lưu';
   static const String statisticCurrentMonth = 'Tháng này';
   static const String statisticPreviousMonth = 'Tháng trước';
   static const String statisticSelectMonth = 'Chọn tháng';
