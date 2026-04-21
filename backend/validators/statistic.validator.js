@@ -11,4 +11,15 @@ const getSummarySchema = Joi.object({
   year: Joi.number().integer().min(2000).required(),
 });
 
-module.exports = { getSummarySchema };
+const getBudgetSchema = Joi.object({
+  month: Joi.number().integer().min(1).max(12).required(),
+  year: Joi.number().integer().min(2000).required(),
+});
+
+const saveBudgetSchema = Joi.object({
+  month: Joi.number().integer().min(1).max(12).required(),
+  year: Joi.number().integer().min(2000).required(),
+  targetAmount: Joi.number().positive().required(),
+});
+
+module.exports = { getSummarySchema, getBudgetSchema, saveBudgetSchema };

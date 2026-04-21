@@ -13,6 +13,8 @@ const { TextEncoder } = require("util");
 // Mock service để tránh truy cập DB thật
 jest.mock("../../services/statistic.service", () => ({
   getMonthlyStatistics: jest.fn(),
+  getBudgetSummary: jest.fn(),
+  saveBudgetTarget: jest.fn(),
 }));
 
 const statisticService = require("../../services/statistic.service");
@@ -80,4 +82,121 @@ describe("GET /api/statistics/summary", () => {
       "2026",
     );
   }, 10000);
+});
+
+describe("Budget endpoints /api/statistics/budget", () => {
+  let token;
+  const mockUserId = new mongoose.Types.ObjectId().toString();
+  const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+  beforeAll(async () => {
+    token = await new SignJWT({ userId: mockUserId })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1h")
+      .sign(secret);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("should return 200 for GET budget when valid", async () => {
+    const mockData = {
+      month: 4,
+      year: 2026,
+      targetAmount: 1000000,
+      actualExpense: 700000,
+      remaining: 300000,
+      status: "safe",
+    };
+
+    statisticService.getBudgetSummary.mockResolvedValue(mockData);
+
+    const res = await request(app)
+      .get("/api/statistics/budget")
+      .set("Authorization", `Bearer ${token}`)
+      .query({ month: 4, year: 2026 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(mockData);
+    expect(statisticService.getBudgetSummary).toHaveBeenCalledWith(
+      mockUserId,
+      4,
+      2026
+    );
+  });
+
+  it("should return 400 for GET budget with invalid month", async () => {
+    const res = await request(app)
+      .get("/api/statistics/budget")
+      .set("Authorization", `Bearer ${token}`)
+      .query({ month: 13, year: 2026 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Validation failed");
+  });
+
+  it("should return 200 for POST budget when valid", async () => {
+    const mockData = {
+      month: 4,
+      year: 2026,
+      targetAmount: 1000000,
+      actualExpense: 700000,
+      remaining: 300000,
+      status: "safe",
+    };
+
+    statisticService.saveBudgetTarget.mockResolvedValue(mockData);
+
+    const res = await request(app)
+      .post("/api/statistics/budget")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ month: 4, year: 2026, targetAmount: 1000000 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(mockData);
+    expect(statisticService.saveBudgetTarget).toHaveBeenCalledWith(
+      mockUserId,
+      4,
+      2026,
+      1000000
+    );
+  });
+
+  it("should return 400 for POST budget with targetAmount <= 0", async () => {
+    const res = await request(app)
+      .post("/api/statistics/budget")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ month: 4, year: 2026, targetAmount: 0 });
+
+    expect(res.status).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Validation failed");
+  });
+
+  it("should return 200 for PATCH budget when valid", async () => {
+    const mockData = {
+      month: 4,
+      year: 2026,
+      targetAmount: 1200000,
+      actualExpense: 700000,
+      remaining: 500000,
+      status: "safe",
+    };
+
+    statisticService.saveBudgetTarget.mockResolvedValue(mockData);
+
+    const res = await request(app)
+      .patch("/api/statistics/budget")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ month: 4, year: 2026, targetAmount: 1200000 });
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual(mockData);
+  });
 });
