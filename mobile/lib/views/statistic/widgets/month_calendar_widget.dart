@@ -129,9 +129,9 @@ class MonthCalendarWidget extends StatelessWidget {
                                     width: 4,
                                     height: 4,
                                     decoration: BoxDecoration(
-                                      color: amount.expense > 0
-                                          ? AppColors.danger
-                                          : AppColors.info,
+                                      color: amount.income - amount.expense > 0
+                                          ? AppColors.success
+                                          : AppColors.danger,
                                       shape: BoxShape.circle,
                                     ),
                                   ),

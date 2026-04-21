@@ -66,7 +66,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDate!.hour,
+          _selectedDate!.minute,
+          _selectedDate!.second,
+        );
       });
     }
   }
