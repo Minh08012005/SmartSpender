@@ -122,7 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Hồ sơ',
+          AppStrings.profileTitle,
           style: Theme.of(context).appBarTheme.titleTextStyle,
         ),
         actions: [

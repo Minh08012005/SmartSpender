@@ -236,11 +236,11 @@ class _MyAppState extends State<MyApp> {
           },
         ),
 
-      // Statistic Provider
-      ChangeNotifierProvider(create: (_) => StatisticProvider()),
+        // Statistic Provider
+        ChangeNotifierProvider(create: (_) => StatisticProvider()),
 
-      // Wallet Provider
-      ChangeNotifierProvider(create: (_) => WalletProvider()),
+        // Wallet Provider
+        ChangeNotifierProvider(create: (_) => WalletProvider()),
 
         // TODO: Thêm các providers khác ở đây
         // ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -251,6 +251,12 @@ class _MyAppState extends State<MyApp> {
         title: 'SmartSpender',
         navigatorKey: ApiService.navigatorKey,
         theme: _buildAppTheme(),
+
+        // ===== NAMED ROUTES =====
+        onGenerateRoute: (settings) {
+          // Default route
+          return null;
+        },
 
         // ===== AUTO-LOGIN LOGIC =====
         home: FutureBuilder<_LaunchTarget>(

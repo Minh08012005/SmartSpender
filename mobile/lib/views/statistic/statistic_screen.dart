@@ -9,8 +9,10 @@ import '../../shared/widgets/section_reveal.dart';
 import '../../theme/colors.dart';
 import 'statistic_utils.dart';
 import 'widgets/category_row_widget.dart';
+import 'widgets/day_transactions_sheet.dart';
 import 'widgets/empty_state_widget.dart';
-import 'widgets/kpi_card_widget.dart';
+import 'widgets/month_budget_card_widget.dart';
+import 'widgets/month_calendar_widget.dart';
 import 'widgets/period_picker_widget.dart';
 import 'widgets/transaction_tile_widget.dart';
 
@@ -26,6 +28,8 @@ class _StatisticScreenState extends State<StatisticScreen> {
   bool _isPeriodChanging = false;
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
+  DateTime? _selectedDate;
+  double _monthlyTarget = 0.0;
 
   @override
   void didChangeDependencies() {
@@ -38,7 +42,10 @@ class _StatisticScreenState extends State<StatisticScreen> {
     Future.microtask(() {
       txProvider.fetchTransactions(month: _selectedMonth, year: _selectedYear);
       statProvider.fetchStatistics(month: _selectedMonth, year: _selectedYear);
+      statProvider.fetchBudget(month: _selectedMonth, year: _selectedYear);
     });
+
+    _selectedDate = DateTime(_selectedYear, _selectedMonth, DateTime.now().day);
   }
 
   @override
@@ -46,6 +53,8 @@ class _StatisticScreenState extends State<StatisticScreen> {
     final txProvider = context.watch<TransactionProvider>();
     final statProvider = context.watch<StatisticProvider>();
     final transactions = txProvider.transactions;
+    final monthTransactions = [...transactions]
+      ..sort((a, b) => b.date.compareTo(a.date));
 
     // Sử dụng data từ API statistics provider
     final totalIncome = statProvider.totalIncome;
@@ -82,16 +91,61 @@ class _StatisticScreenState extends State<StatisticScreen> {
                     setState(() {
                       _selectedMonth = month;
                       _selectedYear = year;
+                      _selectedDate = DateTime(year, month, 1);
                     });
                     await _reload();
                   },
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 14),
 
-              // KPI Cards
               SectionReveal(
-                delayMs: 80,
+                delayMs: 40,
+                child: MonthBudgetCardWidget(
+                  monthlyTarget: statProvider.monthlyTarget,
+                  actualExpense: statProvider.actualExpense,
+                  remaining: statProvider.remaining,
+                  status: statProvider.budgetStatus,
+                  onEditPressed: _showBudgetEditor,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              SectionReveal(
+                delayMs: 60,
+                child: MonthCalendarWidget(
+                  selectedMonth: _selectedMonth,
+                  selectedYear: _selectedYear,
+                  selectedDate:
+                      _selectedDate ??
+                      DateTime(_selectedYear, _selectedMonth, 1),
+                  transactions: monthTransactions,
+                  onDaySelected: (day) {
+                    setState(() {
+                      _selectedDate = day;
+                    });
+                    showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      constraints: BoxConstraints(
+                        maxHeight: MediaQuery.of(context).size.height * 0.75,
+                      ),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(16),
+                        ),
+                      ),
+                      builder: (_) => DayTransactionsSheet(day: day),
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              SectionReveal(
+                delayMs: 70,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 220),
                   switchInCurve: Curves.easeOut,
@@ -100,21 +154,21 @@ class _StatisticScreenState extends State<StatisticScreen> {
                       (statProvider.isLoading &&
                           totalIncome == 0 &&
                           totalExpense == 0)
-                      ? _buildLoadingKpiCards(
-                          key: const ValueKey<String>('loading_kpi'),
+                      ? _buildLoadingSummaryStrip(
+                          key: const ValueKey<String>('loading_summary'),
                         )
-                      : _buildKpiCards(
-                          totalExpense,
+                      : _buildMonthlySummaryStrip(
                           totalIncome,
+                          totalExpense,
                           balance,
                           key: ValueKey<String>(
-                            'kpi_${_selectedMonth}_${_selectedYear}_${totalExpense}_$totalIncome',
+                            'summary_${_selectedMonth}_${_selectedYear}_${totalExpense}_$totalIncome',
                           ),
                         ),
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
 
               // Category Breakdown Section
               SectionReveal(
@@ -131,24 +185,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              // Recent Transactions Section
-              SectionReveal(
-                delayMs: 200,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: _buildTransactionSection(
-                    txProvider,
-                    transactions,
-                    key: ValueKey<String>(
-                      'tx_${_selectedMonth}_${_selectedYear}_${transactions.length}',
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -156,54 +193,66 @@ class _StatisticScreenState extends State<StatisticScreen> {
     );
   }
 
-  Widget _buildKpiCards(
-    double totalExpense,
+  Widget _buildMonthlySummaryStrip(
     double totalIncome,
+    double totalExpense,
     double balance, {
     Key? key,
   }) {
-    return Column(
+    return Container(
       key: key,
-      children: [
-        KpiCardWidget(
-          title: AppStrings.statisticKpiTotalExpense,
-          value: formatAmount(totalExpense),
-          color: AppColors.danger,
-          icon: Icons.trending_down,
-          subtitle: AppStrings.statisticSpentSubtitle,
-        ),
-        const SizedBox(height: 12),
-        KpiCardWidget(
-          title: AppStrings.statisticKpiTotalIncome,
-          value: formatAmount(totalIncome),
-          color: AppColors.success,
-          icon: Icons.trending_up,
-          subtitle: AppStrings.statisticReceivedSubtitle,
-        ),
-        const SizedBox(height: 12),
-        KpiCardWidget(
-          title: AppStrings.statisticKpiBalance,
-          value: formatAmount(balance),
-          color: AppColors.info,
-          icon: Icons.account_balance_wallet,
-          subtitle: balance >= 0
-              ? AppStrings.statisticRemaining
-              : AppStrings.statisticNegative,
-        ),
-      ],
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surfaceBorder),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SummaryItem(
+              label: AppStrings.statisticSummaryIncome,
+              value: formatAmount(totalIncome),
+              color: AppColors.success,
+            ),
+          ),
+          Expanded(
+            child: _SummaryItem(
+              label: AppStrings.statisticSummaryExpense,
+              value: formatAmount(totalExpense),
+              color: AppColors.danger,
+            ),
+          ),
+          Expanded(
+            child: _SummaryItem(
+              label: AppStrings.statisticSummaryTotal,
+              value: formatAmount(balance),
+              color: balance >= 0 ? AppColors.info : AppColors.danger,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  Widget _buildLoadingKpiCards({Key? key}) {
-    return Column(
+  Widget _buildLoadingSummaryStrip({Key? key}) {
+    return Container(
       key: key,
-      children: [
-        LoadingSkeletonWidget(type: 'card'),
-        const SizedBox(height: 12),
-        LoadingSkeletonWidget(type: 'card'),
-        const SizedBox(height: 12),
-        LoadingSkeletonWidget(type: 'card'),
-      ],
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.surfaceBorder),
+      ),
+      child: Row(
+        children: const [
+          Expanded(child: LoadingSkeletonWidget(type: 'row')),
+          SizedBox(width: 8),
+          Expanded(child: LoadingSkeletonWidget(type: 'row')),
+          SizedBox(width: 8),
+          Expanded(child: LoadingSkeletonWidget(type: 'row')),
+        ],
+      ),
     );
   }
 
@@ -239,15 +288,15 @@ class _StatisticScreenState extends State<StatisticScreen> {
                   color: AppColors.textSecondary,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
 
               // Content
               if (txProvider.isLoading && txProvider.transactions.isEmpty)
                 Column(
                   children: List.generate(
-                    3,
+                    2,
                     (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                      padding: const EdgeInsets.only(bottom: 8),
                       child: LoadingSkeletonWidget(type: 'row'),
                     ),
                   ),
@@ -256,13 +305,14 @@ class _StatisticScreenState extends State<StatisticScreen> {
                 const EmptyStateWidget(
                   message: AppStrings.statisticNoExpenseInPeriod,
                   icon: Icons.trending_down,
+                  compact: true,
                 )
               else
                 Column(
                   children: categoryBreakdown
                       .map(
                         (item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 8),
                           child: CategoryRowWidget(
                             category:
                                 categoryLabelMap[item.category] ??
@@ -271,71 +321,6 @@ class _StatisticScreenState extends State<StatisticScreen> {
                             percentage: item.percentage,
                             amount: item.amount,
                           ),
-                        ),
-                      )
-                      .toList(),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransactionSection(
-    TransactionProvider txProvider,
-    List<TransactionModel> transactions, {
-    Key? key,
-  }) {
-    return Column(
-      key: key,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.surfaceBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppStrings.statisticRecentTransactions,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                AppStrings.statisticRecentTransactionsHint,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (txProvider.isLoading && transactions.isEmpty)
-                Column(
-                  children: List.generate(
-                    3,
-                    (i) => Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: LoadingSkeletonWidget(type: 'row'),
-                    ),
-                  ),
-                )
-              else if (transactions.isEmpty)
-                const EmptyStateWidget(
-                  message: AppStrings.homeEmptyTransactions,
-                  icon: Icons.receipt_long,
-                )
-              else
-                Column(
-                  children: transactions
-                      .take(5)
-                      .map(
-                        (tx) => Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: TransactionTileWidget(transaction: tx),
                         ),
                       )
                       .toList(),
@@ -367,7 +352,17 @@ class _StatisticScreenState extends State<StatisticScreen> {
           month: _selectedMonth,
           year: _selectedYear,
         ),
+        statProvider.fetchBudget(
+          month: _selectedMonth,
+          year: _selectedYear,
+        ),
       ]);
+
+      if (_selectedDate == null ||
+          _selectedDate!.month != _selectedMonth ||
+          _selectedDate!.year != _selectedYear) {
+        _selectedDate = DateTime(_selectedYear, _selectedMonth, 1);
+      }
     } finally {
       if (mounted) {
         setState(() {
@@ -375,5 +370,126 @@ class _StatisticScreenState extends State<StatisticScreen> {
         });
       }
     }
+  }
+
+  void _showBudgetEditor() {
+    final statProvider = context.read<StatisticProvider>();
+    final controller = TextEditingController(
+      text: statProvider.monthlyTarget.toStringAsFixed(0),
+    );
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 16,
+            right: 16,
+            top: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${AppStrings.statisticBudgetEditorTitlePrefix} $_selectedMonth/$_selectedYear',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: controller,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: AppStrings.statisticBudgetEditorAmountLabel,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(AppStrings.cancel),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final next = double.tryParse(controller.text.trim());
+                        if (next == null || next <= 0) return;
+                        final success = await statProvider.saveBudget(
+                          month: _selectedMonth,
+                          year: _selectedYear,
+                          targetAmount: next,
+                        );
+                        if (success) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(AppStrings.budgetSavedSuccessfully),
+                              ),
+                            );
+                          }
+                          Navigator.pop(context);
+                        } else {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  statProvider.error.isEmpty
+                                      ? AppStrings.failedToSaveBudget
+                                      : statProvider.error,
+                                ),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                      child: const Text(AppStrings.save),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _SummaryItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color color;
+
+  const _SummaryItem({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 }

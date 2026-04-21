@@ -3,12 +3,12 @@ import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
-import '../../views/profile/widgets/notification_widgets.dart';
 import 'notifications_provider.dart';
 import '../../core/services/api_service.dart';
 import '../../core/constants/api_constants.dart';
 import '../../core/strings.dart';
 import '../models/transaction_model.dart';
+import '../../views/profile/widgets/notification_widgets.dart';
 import '../dummy_transactions.dart';
 
 /// Transaction Provider
@@ -16,12 +16,12 @@ import '../dummy_transactions.dart';
 /// Quản lý state của transactions và giao tiếp với API
 /// Sử dụng ChangeNotifier để notify UI khi data thay đổi
 class TransactionProvider extends ChangeNotifier {
-
   NotificationsProvider? _notificationsProvider;
 
-  void setNotificationsProvider(NotificationsProvider? p) {
-    _notificationsProvider = p;
+  void setNotificationsProvider(NotificationsProvider? provider) {
+    _notificationsProvider = provider;
   }
+
   // ============== PRIVATE STATE ==============
   List<TransactionModel> _transactions = [];
   bool _isLoading = false;
@@ -29,6 +29,12 @@ class TransactionProvider extends ChangeNotifier {
   // Optional stats returned by backend
   double? _remoteTotalIncome;
   double? _remoteTotalExpense;
+
+  // Day transactions state
+  List<TransactionModel> _dayTransactions = [];
+  double? _dayTotalIncome;
+  double? _dayTotalExpense;
+  String _selectedDate = '';
 
   // API Service instance (injectable for testing)
   late final ApiService _apiService;
@@ -73,7 +79,93 @@ class TransactionProvider extends ChangeNotifier {
     return _transactions.where((t) => t.type == type).toList();
   }
 
+  // ============== DAY TRANSACTIONS GETTERS ==============
+  List<TransactionModel> get dayTransactions => _dayTransactions;
+  double get dayTotalIncome => _dayTotalIncome ?? 0.0;
+  double get dayTotalExpense => _dayTotalExpense ?? 0.0;
+  double get dayBalance => dayTotalIncome - dayTotalExpense;
+  String get selectedDate => _selectedDate;
+
   // ============== API METHODS ==============
+
+  /// Lấy transactions theo ngày từ API by-date
+  ///
+  /// Query parameters:
+  /// - date: Ngày cần lấy (YYYY-MM-DD)
+  Future<void> fetchTransactionsByDate(String date) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final queryParams = <String, dynamic>{'date': date};
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(ApiConstants.accessTokenKey) ?? '';
+
+      final Options? options = token.isNotEmpty
+          ? Options(
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+          : null;
+
+      final response = await _apiService.get(
+        ApiConstants.transactionsByDate,
+        queryParameters: queryParams,
+        options: options,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is Map<String, dynamic> && data['success'] == true) {
+          final dayData = data['data'] as Map<String, dynamic>?;
+
+          if (dayData != null) {
+            // Parse transactions
+            final txList =
+                (dayData['transactions'] as List?)
+                    ?.map(
+                      (tx) =>
+                          TransactionModel.fromJson(tx as Map<String, dynamic>),
+                    )
+                    .toList() ??
+                [];
+
+            // Parse summary
+            final summary = dayData['summary'] as Map<String, dynamic>?;
+
+            _dayTransactions = txList;
+            _selectedDate = dayData['date'] ?? date;
+            _dayTotalIncome =
+                (summary?['totalIncome'] as num?)?.toDouble() ?? 0.0;
+            _dayTotalExpense =
+                (summary?['totalExpense'] as num?)?.toDouble() ?? 0.0;
+
+            debugPrint(
+              '✅ Lấy giao dịch ngày $date thành công: ${txList.length} transactions',
+            );
+          } else {
+            throw Exception('Định dạng dữ liệu không hợp lệ');
+          }
+        } else {
+          throw Exception('Phản hồi API không hợp lệ');
+        }
+      } else {
+        throw Exception('Không thể tải giao dịch ngày $date');
+      }
+    } on DioException catch (e) {
+      _setError(_extractApiErrorMessage(e, 'Không thể tải giao dịch ngày'));
+      debugPrint('❌ Tải giao dịch ngày thất bại: ${e.message}');
+    } catch (e) {
+      _setError(e.toString());
+      debugPrint('❌ Lỗi không mong muốn: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
 
   /// Lấy danh sách transactions từ API
   ///
@@ -212,13 +304,17 @@ class TransactionProvider extends ChangeNotifier {
         );
 
         try {
+          final notifications =
+              _notificationsProvider ?? NotificationsProvider.instance;
           // If NotificationsProvider exists, use it to insert and notify
-          if (NotificationsProvider.instance == null) {
-            debugPrint('⚠️ NotificationsProvider.instance is NULL when adding notif');
+          if (notifications == null) {
+            debugPrint(
+              '⚠️ NotificationsProvider.instance is NULL when adding notif',
+            );
           } else {
             debugPrint('ℹ️ TransactionProvider: adding notif via provider');
           }
-          NotificationsProvider.instance?.addLocalNotification(newNotif);
+          notifications?.addLocalNotification(newNotif);
         } catch (_) {
           // fallback: write directly to prefs
           try {
@@ -369,6 +465,76 @@ class TransactionProvider extends ChangeNotifier {
       debugPrint('❌ Giao dịch từ API không hợp lệ: $e');
       debugPrint('👉 Dữ liệu: $payload');
       return null;
+    }
+  }
+
+  // ============== GROUP TRANSACTIONS LOAD ==============
+  /// Tải transactions cho một group cụ thể
+  Future<void> loadGroupTransactions(String groupId) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final response = await _apiService.get(
+        '/api/groups/$groupId/transactions',
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is Map<String, dynamic> && data['success'] == true) {
+          final payload = data['data'];
+
+          List<dynamic>? transactionsData;
+
+          if (payload is List) {
+            transactionsData = payload as List<dynamic>?;
+          } else if (payload is Map<String, dynamic>) {
+            transactionsData =
+                (payload['transactions'] as List<dynamic>?) ??
+                (payload['data'] as List<dynamic>?);
+
+            final stats = payload['stats'] as Map<String, dynamic>?;
+            if (stats != null) {
+              _remoteTotalIncome = (stats['totalIncome'] as num?)?.toDouble();
+              _remoteTotalExpense = (stats['totalExpense'] as num?)?.toDouble();
+            }
+          }
+
+          if (transactionsData != null) {
+            final List<TransactionModel> parsedList = [];
+            for (final json in transactionsData) {
+              try {
+                final tx = TransactionModel.fromJson(json);
+                parsedList.add(tx);
+              } catch (e) {
+                debugPrint('❌ Bỏ qua giao dịch không hợp lệ: $e');
+              }
+            }
+
+            _transactions = parsedList;
+            debugPrint('✅ Đã tải ${_transactions.length} giao dịch cho group');
+          } else {
+            _transactions = [];
+          }
+        } else {
+          throw Exception('Định dạng phản hồi không hợp lệ');
+        }
+      } else {
+        throw Exception('Không thể tải giao dịch nhóm');
+      }
+    } on DioException catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
+      _setError(_extractApiErrorMessage(e, 'Không thể tải giao dịch nhóm'));
+      debugPrint('❌ Tải giao dịch nhóm thất bại: ${e.message}');
+    } catch (e) {
+      _remoteTotalIncome = null;
+      _remoteTotalExpense = null;
+      _setError(e.toString());
+      debugPrint('❌ Lỗi không mong muốn: $e');
+    } finally {
+      _setLoading(false);
     }
   }
 

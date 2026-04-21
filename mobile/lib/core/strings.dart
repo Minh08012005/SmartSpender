@@ -24,6 +24,9 @@ class AppStrings {
   static const String failedToAddTransaction = 'Thêm giao dịch thất bại';
   static const String failedToLoadTransactions =
       'Tải danh sách giao dịch thất bại';
+  static const String failedToLoadBudget = 'Tải budget thất bại';
+  static const String failedToSaveBudget = 'Lưu budget thất bại';
+  static const String budgetSavedSuccessfully = 'Đã lưu budget thành công';
   static const String failedToDeleteTransaction = 'Xóa giao dịch thất bại';
   static const String failedToUpdateTransaction = 'Cập nhật giao dịch thất bại';
   static const String transactionUpdatedSuccessfully =
@@ -121,17 +124,46 @@ class AppStrings {
   static const String statisticRecentTransactions = 'Giao dịch gần đây';
   static const String statisticRecentTransactionsHint =
       'Tối đa 5 giao dịch mới nhất';
+  static const String statisticRecentTransactionsCompactHint =
+      'Mặc định hiển thị 3 giao dịch mới nhất';
+  static const String statisticRecentTransactionsExpandedHint =
+      'Đang hiển thị tất cả giao dịch tháng này';
+  static const String statisticSeeMore = 'Xem thêm';
+  static const String statisticCollapse = 'Thu gọn';
+  static const String statisticMonthlyCalendar = 'Lịch tháng';
+  static const String statisticDayTransactionsTitlePrefix = 'Giao dịch ngày';
+  static const String statisticNoTransactionInSelectedDay =
+      'Không có giao dịch trong ngày này';
+
+  static const String statisticMonthlyBudgetTitle = 'Mục tiêu chi tiêu tháng';
+  static const String statisticSetUpBudget = 'Thiết lập';
+  static const String statisticBudgetTargetPrefix = 'Mục tiêu';
+  static const String statisticBudgetSpentPrefix = 'Đã chi';
+  static const String statisticBudgetRemainingPrefix = 'Còn lại';
+  static const String statisticBudgetStatusPrefix = 'Trạng thái';
+  static const String statisticBudgetStatusOver = 'Vượt mục tiêu';
+  static const String statisticBudgetStatusNear = 'Gần chạm mục tiêu';
+  static const String statisticBudgetStatusSafe = 'An toàn';
+  static const String statisticSummaryIncome = 'Thu nhập';
+  static const String statisticSummaryExpense = 'Chi tiêu';
+  static const String statisticSummaryTotal = 'Tổng';
+  static const String statisticBudgetEditorTitlePrefix =
+      'Thiết lập mục tiêu tháng';
+  static const String statisticBudgetEditorAmountLabel = 'Số tiền mục tiêu';
+  static const String save = 'Lưu';
   static const String statisticCurrentMonth = 'Tháng này';
   static const String statisticPreviousMonth = 'Tháng trước';
   static const String statisticSelectMonth = 'Chọn tháng';
 
   // Profile
+  static const String profileTitle = 'Hồ sơ';
   static const String profilePersonalInfo = 'Thông tin cá nhân';
   static const String profileLoginSecurity = 'Đăng nhập và bảo mật';
   static const String profileNotifications = 'Thông báo';
   static const String profilePrivacy = 'Quyền riêng tư';
   static const String profileLogout = 'Đăng xuất';
   static const String profileEdit = 'Chỉnh sửa';
+  static const String profileGroupManagement = 'Quản Lý Nhóm';
   static const String profileAvatarFallback = 'U';
   static const String profileLogoutConfirmMessage =
       'Bạn có chắc muốn đăng xuất không?';
@@ -139,6 +171,7 @@ class AppStrings {
       'Không thể đăng xuất lúc này, vui lòng thử lại.';
   static const String profileDisplayName = 'Người dùng SmartSpender';
   static const String profileUsername = '@nguoi_dung';
+  static const String profileEditInfo = 'Chỉnh sửa thông tin';
 
   // Onboarding
   static const String onboardingTitle = 'Chi tiêu thông minh\nTiết kiệm hơn';
@@ -165,8 +198,10 @@ class AppStrings {
   // Wallet screen
   static const String walletTitle = 'Ví của tôi';
   static const String walletListLabel = 'Danh sách ví';
+  static const String walletSelectWallet = 'Chọn ví';
   static const String walletTransferButtonLabel = 'Điều chuyển';
   static const String walletAddButtonLabel = 'Thêm ví';
+  static const String walletFeatureComingSoon = 'Tính năng sẽ được cập nhật';
 
   static const String walletTransferModalTitle = 'Điều chuyển tiền';
   static const String walletFromLabel = 'Từ ví';

@@ -200,38 +200,16 @@ Sau đó tạo Pull Request vào `dev` để review trước khi merge.
 - `SETUP_GUIDE.md`
 - `MOBILE_E2E_TEST_CHECKLIST.md`
 - `MOBILE_SPRINT3_UI_CHECKLIST.md`
+- [docs/api-presentation/README.md](docs/api-presentation/README.md)
 
 ## 10. Ghi chú phát hành
 
 - Bản hiện tại phù hợp để đóng gói bản nội bộ/UAT.
-- Luồng deploy web công khai đã chuyển sang dùng GitHub Pages (được tích hợp qua GitHub Actions).
 - Các hạng mục dự kiến nâng cấp tiếp theo:
   - Budget planning.
   - Biểu đồ/thống kê nâng cao.
   - Push notification.
   - Dark mode.
-
-## 11. Quy trình deploy web công khai (GitHub Pages)
-
-Sử dụng workflow Actions (`.github/workflows/flutter-web-gh-pages.yml`) để build và publish tự động khi có push lên `main`.
-
-Nếu cần build thủ công trên máy local và publish thủ công:
-
-```bash
-cd mobile
-flutter pub get
-flutter build web --release --pwa-strategy=none --dart-define=APP_ENV=production --dart-define=API_BASE_URL=https://smartspender-x1fl.onrender.com
-
-# Publish manually using a gh-pages tool (example):
-# npm install -g gh-pages
-# gh-pages -d mobile/build/web -r https://github.com/<your-username>/SmartSpender.git
-```
-
-Checklist nhanh sau publish:
-
-- Mở link Pages trên điện thoại (ví dụ `https://<username>.github.io/SmartSpender/`).
-- Test đăng ký/đăng nhập.
-- Nếu backend vừa ngủ (Render free tier), chờ 20-60 giây rồi thử lại.
 
 ---
 

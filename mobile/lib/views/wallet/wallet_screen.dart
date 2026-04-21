@@ -150,7 +150,9 @@ class _WalletScreenState extends State<WalletScreen> {
                             onPressed: () {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content: Text('Tính năng sẽ được cập nhật'),
+                                  content: Text(
+                                    AppStrings.walletFeatureComingSoon,
+                                  ),
                                   duration: Duration(seconds: 2),
                                 ),
                               );

@@ -8,7 +8,9 @@ import '../data/models/transaction_model.dart';
 import '../data/providers/transaction_provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final String? groupId;
+
+  const AddTransactionScreen({this.groupId, super.key});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -64,7 +66,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDate!.hour,
+          _selectedDate!.minute,
+          _selectedDate!.second,
+        );
       });
     }
   }

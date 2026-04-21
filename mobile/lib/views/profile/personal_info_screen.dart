@@ -130,7 +130,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                           child: FilledButton.icon(
                             onPressed: _navigateToEditProfile,
                             icon: const Icon(Icons.edit_outlined),
-                            label: const Text('Chỉnh sửa thông tin'),
+                            label: const Text(AppStrings.profileEditInfo),
                             style: FilledButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,

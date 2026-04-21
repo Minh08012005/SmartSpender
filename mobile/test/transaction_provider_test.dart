@@ -220,7 +220,10 @@ void main() {
 
       expect(result, isFalse);
       expect(provider.transactions.first.amount, 80.0);
-      expect(provider.error, contains('Phản hồi cập nhật giao dịch không hợp lệ'));
+      expect(
+        provider.error,
+        contains('Phản hồi cập nhật giao dịch không hợp lệ'),
+      );
     });
 
     test('api title error: rolls back and shows backend message', () async {

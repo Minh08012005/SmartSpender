@@ -17,10 +17,12 @@ class ApiConstants {
 
   // ============== TRANSACTION ENDPOINTS ==============
   static const String transactions = '/api/transactions';
+  static const String transactionsByDate = '/api/transactions/by-date';
   static String transactionById(String id) => '/api/transactions/$id';
 
   // ============== STATISTICS ENDPOINTS ==============
   static const String statisticsSummary = '/api/statistics/summary';
+  static const String statisticsBudget = '/api/statistics/budget';
 
   // ============== USER ENDPOINTS ==============
   static const String userProfile = '/api/user/profile';

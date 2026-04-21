@@ -161,42 +161,45 @@ void main() {
     expect(provider.errorMessage, isEmpty);
   });
 
-  test('transferBetweenWallets returns false and sets error when API fails', () async {
-    final api = FakeWalletApiService(
-      walletsResponse: GetWalletsResponse(
-        success: true,
-        data: [
-          walletData(
-            id: 'cash-id',
-            walletType: 'cash',
-            balance: 300000,
-            name: 'Tiền mặt',
-          ),
-          walletData(
-            id: 'bank-id',
-            walletType: 'bank',
-            balance: 90000,
-            name: 'Ngân hàng',
-          ),
-        ],
-        totalBalance: 390000,
-      ),
-      transferError: Exception('API Error: transfer failed'),
-    );
+  test(
+    'transferBetweenWallets returns false and sets error when API fails',
+    () async {
+      final api = FakeWalletApiService(
+        walletsResponse: GetWalletsResponse(
+          success: true,
+          data: [
+            walletData(
+              id: 'cash-id',
+              walletType: 'cash',
+              balance: 300000,
+              name: 'Tiền mặt',
+            ),
+            walletData(
+              id: 'bank-id',
+              walletType: 'bank',
+              balance: 90000,
+              name: 'Ngân hàng',
+            ),
+          ],
+          totalBalance: 390000,
+        ),
+        transferError: Exception('API Error: transfer failed'),
+      );
 
-    final provider = WalletProvider(apiService: api);
-    await provider.fetchWallets(forceRefresh: true);
+      final provider = WalletProvider(apiService: api);
+      await provider.fetchWallets(forceRefresh: true);
 
-    final success = await provider.transferBetweenWallets(
-      fromWalletId: 'cash-id',
-      toWalletId: 'bank-id',
-      amount: 20000,
-      note: 'move',
-    );
+      final success = await provider.transferBetweenWallets(
+        fromWalletId: 'cash-id',
+        toWalletId: 'bank-id',
+        amount: 20000,
+        note: 'move',
+      );
 
-    expect(success, isFalse);
-    expect(provider.errorMessage, contains('transfer failed'));
-    expect(provider.getWalletById('cash-id')?.balance, 300000);
-    expect(provider.getWalletById('bank-id')?.balance, 90000);
-  });
+      expect(success, isFalse);
+      expect(provider.errorMessage, contains('transfer failed'));
+      expect(provider.getWalletById('cash-id')?.balance, 300000);
+      expect(provider.getWalletById('bank-id')?.balance, 90000);
+    },
+  );
 }

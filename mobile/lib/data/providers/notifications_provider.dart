@@ -43,7 +43,9 @@ class NotificationsProvider extends ChangeNotifier {
             return;
           } else {
             // Backend returned empty list — do not overwrite local prefs
-            debugPrint('🔔 NotificationsProvider: backend returned empty list, preserving local notifications');
+            debugPrint(
+              '🔔 NotificationsProvider: backend returned empty list, preserving local notifications',
+            );
           }
         }
       } catch (_) {}
@@ -56,7 +58,9 @@ class NotificationsProvider extends ChangeNotifier {
             .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
             .toList();
         // Debug: report loaded count
-        debugPrint('🔔 NotificationsProvider: loaded ${notifications.length} from prefs');
+        debugPrint(
+          '🔔 NotificationsProvider: loaded ${notifications.length} from prefs',
+        );
       } else {
         debugPrint('🔔 NotificationsProvider: no stored notifications');
       }

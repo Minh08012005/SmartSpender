@@ -12,25 +12,25 @@ const connectDB = require('./config/db'); // Hàm kết nối MongoDB
 const PORT = process.env.PORT || 3000;
 
 const startServer = async () => {
-  // Try to connect to DB but do not block server start for debugging/debug-friendly behavior.
-  connectDB()
-    .then(() => {
-      console.log('Database connected successfully');
-    })
-    .catch((err) => {
-      console.error(
-        'MongoDB connection failed (continuing without DB):',
-        err.message || err
-      );
-    })
-    .finally(() => {
-      // Start server regardless of DB connection outcome so health endpoints respond.
-      app.listen(PORT, () => {
-        console.log(
-          `Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`
-        );
-      });
-    });
+  try {
+    // Kết nối MongoDB trước khi khởi động server
+    await connectDB();
+    console.log('🚀 Ready to start server');
+  } catch (err) {
+    console.error('❌ FATAL: Cannot start server without MongoDB');
+    console.error('Troubleshooting checklist:');
+    console.error('  1. MongoDB running? → mongosh hoặc mongod');
+    console.error('  2. MONGO_URI đúng? → check .env file');
+    console.error('  3. Firewall/Network OK? → kiểm tra port 27017');
+    process.exit(1);
+  }
+
+  // Khởi động server sau khi kết nối DB thành công
+  app.listen(PORT, () => {
+    console.log(
+      `\n📡 Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode\n`
+    );
+  });
 };
 
 // Gọi hàm khởi động server

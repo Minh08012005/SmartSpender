@@ -294,7 +294,7 @@ class _TransferModalWidgetState extends State<TransferModalWidget> {
                 ),
               )
               .toList(),
-          hint: const Text('Chọn ví'),
+          hint: const Text(AppStrings.walletSelectWallet),
         ),
       ],
     );
