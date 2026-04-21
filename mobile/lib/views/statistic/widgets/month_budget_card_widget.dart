@@ -7,31 +7,28 @@ import '../statistic_utils.dart';
 class MonthBudgetCardWidget extends StatelessWidget {
   final double monthlyTarget;
   final double actualExpense;
+  final double remaining;
+  final String status;
   final VoidCallback onEditPressed;
 
   const MonthBudgetCardWidget({
     required this.monthlyTarget,
     required this.actualExpense,
+    required this.remaining,
+    required this.status,
     required this.onEditPressed,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    final remaining = monthlyTarget - actualExpense;
     final ratio = monthlyTarget <= 0
         ? 0.0
         : (actualExpense / monthlyTarget).clamp(0.0, 1.0);
 
-    final statusText = remaining < 0
-        ? AppStrings.statisticBudgetStatusOver
-        : (ratio >= 0.8
-              ? AppStrings.statisticBudgetStatusNear
-              : AppStrings.statisticBudgetStatusSafe);
+    final statusText = _mapStatusToLocalizedString(status);
 
-    final statusColor = remaining < 0
-        ? AppColors.danger
-        : (ratio >= 0.8 ? const Color(0xffE67E22) : AppColors.success);
+    final statusColor = _mapStatusToColor(status);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -96,5 +93,31 @@ class MonthBudgetCardWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _mapStatusToLocalizedString(String status) {
+    switch (status) {
+      case 'safe':
+        return AppStrings.statisticBudgetStatusSafe;
+      case 'near':
+        return AppStrings.statisticBudgetStatusNear;
+      case 'over':
+        return AppStrings.statisticBudgetStatusOver;
+      default:
+        return AppStrings.statisticBudgetStatusSafe;
+    }
+  }
+
+  Color _mapStatusToColor(String status) {
+    switch (status) {
+      case 'safe':
+        return AppColors.success;
+      case 'near':
+        return const Color(0xffE67E22); // Orange
+      case 'over':
+        return AppColors.danger;
+      default:
+        return AppColors.success;
+    }
   }
 }

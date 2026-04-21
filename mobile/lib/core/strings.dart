@@ -24,6 +24,9 @@ class AppStrings {
   static const String failedToAddTransaction = 'Thêm giao dịch thất bại';
   static const String failedToLoadTransactions =
       'Tải danh sách giao dịch thất bại';
+  static const String failedToLoadBudget = 'Tải budget thất bại';
+  static const String failedToSaveBudget = 'Lưu budget thất bại';
+  static const String budgetSavedSuccessfully = 'Đã lưu budget thành công';
   static const String failedToDeleteTransaction = 'Xóa giao dịch thất bại';
   static const String failedToUpdateTransaction = 'Cập nhật giao dịch thất bại';
   static const String transactionUpdatedSuccessfully =

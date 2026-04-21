@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const {
+  getTransactionsByDate,
   getTransactions,
   createTransaction,
   updateTransaction,
@@ -19,6 +20,8 @@ const {
   updateTransactionSchema,
   objectIdParamSchema,
 } = require('../validators/transaction.validator');
+
+router.get('/by-date', authenticate, getTransactionsByDate);
 
 /**
  * @swagger

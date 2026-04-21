@@ -3,6 +3,7 @@
  */
 
 const Transaction = require("../models/transaction_schema");
+const MonthlyBudget = require("../models/monthly_budget.model");
 const mongoose = require("mongoose");
 
 /**
@@ -130,9 +131,51 @@ const getDailyStatsByMonth = async (userId, month, year) => {
   return { month, year, days };
 };
 
+const computeBudgetStatus = (targetAmount, actualExpense) => {
+  if (targetAmount <= 0) return "safe";
+  if (actualExpense > targetAmount) return "over";
+
+  const ratio = actualExpense / targetAmount;
+  if (ratio >= 0.8) return "near";
+
+  return "safe";
+};
+
+const getBudgetSummary = async (userId, month, year) => {
+  const budget = await MonthlyBudget.findOne({ userId, month, year }).lean();
+  const targetAmount = budget?.targetAmount ?? 0;
+
+  const stats = await getStatistics(userId, { month, year });
+  const actualExpense = stats.totalExpense;
+  const remaining = targetAmount - actualExpense;
+  const status = computeBudgetStatus(targetAmount, actualExpense);
+
+  return {
+    month,
+    year,
+    targetAmount,
+    actualExpense,
+    remaining,
+    status,
+  };
+};
+
+const saveBudgetTarget = async (userId, month, year, targetAmount) => {
+  await MonthlyBudget.findOneAndUpdate(
+    { userId, month, year },
+    { $set: { targetAmount } },
+    { upsert: true, new: true, setDefaultsOnInsert: true }
+  );
+
+  return getBudgetSummary(userId, month, year);
+};
+
 module.exports = {
   getStatistics,
   getCategoryBreakdown,
   getMonthlyStatistics,
-  getDailyStatsByMonth
+  getDailyStatsByMonth,
+  getBudgetSummary,
+  saveBudgetTarget,
+  computeBudgetStatus,
 };

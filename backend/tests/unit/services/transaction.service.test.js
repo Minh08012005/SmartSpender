@@ -256,6 +256,123 @@ describe("Transaction Service - getFilteredTransactions", () => {
     expect(typeof result.stats.balance).toBe("number");
   });
 });
+
+describe("Transaction Service - getTransactionsByDate", () => {
+  const userId = new mongoose.Types.ObjectId().toString();
+  const mockQuery = {
+    sort: jest.fn().mockReturnThis(),
+    lean: jest.fn(),
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    Transaction.find.mockReturnValue(mockQuery);
+    mockQuery.sort.mockReturnThis();
+    mockQuery.lean.mockResolvedValue([]);
+  });
+
+  it("should query by userId and UTC day range", async () => {
+    await transactionService.getTransactionsByDate(userId, "2026-04-17");
+
+    expect(Transaction.find).toHaveBeenCalledWith({
+      userId: new mongoose.Types.ObjectId(userId),
+      date: {
+        $gte: new Date("2026-04-17T00:00:00.000Z"),
+        $lt: new Date("2026-04-18T00:00:00.000Z"),
+      },
+    });
+    expect(mockQuery.sort).toHaveBeenCalledWith({ date: -1 });
+  });
+
+  it("should calculate summary and map transaction fields for mobile", async () => {
+    mockQuery.lean.mockResolvedValueOnce([
+      {
+        _id: new mongoose.Types.ObjectId("65c88df8b2f8a1c21c23abcd"),
+        userId,
+        title: "Salary",
+        amount: 500000,
+        type: "income",
+        category: "salary",
+        date: new Date("2026-04-17T08:00:00.000Z"),
+        note: "",
+      },
+      {
+        _id: new mongoose.Types.ObjectId("65c88df8b2f8a1c21c23abce"),
+        userId,
+        title: "Lunch",
+        amount: 120000,
+        type: "expense",
+        category: "food",
+        date: new Date("2026-04-17T12:30:00.000Z"),
+        note: "Team lunch",
+      },
+    ]);
+
+    const result = await transactionService.getTransactionsByDate(
+      userId,
+      "2026-04-17"
+    );
+
+    expect(result).toEqual({
+      date: "2026-04-17",
+      summary: {
+        totalIncome: 500000,
+        totalExpense: 120000,
+        net: 380000,
+      },
+      transactions: [
+        {
+          id: "65c88df8b2f8a1c21c23abcd",
+          title: "Salary",
+          amount: 500000,
+          type: "income",
+          category: "salary",
+          date: "2026-04-17T08:00:00.000Z",
+          note: "",
+        },
+        {
+          id: "65c88df8b2f8a1c21c23abce",
+          title: "Lunch",
+          amount: 120000,
+          type: "expense",
+          category: "food",
+          date: "2026-04-17T12:30:00.000Z",
+          note: "Team lunch",
+        },
+      ],
+    });
+  });
+
+  it("should return zero summary and empty transactions when no rows exist", async () => {
+    const result = await transactionService.getTransactionsByDate(
+      userId,
+      "2026-04-19"
+    );
+
+    expect(result).toEqual({
+      date: "2026-04-19",
+      summary: {
+        totalIncome: 0,
+        totalExpense: 0,
+        net: 0,
+      },
+      transactions: [],
+    });
+  });
+
+  it("should throw AppError if userId is invalid", async () => {
+    await expect(
+      transactionService.getTransactionsByDate("invalid", "2026-04-17")
+    ).rejects.toThrow("Invalid user id");
+  });
+
+  it("should throw AppError if date is not a real calendar date", async () => {
+    await expect(
+      transactionService.getTransactionsByDate(userId, "2026-02-31")
+    ).rejects.toThrow("Invalid date format");
+  });
+});
+
 /**
  * CREATE TRANSACTION TESTS
  */

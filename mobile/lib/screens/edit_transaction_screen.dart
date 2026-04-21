@@ -93,7 +93,14 @@ class _EditTransactionScreenState extends State<EditTransactionScreen> {
 
     if (picked != null) {
       setState(() {
-        _selectedDate = picked;
+        _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          widget.transaction.date.hour,
+          widget.transaction.date.minute,
+          widget.transaction.date.second,
+        );
       });
     }
   }

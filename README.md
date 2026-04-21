@@ -105,20 +105,20 @@ SmartSpender/
 - API base URL chính thức (Render): `https://smartspender-x1fl.onrender.com/api/v1`
 
 - Auth:
-	- `POST /api/auth/register`
-	- `POST /api/auth/login`
+  - `POST /api/auth/register`
+  - `POST /api/auth/login`
 - Transactions:
-	- `GET /api/transactions`
-	- `POST /api/transactions`
-	- `PUT /api/transactions/:id`
-	- `DELETE /api/transactions/:id`
+  - `GET /api/transactions`
+  - `POST /api/transactions`
+  - `PUT /api/transactions/:id`
+  - `DELETE /api/transactions/:id`
 - Statistics:
-	- `GET /api/statistics/summary`
+  - `GET /api/statistics/summary`
 - Wallets:
-	- `GET /api/wallets`
-	- `GET /api/wallets/:id`
-	- `PATCH /api/wallets/:id`
-	- `POST /api/wallets/transfer`
+  - `GET /api/wallets`
+  - `GET /api/wallets/:id`
+  - `PATCH /api/wallets/:id`
+  - `POST /api/wallets/transfer`
 - API Docs (Swagger UI): `http://localhost:3000/api-docs`
 
 ## 6. Hướng dẫn chạy dự án
@@ -200,15 +200,16 @@ Sau đó tạo Pull Request vào `dev` để review trước khi merge.
 - `SETUP_GUIDE.md`
 - `MOBILE_E2E_TEST_CHECKLIST.md`
 - `MOBILE_SPRINT3_UI_CHECKLIST.md`
+- [docs/api-presentation/README.md](docs/api-presentation/README.md)
 
 ## 10. Ghi chú phát hành
 
 - Bản hiện tại phù hợp để đóng gói bản nội bộ/UAT.
 - Các hạng mục dự kiến nâng cấp tiếp theo:
-	- Budget planning.
-	- Biểu đồ/thống kê nâng cao.
-	- Push notification.
-	- Dark mode.
+  - Budget planning.
+  - Biểu đồ/thống kê nâng cao.
+  - Push notification.
+  - Dark mode.
 
 ---
 

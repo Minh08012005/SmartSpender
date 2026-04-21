@@ -1,6 +1,43 @@
 const transactionService = require('../services/transaction.service');
 const { successResponse } = require('../utils/response.util');
 
+const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+const isValidDateQuery = (dateStr) => {
+  if (typeof dateStr !== 'string' || !DATE_ONLY_REGEX.test(dateStr)) {
+    return false;
+  }
+
+  const [yearPart, monthPart, dayPart] = dateStr.split('-').map(Number);
+  const parsed = new Date(Date.UTC(yearPart, monthPart - 1, dayPart));
+
+  return (
+    !Number.isNaN(parsed.getTime()) &&
+    parsed.getUTCFullYear() === yearPart &&
+    parsed.getUTCMonth() === monthPart - 1 &&
+    parsed.getUTCDate() === dayPart
+  );
+};
+
+exports.getTransactionsByDate = async (req, res, next) => {
+  try {
+    const { date } = req.query;
+
+    if (!isValidDateQuery(date)) {
+      return res.status(400).json({
+        success: false,
+        statusCode: 400,
+        message: 'date must be in YYYY-MM-DD format',
+      });
+    }
+
+    const data = await transactionService.getTransactionsByDate(req.user._id, date);
+    return res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
 /**
  * @description Get filtered transactions with pagination
  * Hỗ trợ lọc theo date range (from/to) hoặc month/year

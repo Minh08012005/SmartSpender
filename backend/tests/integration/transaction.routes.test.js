@@ -17,6 +17,7 @@ const { TextEncoder } = require('util');
 
 jest.mock('../../services/transaction.service', () => ({
   getFilteredTransactions: jest.fn(),
+  getTransactionsByDate: jest.fn(),
 }));
 
 const transactionService = require('../../services/transaction.service');
@@ -38,6 +39,15 @@ describe('Transaction API Integration Tests', () => {
       page: 1,
       limit: 5,
     });
+    transactionService.getTransactionsByDate.mockResolvedValue({
+      date: '2026-04-19',
+      summary: {
+        totalIncome: 0,
+        totalExpense: 0,
+        net: 0,
+      },
+      transactions: [],
+    });
 
     secret = new TextEncoder().encode(process.env.JWT_SECRET);
     token = await new SignJWT({ userId: mockUserId })
@@ -50,6 +60,21 @@ describe('Transaction API Integration Tests', () => {
   // Xóa mock sau mỗi test để tránh ảnh hưởng lẫn nhau
   afterEach(() => {
     jest.clearAllMocks();
+    transactionService.getFilteredTransactions.mockResolvedValue({
+      transactions: [],
+      totalCount: 0,
+      page: 1,
+      limit: 5,
+    });
+    transactionService.getTransactionsByDate.mockResolvedValue({
+      date: '2026-04-19',
+      summary: {
+        totalIncome: 0,
+        totalExpense: 0,
+        net: 0,
+      },
+      transactions: [],
+    });
   });
 
   // Test bảo mật: không có token sẽ bị từ chối truy cập
@@ -132,6 +157,93 @@ describe('Transaction API Integration Tests', () => {
         to: '2026-03-31',
       })
     );
+  });
+
+  it('GET /api/transactions/by-date - should return summary and transactions contract', async () => {
+    transactionService.getTransactionsByDate.mockResolvedValueOnce({
+      date: '2026-04-17',
+      summary: {
+        totalIncome: 500000,
+        totalExpense: 120000,
+        net: 380000,
+      },
+      transactions: [
+        {
+          id: '65c88df8b2f8a1c21c23abcd',
+          title: 'Lunch',
+          amount: 120000,
+          type: 'expense',
+          category: 'food',
+          date: '2026-04-17T12:30:00.000Z',
+          note: 'Team lunch',
+        },
+      ],
+    });
+
+    const res = await request(app)
+      .get('/api/transactions/by-date')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ date: '2026-04-17' });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toEqual({
+      date: '2026-04-17',
+      summary: {
+        totalIncome: 500000,
+        totalExpense: 120000,
+        net: 380000,
+      },
+      transactions: [
+        {
+          id: '65c88df8b2f8a1c21c23abcd',
+          title: 'Lunch',
+          amount: 120000,
+          type: 'expense',
+          category: 'food',
+          date: '2026-04-17T12:30:00.000Z',
+          note: 'Team lunch',
+        },
+      ],
+    });
+    expect(res.body.statusCode).toBeUndefined();
+    expect(res.body.message).toBeUndefined();
+    expect(transactionService.getTransactionsByDate).toHaveBeenCalledWith(
+      mockUserId,
+      '2026-04-17'
+    );
+  });
+
+  it('GET /api/transactions/by-date - should return empty transactions for date without data', async () => {
+    const res = await request(app)
+      .get('/api/transactions/by-date')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ date: '2026-04-19' });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      data: {
+        date: '2026-04-19',
+        summary: {
+          totalIncome: 0,
+          totalExpense: 0,
+          net: 0,
+        },
+        transactions: [],
+      },
+    });
+  });
+
+  it('GET /api/transactions/by-date - should reject invalid date format', async () => {
+    const res = await request(app)
+      .get('/api/transactions/by-date')
+      .set('Authorization', `Bearer ${token}`)
+      .query({ date: '2026/04/18' });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body.success).toBe(false);
+    expect(transactionService.getTransactionsByDate).not.toHaveBeenCalled();
   });
 
   // Test trường hợp token hết hạn

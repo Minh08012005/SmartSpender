@@ -26,7 +26,7 @@ const transactionRoutes = require('./routes/transaction_routes'); // Routes cho 
 const statisticRoutes = require('./routes/statistic_routes'); // Routes cho thống kê
 const walletRoutes = require('./routes/wallet_routes'); // Routes cho wallets
 const notificationRoutes = require('./routes/notification.routes'); // Routes cho notifications
-const telegramRoutes = require('./routes/telegram.routes'); // Routes cho Telegram Bot integration
+
 
 // Khởi tạo ứng dụng Express
 const app = express();
@@ -144,7 +144,6 @@ apiPrefixes.forEach((prefix) => {
   app.use(`${prefix}/statistics`, statisticRoutes);
   app.use(`${prefix}/wallets`, walletRoutes);
   app.use(`${prefix}/notifications`, notificationRoutes);
-  app.use(`${prefix}/telegram`, telegramRoutes);
 });
 
 // Health check endpoint
