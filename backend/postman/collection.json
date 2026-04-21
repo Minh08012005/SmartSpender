@@ -52,10 +52,11 @@
                 "exec": [
                   "pm.test('Login 200', () => pm.response.to.have.status(200));",
                   "const body = pm.response.json();",
-                  "if (body.data && body.data.token) {",
-                  "  pm.environment.set('authToken', body.data.token);",
-                  "  pm.collectionVariables.set('authToken', body.data.token);",
-                  "  console.log('Token set:', body.data.token.substring(0,30) + '...');",
+                  "const accessToken = body?.data?.accessToken || body?.data?.token;",
+                  "if (accessToken) {",
+                  "  pm.environment.set('authToken', accessToken);",
+                  "  pm.collectionVariables.set('authToken', accessToken);",
+                  "  console.log('Token set:', accessToken.substring(0,30) + '...');",
                   "}"
                 ]
               }

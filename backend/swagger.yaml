@@ -186,6 +186,94 @@ paths:
                     message: Token expired
                     errorCode: TOKEN_EXPIRED
 
+  /api/transactions/by-date:
+    get:
+      tags:
+        - Transactions
+      summary: Get transactions by date
+      description: |
+        Returns summary and transaction list for one UTC calendar date.
+        The `date` query must use `YYYY-MM-DD`.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: date
+          required: true
+          schema:
+            type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
+            example: '2026-04-17'
+          description: Date to fetch, interpreted as UTC day boundaries.
+      responses:
+        '200':
+          description: Transactions by date fetched successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionsByDateSuccess'
+              examples:
+                withData:
+                  summary: Date with income and expense
+                  value:
+                    success: true
+                    data:
+                      date: '2026-04-17'
+                      summary:
+                        totalIncome: 500000
+                        totalExpense: 120000
+                        net: 380000
+                      transactions:
+                        - id: 65c88df8b2f8a1c21c23abcd
+                          title: Lunch
+                          amount: 120000
+                          type: expense
+                          category: food
+                          date: '2026-04-17T12:30:00.000Z'
+                          note: Team lunch
+                empty:
+                  summary: Date without transactions
+                  value:
+                    success: true
+                    data:
+                      date: '2026-04-19'
+                      summary:
+                        totalIncome: 0
+                        totalExpense: 0
+                        net: 0
+                      transactions: []
+        '400':
+          description: Invalid date query
+          content:
+            application/json:
+              example:
+                success: false
+                statusCode: 400
+                message: date must be in YYYY-MM-DD format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              examples:
+                missingToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Access token required
+                    errorCode: TOKEN_MISSING
+                invalidToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Invalid token
+                    errorCode: TOKEN_INVALID
+                expiredToken:
+                  value:
+                    success: false
+                    statusCode: 401
+                    message: Token expired
+                    errorCode: TOKEN_EXPIRED
+
   /api/transactions/{id}:
     put:
       tags:
@@ -470,6 +558,69 @@ components:
           example: Transactions fetched successfully
         data:
           $ref: '#/components/schemas/TransactionListPayload'
+
+    TransactionByDate:
+      type: object
+      required: [id, title, amount, type, category, date, note]
+      properties:
+        id:
+          type: string
+          example: 65c88df8b2f8a1c21c23abcd
+        title:
+          type: string
+          example: Lunch
+        amount:
+          type: number
+          example: 120000
+        type:
+          type: string
+          enum: [income, expense]
+          example: expense
+        category:
+          type: string
+          enum: [food, travel, shopping, salary, entertainment, utility, other]
+          example: food
+        date:
+          type: string
+          format: date-time
+          example: '2026-04-17T12:30:00.000Z'
+        note:
+          type: string
+          example: Team lunch
+
+    TransactionsByDatePayload:
+      type: object
+      required: [date, summary, transactions]
+      properties:
+        date:
+          type: string
+          example: '2026-04-17'
+        summary:
+          type: object
+          required: [totalIncome, totalExpense, net]
+          properties:
+            totalIncome:
+              type: number
+              example: 500000
+            totalExpense:
+              type: number
+              example: 120000
+            net:
+              type: number
+              example: 380000
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionByDate'
+
+    TransactionsByDateSuccess:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/TransactionsByDatePayload'
 
     MutationMessageSuccess:
       type: object
