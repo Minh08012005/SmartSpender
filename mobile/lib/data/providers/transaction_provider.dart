@@ -30,6 +30,12 @@ class TransactionProvider extends ChangeNotifier {
   double? _remoteTotalIncome;
   double? _remoteTotalExpense;
 
+  // Day transactions state
+  List<TransactionModel> _dayTransactions = [];
+  double? _dayTotalIncome;
+  double? _dayTotalExpense;
+  String _selectedDate = '';
+
   // API Service instance (injectable for testing)
   late final ApiService _apiService;
 
@@ -73,7 +79,93 @@ class TransactionProvider extends ChangeNotifier {
     return _transactions.where((t) => t.type == type).toList();
   }
 
+  // ============== DAY TRANSACTIONS GETTERS ==============
+  List<TransactionModel> get dayTransactions => _dayTransactions;
+  double get dayTotalIncome => _dayTotalIncome ?? 0.0;
+  double get dayTotalExpense => _dayTotalExpense ?? 0.0;
+  double get dayBalance => dayTotalIncome - dayTotalExpense;
+  String get selectedDate => _selectedDate;
+
   // ============== API METHODS ==============
+
+  /// Lấy transactions theo ngày từ API by-date
+  ///
+  /// Query parameters:
+  /// - date: Ngày cần lấy (YYYY-MM-DD)
+  Future<void> fetchTransactionsByDate(String date) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final queryParams = <String, dynamic>{'date': date};
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString(ApiConstants.accessTokenKey) ?? '';
+
+      final Options? options = token.isNotEmpty
+          ? Options(
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer $token',
+              },
+            )
+          : null;
+
+      final response = await _apiService.get(
+        ApiConstants.transactionsByDate,
+        queryParameters: queryParams,
+        options: options,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is Map<String, dynamic> && data['success'] == true) {
+          final dayData = data['data'] as Map<String, dynamic>?;
+
+          if (dayData != null) {
+            // Parse transactions
+            final txList =
+                (dayData['transactions'] as List?)
+                    ?.map(
+                      (tx) =>
+                          TransactionModel.fromJson(tx as Map<String, dynamic>),
+                    )
+                    .toList() ??
+                [];
+
+            // Parse summary
+            final summary = dayData['summary'] as Map<String, dynamic>?;
+
+            _dayTransactions = txList;
+            _selectedDate = dayData['date'] ?? date;
+            _dayTotalIncome =
+                (summary?['totalIncome'] as num?)?.toDouble() ?? 0.0;
+            _dayTotalExpense =
+                (summary?['totalExpense'] as num?)?.toDouble() ?? 0.0;
+
+            debugPrint(
+              '✅ Lấy giao dịch ngày $date thành công: ${txList.length} transactions',
+            );
+          } else {
+            throw Exception('Định dạng dữ liệu không hợp lệ');
+          }
+        } else {
+          throw Exception('Phản hồi API không hợp lệ');
+        }
+      } else {
+        throw Exception('Không thể tải giao dịch ngày $date');
+      }
+    } on DioException catch (e) {
+      _setError(_extractApiErrorMessage(e, 'Không thể tải giao dịch ngày'));
+      debugPrint('❌ Tải giao dịch ngày thất bại: ${e.message}');
+    } catch (e) {
+      _setError(e.toString());
+      debugPrint('❌ Lỗi không mong muốn: $e');
+    } finally {
+      _setLoading(false);
+    }
+  }
 
   /// Lấy danh sách transactions từ API
   ///

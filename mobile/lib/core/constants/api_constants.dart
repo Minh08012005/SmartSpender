@@ -17,6 +17,7 @@ class ApiConstants {
 
   // ============== TRANSACTION ENDPOINTS ==============
   static const String transactions = '/api/transactions';
+  static const String transactionsByDate = '/api/transactions/by-date';
   static String transactionById(String id) => '/api/transactions/$id';
 
   // ============== STATISTICS ENDPOINTS ==============

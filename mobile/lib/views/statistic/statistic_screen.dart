@@ -132,10 +132,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
                           top: Radius.circular(16),
                         ),
                       ),
-                      builder: (_) => DayTransactionsSheet(
-                        day: day,
-                        monthTransactions: monthTransactions,
-                      ),
+                      builder: (_) => DayTransactionsSheet(day: day),
                     );
                   },
                 ),
