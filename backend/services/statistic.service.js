@@ -87,4 +87,5 @@ module.exports = {
   getStatistics,
   getCategoryBreakdown,
   getMonthlyStatistics,
+  getDailyStatsByMonth
 };

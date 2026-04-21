@@ -56,6 +56,28 @@ const { getSummarySchema } = require("../validators/statistic.validator");
  *       401:
  *         description: Unauthorized
  */
-router.get("/summary", authenticate,validate(getSummarySchema, "query"), statisticController.getSummary);
+router.get("/summary", authenticate, validate(getSummarySchema, "query"), statisticController.getSummary);
+
+// ==========================================
+// THÊM ĐOẠN CODE NÀY VÀO CHO TÍNH NĂNG MỚI
+// ==========================================
+/**
+ * @swagger
+ * /statistics/daily:
+ * get:
+ * summary: "Lấy thống kê thu chi chi tiết theo từng ngày trong tháng"
+ * tags:
+ * - Statistics
+ * security:
+ * - bearerAuth: []
+ * parameters:
+ * - in: query
+ * name: month
+ * required: true
+ * - in: query
+ * name: year
+ * required: true
+ */
+router.get("/daily", authenticate, statisticController.getDailyStats);
 
 module.exports = router;
