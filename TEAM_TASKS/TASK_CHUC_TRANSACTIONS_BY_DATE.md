@@ -20,7 +20,7 @@
 
 - TEAM_TASKS/TEST_DATA_SETUP_QUICKSTART.md
 
-4. Bộ dữ liệu Chúc cần dùng:
+1. Bộ dữ liệu Chúc cần dùng:
 
 - date=2026-04-17 (có cả income + expense)
 - date=2026-04-19 (rỗng dữ liệu)

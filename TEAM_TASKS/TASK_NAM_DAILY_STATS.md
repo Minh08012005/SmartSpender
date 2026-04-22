@@ -21,7 +21,7 @@
 
 - TEAM_TASKS/TEST_DATA_SETUP_QUICKSTART.md
 
-4. Bộ dữ liệu Nam cần dùng:
+1. Bộ dữ liệu Nam cần dùng:
 
 - month=4, year=2026 (có dữ liệu)
 - month=5, year=2026 (rỗng dữ liệu)
