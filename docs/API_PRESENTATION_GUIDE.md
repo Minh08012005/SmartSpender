@@ -1328,6 +1328,488 @@ A: Hiện tại không. Nó chỉ là list lưu trữ trong DB. Mobile phải pu
 
 ---
 
+## 📊 Tính Năng 6: Transactions by Date
+
+### 🎯 Chúc - Tập Trung Vào Lấy Giao Dịch Theo Ngày
+
+### Luồng Hoạt Động
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ TRANSACTIONS BY DATE FLOW                                │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│ Mobile:                                                  │
+│  User chọn ngày trên lịch tháng                        │
+│   ↓                                                      │
+│  StatisticProvider.fetchTransactionsByDate(date)        │
+│   ↓                                                      │
+│  GET /api/transactions/by-date?date=YYYY-MM-DD         │
+│                                                          │
+│ Backend:                                                 │
+│  Routes: transaction_routes.js (by-date endpoint)      │
+│   ↓                                                      │
+│  Controller: getTransactionsByDate()                   │
+│   ↓                                                      │
+│  Service: getTransactionsByDate(userId, dateStr)       │
+│   │                                                     │
+│   ├─ Parse date thành start/end của ngày               │
+│   ├─ Query transactions trong khoảng thời gian         │
+│   ├─ Tính summary: totalIncome, totalExpense, net       │
+│   └─ Trả {date, summary, transactions}                 │
+│                                                          │
+│ Mobile:                                                  │
+│  Hiển thị bottom sheet với summary và danh sách giao dịch│
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Backend Files
+
+#### 1. Routes (`backend/routes/transaction_routes.js`)
+
+```javascript
+router.get(
+  "/by-date",
+  authenticate,
+  validate(getTransactionsByDateSchema, "query"),
+  getTransactionsByDate,
+);
+```
+
+#### 2. Controller (`backend/controllers/transaction_controller.js`)
+
+```javascript
+exports.getTransactionsByDate = async (req, res, next) => {
+  const userId = req.user._id;
+  const { date } = req.query;
+
+  const result = await transactionService.getTransactionsByDate(
+    userId,
+    date,
+  );
+
+  res.status(200).json(successResponse(200, "Fetched successfully", result));
+};
+```
+
+#### 3. Service (`backend/services/transaction.service.js`)
+
+```javascript
+function toDayRange(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const start = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
+  const end = new Date(Date.UTC(y, m - 1, d + 1, 0, 0, 0));
+  return { start, end };
+}
+
+async function getTransactionsByDate(userId, dateStr) {
+  const { start, end } = toDayRange(dateStr);
+
+  const rows = await Transaction.find({
+    userId,
+    date: { $gte: start, $lt: end },
+  })
+    .sort({ date: -1 })
+    .lean();
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+  for (const tx of rows) {
+    if (tx.type === "income") totalIncome += tx.amount;
+    if (tx.type === "expense") totalExpense += tx.amount;
+  }
+
+  return {
+    date: dateStr,
+    summary: {
+      totalIncome,
+      totalExpense,
+      net: totalIncome - totalExpense,
+    },
+    transactions: rows,
+  };
+}
+```
+
+### Mobile Files
+
+#### 1. StatisticProvider (`mobile/lib/data/providers/statistic_provider.dart`)
+
+```dart
+Future<Map<String, dynamic>> fetchTransactionsByDate(String date) async {
+  final response = await _apiService.getTransactionsByDate(date);
+  if (response.success) {
+    return response.data;
+  }
+  throw Exception('Failed to fetch transactions by date');
+}
+```
+
+#### 2. MonthCalendarWidget (`mobile/lib/views/statistic/widgets/month_calendar_widget.dart`)
+
+```dart
+onDaySelected: (DateTime day) async {
+  final formattedDate = DateFormat('yyyy-MM-dd').format(day);
+  final data = await statisticProvider.fetchTransactionsByDate(formattedDate);
+  _showBottomSheet(data);
+}
+```
+
+### Khi Cô Hỏi Sâu Về Transactions By Date
+
+**Q: Timezone được xử lý như thế nào?**
+A: Backend dùng UTC để lưu trữ. Khi query, chuyển đổi date string thành UTC start/end của ngày để đảm bảo chính xác.
+
+**Q: Nếu ngày không có giao dịch thì trả gì?**
+A: Trả summary với totalIncome=0, totalExpense=0, net=0 và transactions là mảng rỗng.
+
+**Q: Tại sao cần sort transactions theo date desc?**
+A: Để hiển thị giao dịch mới nhất lên đầu trong bottom sheet.
+
+---
+
+## 📈 Tính Năng 7: Daily Stats
+
+### 🎯 Nam - Tập Trung Vào Thống Kê Theo Ngày Trong Tháng
+
+### Luồng Hoạt Động
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ DAILY STATS FLOW                                        │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│ Mobile:                                                  │
+│  User mở màn hình thống kê tháng                       │
+│   ↓                                                      │
+│  StatisticProvider.fetchDailyStats(month, year)        │
+│   ↓                                                      │
+│  GET /api/statistics/daily?month=X&year=YYYY           │
+│                                                          │
+│ Backend:                                                 │
+│  Routes: statistic_routes.js (daily endpoint)         │
+│   ↓                                                      │
+│  Controller: getDailyStats()                           │
+│   ↓                                                      │
+│  Service: getDailyStatsByMonth(userId, month, year)     │
+│   │                                                     │
+│   ├─ Tính start/end của tháng                          │
+│   ├─ Aggregate transactions theo từng ngày             │
+│   ├─ Tính totalIncome, totalExpense, net, count        │
+│   └─ Trả {month, year, days}                          │
+│                                                          │
+│ Mobile:                                                  │
+│  Hiển thị lịch tháng với màu sắc theo net value         │
+│  (Xanh: net dương, Đỏ: net âm, Xám: không có giao dịch) │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Backend Files
+
+#### 1. Routes (`backend/routes/statistic_routes.js`)
+
+```javascript
+router.get(
+  "/daily",
+  authenticate,
+  validate(getDailyStatsSchema, "query"),
+  getDailyStats,
+);
+```
+
+#### 2. Controller (`backend/controllers/statistic.controller.js`)
+
+```javascript
+exports.getDailyStats = async (req, res, next) => {
+  const userId = req.user._id;
+  const { month, year } = req.query;
+
+  const result = await statisticService.getDailyStatsByMonth(
+    userId,
+    parseInt(month),
+    parseInt(year),
+  );
+
+  res.status(200).json(successResponse(200, "Fetched successfully", result));
+};
+```
+
+#### 3. Service (`backend/services/statistic.service.js`)
+
+```javascript
+async function getDailyStatsByMonth(userId, month, year) {
+  const startDate = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0));
+  const endDate = new Date(Date.UTC(year, month, 1, 0, 0, 0));
+
+  const rows = await Transaction.aggregate([
+    {
+      $match: {
+        userId: new mongoose.Types.ObjectId(userId),
+        date: { $gte: startDate, $lt: endDate },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          y: { $year: "$date" },
+          m: { $month: "$date" },
+          d: { $dayOfMonth: "$date" },
+        },
+        totalIncome: {
+          $sum: { $cond: [{ $eq: ["$type", "income"] }, "$amount", 0] },
+        },
+        totalExpense: {
+          $sum: { $cond: [{ $eq: ["$type", "expense"] }, "$amount", 0] },
+        },
+        transactionCount: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.y": 1, "_id.m": 1, "_id.d": 1 } },
+  ]);
+
+  const days = rows.map((r) => ({
+    date: `${r._id.y}-${String(r._id.m).padStart(2, "0")}-${String(
+      r._id.d,
+    ).padStart(2, "0")}`,
+    totalIncome: r.totalIncome,
+    totalExpense: r.totalExpense,
+    net: r.totalIncome - r.totalExpense,
+    transactionCount: r.transactionCount,
+  }));
+
+  return { month, year, days };
+}
+```
+
+### Mobile Files
+
+#### 1. StatisticProvider (`mobile/lib/data/providers/statistic_provider.dart`)
+
+```dart
+Future<Map<String, dynamic>> fetchDailyStats(int month, int year) async {
+  final response = await _apiService.getDailyStats(month, year);
+  if (response.success) {
+    return response.data;
+  }
+  throw Exception('Failed to fetch daily stats');
+}
+```
+
+#### 2. MonthCalendarWidget (`mobile/lib/views/statistic/widgets/month_calendar_widget.dart`)
+
+```dart
+void _loadMonthData() async {
+  final dailyStats = await statisticProvider.fetchDailyStats(_currentMonth, _currentYear);
+  _updateCalendarDots(dailyStats['days']);
+}
+
+void _updateCalendarDots(List<dynamic> days) {
+  // Xanh: net > 0, Đỏ: net < 0, Xám: không có giao dịch
+}
+```
+
+### Khi Cô Hỏi Sâu Về Daily Stats
+
+**Q: Tại sao dùng aggregation thay vì query thông thường?**
+A: Vì cần group và tính toán theo từng ngày. Aggregation pipeline của MongoDB làm việc này hiệu quả hơn.
+
+**Q: Nếu tháng không có giao dịch nào thì trả gì?**
+A: Trả days là mảng rỗng, nhưng vẫn có month và year trong response.
+
+**Q: TransactionCount dùng để làm gì?**
+A: Để biết mỗi ngày có bao nhiêu giao dịch, có thể dùng để hiển thị số lượng trên UI.
+
+---
+
+## 💰 Tính Năng 8: Monthly Budget
+
+### 🎯 Ngọc Anh - Tập Trung Vào Quản Lý Mục Tiêu Chi Tiêu Tháng
+
+### Luồng Hoạt Động
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ MONTHLY BUDGET FLOW                                      │
+├──────────────────────────────────────────────────────────┤
+│                                                          │
+│ 1. GET BUDGET SUMMARY:                                   │
+│    Mobile: StatisticProvider.fetchBudgetSummary()       │
+│      ↓                                                   │
+│    GET /api/statistics/budget?month=X&year=YYYY         │
+│      ↓                                                   │
+│    Controller getBudgetSummary():                       │
+│      - Gọi service getBudgetSummary()                   │
+│      - Service: Tính actualExpense từ transactions      │
+│      - Lấy targetAmount từ budget collection            │
+│      - Tính remaining = targetAmount - actualExpense    │
+│      - Xác định status (safe, near, over)               │
+│      - Trả {targetAmount, actualExpense, remaining, status}│
+│                                                          │
+│ 2. SAVE BUDGET:                                          │
+│    Mobile: StatisticProvider.saveBudget()               │
+│      ↓                                                   │
+│    POST /api/statistics/budget                          │
+│      Body: {month, year, targetAmount}                 │
+│      ↓                                                   │
+│    Controller saveBudget():                            │
+│      - Tìm hoặc tạo budget record                      │
+│      - Lưu targetAmount                                │
+│      - Trả budget mới                                  │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Backend Files
+
+#### 1. Routes (`backend/routes/statistic_routes.js`)
+
+```javascript
+router.get("/budget", authenticate, validate(getBudgetSchema, "query"), getBudgetSummary);
+router.post("/budget", authenticate, validate(saveBudgetSchema, "body"), saveBudget);
+```
+
+#### 2. Controller (`backend/controllers/statistic.controller.js`)
+
+```javascript
+exports.getBudgetSummary = async (req, res, next) => {
+  const userId = req.user._id;
+  const { month, year } = req.query;
+
+  const result = await statisticService.getBudgetSummary(
+    userId,
+    parseInt(month),
+    parseInt(year),
+  );
+
+  res.status(200).json(successResponse(200, "Fetched successfully", result));
+};
+
+exports.saveBudget = async (req, res, next) => {
+  const userId = req.user._id;
+  const { month, year, targetAmount } = req.body;
+
+  const result = await statisticService.saveBudget(
+    userId,
+    parseInt(month),
+    parseInt(year),
+    targetAmount,
+  );
+
+  res.status(200).json(successResponse(200, "Saved successfully", result));
+};
+```
+
+#### 3. Service (`backend/services/statistic.service.js`)
+
+```javascript
+async function getBudgetSummary(userId, month, year) {
+  // 1. Lấy hoặc tạo budget record
+  let budget = await Budget.findOne({ userId, month, year }).lean();
+  const targetAmount = budget?.targetAmount ?? 0;
+
+  // 2. Tính actual expense từ transactions
+  const actualExpense = await getMonthlyExpense(userId, month, year);
+
+  // 3. Tính remaining và status
+  const remaining = targetAmount - actualExpense;
+  const status = computeBudgetStatus(targetAmount, actualExpense);
+
+  return { month, year, targetAmount, actualExpense, remaining, status };
+}
+
+async function saveBudget(userId, month, year, targetAmount) {
+  let budget = await Budget.findOne({ userId, month, year });
+  
+  if (budget) {
+    budget.targetAmount = targetAmount;
+  } else {
+    budget = new Budget({ userId, month, year, targetAmount });
+  }
+  
+  await budget.save();
+  return budget;
+}
+
+function computeBudgetStatus(targetAmount, actualExpense) {
+  if (targetAmount === 0) return "not_set";
+  
+  const percentage = (actualExpense / targetAmount) * 100;
+  
+  if (percentage >= 100) return "over";
+  if (percentage >= 80) return "near";
+  return "safe";
+}
+```
+
+#### 4. Model (`backend/models/budget.model.js`)
+
+```javascript
+{
+  userId: ObjectId,
+  month: Number, // 1-12
+  year: Number,
+  targetAmount: Number,
+  timestamps: { createdAt, updatedAt }
+}
+```
+
+### Mobile Files
+
+#### 1. StatisticProvider (`mobile/lib/data/providers/statistic_provider.dart`)
+
+```dart
+Future<Map<String, dynamic>> fetchBudgetSummary(int month, int year) async {
+  final response = await _apiService.getBudgetSummary(month, year);
+  if (response.success) {
+    return response.data;
+  }
+  throw Exception('Failed to fetch budget summary');
+}
+
+Future<bool> saveBudget(int month, int year, double targetAmount) async {
+  final response = await _apiService.saveBudget(month, year, targetAmount);
+  return response.success;
+}
+```
+
+#### 2. MonthBudgetCardWidget (`mobile/lib/views/statistic/widgets/month_budget_card_widget.dart`)
+
+```dart
+void _loadBudgetData() async {
+  final budgetData = await statisticProvider.fetchBudgetSummary(_month, _year);
+  setState(() {
+    _targetAmount = budgetData['targetAmount'];
+    _actualExpense = budgetData['actualExpense'];
+    _remaining = budgetData['remaining'];
+    _status = budgetData['status'];
+  });
+}
+
+void _onSaveBudget() async {
+  final success = await statisticProvider.saveBudget(_month, _year, _targetAmount);
+  if (success) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Đã lưu mục tiêu tháng')),
+    );
+  }
+}
+```
+
+### Khi Cô Hỏi Sâu Về Monthly Budget
+
+**Q: Nếu chưa set targetAmount thì status là gì?**
+A: Status là "not_set". UI sẽ hiển thị thông báo "Chưa đặt mục tiêu".
+
+**Q: ActualExpense được tính như thế nào?**
+A: Từ tổng tất cả expense transactions trong tháng, không phân biệt wallet.
+
+**Q: Ngưỡng nào để xác định status near/over?**
+A: Near: chi tiêu >= 80% mục tiêu, Over: chi tiêu >= 100% mục tiêu.
+
+---
+
 ## 🎯 Cheat Sheet - Câu Hỏi Thường Gặp Từ Cô Giáo
 
 ### 📌 Câu Hỏi Về Architecture

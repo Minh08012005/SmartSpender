@@ -187,16 +187,6 @@ class MonthCalendarWidget extends StatelessWidget {
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
-
-  String _compactAmount(double value) {
-    if (value >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(value >= 10000000 ? 0 : 1)}tr';
-    }
-    if (value >= 1000) {
-      return '${(value / 1000).toStringAsFixed(value >= 100000 ? 0 : 1)}k';
-    }
-    return value.toStringAsFixed(0);
-  }
 }
 
 class _WeekdayLabel extends StatelessWidget {

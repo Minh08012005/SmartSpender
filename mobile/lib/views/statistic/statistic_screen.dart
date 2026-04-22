@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/strings.dart';
-import '../../data/models/transaction_model.dart';
 import '../../data/providers/transaction_provider.dart';
 import '../../data/providers/statistic_provider.dart';
 import '../../shared/widgets/section_reveal.dart';
@@ -14,7 +13,6 @@ import 'widgets/empty_state_widget.dart';
 import 'widgets/month_budget_card_widget.dart';
 import 'widgets/month_calendar_widget.dart';
 import 'widgets/period_picker_widget.dart';
-import 'widgets/transaction_tile_widget.dart';
 
 class StatisticScreen extends StatefulWidget {
   const StatisticScreen({super.key});
@@ -29,7 +27,6 @@ class _StatisticScreenState extends State<StatisticScreen> {
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
   DateTime? _selectedDate;
-  double _monthlyTarget = 0.0;
 
   @override
   void didChangeDependencies() {
@@ -352,10 +349,7 @@ class _StatisticScreenState extends State<StatisticScreen> {
           month: _selectedMonth,
           year: _selectedYear,
         ),
-        statProvider.fetchBudget(
-          month: _selectedMonth,
-          year: _selectedYear,
-        ),
+        statProvider.fetchBudget(month: _selectedMonth, year: _selectedYear),
       ]);
 
       if (_selectedDate == null ||
@@ -432,7 +426,9 @@ class _StatisticScreenState extends State<StatisticScreen> {
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text(AppStrings.budgetSavedSuccessfully),
+                                content: Text(
+                                  AppStrings.budgetSavedSuccessfully,
+                                ),
                               ),
                             );
                           }

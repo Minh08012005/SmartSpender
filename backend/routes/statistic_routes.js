@@ -60,7 +60,8 @@ const {
  *       401:
  *         description: Unauthorized
  */
-router.get("/summary", authenticate,validate(getSummarySchema, "query"), statisticController.getSummary);
+router.get("/summary", authenticate, validate(getSummarySchema, "query"), statisticController.getSummary);
+router.get("/daily", authenticate, statisticController.getDailyStats);
 router.get(
 	"/budget",
 	authenticate,
