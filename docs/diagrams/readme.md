@@ -63,6 +63,22 @@ Tai lieu trong thu muc nay gom cac so do va mo ta lien quan den luong tuong tac 
   - **Collection Statistics** - Phân bổ dữ liệu
   - **Performance Considerations** - Query performance
 
+#### 4. **mongodb_erd_print_version.md** (ERD Tối Ưu In Báo Cáo) ⭐ **ĐỨC DÙNG CHO IN**
+
+- 📌 **Mục đích**: Phiên bản ERD tối ưu cho in báo cáo trắng đen
+- 📋 **Nội dung**:
+  - **ASCII Art ERD** - Sơ đồ dạng text, in rất rõ và đẹp
+  - **Mermaid ERD (Print-optimized)** - Phiên bản không màu
+  - **Chi tiết đầy đủ**: Field, Type, Constraint, Description cho tất cả collections
+  - **Bảng Relationship** - Tóm tắt quan hệ giữa các collections
+  - **Legend & Conventions** - Giải thích tất cả ký hiệu
+  - **Data Flow & Constraints** - Quy tắc ràng buộc dữ liệu
+  - **Database Statistics** - Dung lượng ước tính
+  - **Enum Values** - Danh sách giá trị hợp lệ
+  - **Validation Rules** - Các quy tắc kiểm chứng
+
+  💡 **Sử dụng**: In trực tiếp từ file này hoặc copy bảng ASCII art vào Word/PDF
+
 ### Cách Sử Dụng
 
 1. **Để hiểu cấu trúc dữ liệu**:
