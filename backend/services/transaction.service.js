@@ -93,10 +93,23 @@ exports.createTransaction = async (userId, body) => {
 
   const normalizedWalletType = normalizeWalletType(body.walletType);
 
+  // Normalize provided date. Treat plain date strings (YYYY-MM-DD) as local
+  // dates (midnight local) to avoid timezone shifts when clients send date-only
+  // values. Otherwise, fall back to Date parsing which supports ISO strings.
   let normalizedDate;
   if (body.date !== undefined) {
-    normalizedDate =
-      body.date instanceof Date ? body.date : new Date(body.date);
+    const DATE_ONLY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+    if (
+      typeof body.date === 'string' &&
+      DATE_ONLY_REGEX.test(body.date.trim())
+    ) {
+      const [y, m, d] = body.date.trim().split('-').map(Number);
+      normalizedDate = new Date(y, m - 1, d); // local midnight
+    } else {
+      normalizedDate =
+        body.date instanceof Date ? body.date : new Date(body.date);
+    }
+
     if (!normalizedDate || Number.isNaN(normalizedDate.getTime())) {
       throw new AppError('Invalid date format', 400);
     }

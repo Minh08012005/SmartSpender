@@ -16,7 +16,8 @@ class AppConfig {
   );
 
   // Force production for demo builds (set to true for demo, false for development)
-  static const bool forceProductionForDemo = true;
+  // Set to false during local development so app uses local/backend URLs.
+  static const bool forceProductionForDemo = false;
 
   // Force localhost for VM testing (set to true when testing on VM with local backend)
   static const bool forceLocalhostForVM = false;
